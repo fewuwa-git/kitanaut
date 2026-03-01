@@ -5,7 +5,7 @@ import { updateTransactionCategory } from '@/lib/data';
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const token = req.cookies.get('token')?.value;
