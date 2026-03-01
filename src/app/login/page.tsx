@@ -44,7 +44,7 @@ export default function LoginPage() {
                     <img src="/logo.png" alt="Pankonauten Logo" className="login-logo-icon" />
                     <div className="login-logo-text">
                         <h2>Pankonauten</h2>
-                        <p>Kita Berlin</p>
+                        <p>Finanzen</p>
                     </div>
                 </div>
 
