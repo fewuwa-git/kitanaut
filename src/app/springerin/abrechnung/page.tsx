@@ -95,7 +95,6 @@ export default async function AbrechnungPage({
                                 <table className="data-table">
                                     <thead>
                                         <tr>
-                                            <th>Jahr / Monat</th>
                                             <th>Name</th>
                                             <th style={{ textAlign: 'right' }}>Anzahl der Stunden</th>
                                             <th style={{ textAlign: 'right' }}>Betrag €</th>
@@ -106,91 +105,119 @@ export default async function AbrechnungPage({
                                     <tbody>
                                         {abrechnungen.length === 0 ? (
                                             <tr>
-                                                <td colSpan={6} style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--text-muted)' }}>
+                                                <td colSpan={5} style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--text-muted)' }}>
                                                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>📁</div>
                                                     Bisher wurden keine Abrechnungen angelegt.
                                                 </td>
                                             </tr>
-                                        ) : (
-                                            abrechnungen.map(ab => {
-                                                const badge = STATUS_BADGE[ab.status] || STATUS_BADGE.entwurf;
-                                                const isLocked = ab.status === 'eingereicht' || ab.status === 'bezahlt';
-                                                return (
-                                                    <tr key={ab.id}>
-                                                        <td style={{ fontWeight: '600' }}>
-                                                            {ab.jahr} – {getMonthName(ab.monat)}
-                                                        </td>
-                                                        <td style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-                                                            {ab.pankonauten_users?.name || 'Unbekannt'}
-                                                        </td>
-                                                        <td style={{ textAlign: 'right' }}>
-                                                            <span className="badge" style={{ background: 'var(--bg)', padding: '4px 10px', borderRadius: '4px', fontWeight: '500' }}>
-                                                                {ab.totalStunden.toFixed(2)} h
+                                        ) : (() => {
+                                            // Group by jahr+monat
+                                            const groups: { key: string; jahr: number; monat: number; items: typeof abrechnungen }[] = [];
+                                            for (const ab of abrechnungen) {
+                                                const key = `${ab.jahr}-${String(ab.monat).padStart(2, '0')}`;
+                                                const last = groups[groups.length - 1];
+                                                if (last?.key === key) {
+                                                    last.items.push(ab);
+                                                } else {
+                                                    groups.push({ key, jahr: ab.jahr, monat: ab.monat, items: [ab] });
+                                                }
+                                            }
+                                            return groups.map(group => (
+                                                <>
+                                                    <tr key={`header-${group.key}`}>
+                                                        <td colSpan={5} style={{
+                                                            background: 'var(--bg)',
+                                                            padding: '8px 16px',
+                                                            fontWeight: 700,
+                                                            fontSize: '13px',
+                                                            color: 'var(--navy)',
+                                                            borderTop: '2px solid var(--border)',
+                                                            letterSpacing: '0.02em',
+                                                        }}>
+                                                            {getMonthName(group.monat)} {group.jahr}
+                                                            <span style={{ fontWeight: 400, color: 'var(--text-muted)', marginLeft: '8px', fontSize: '12px' }}>
+                                                                {group.items.length} {group.items.length === 1 ? 'Eintrag' : 'Einträge'}
                                                             </span>
-                                                        </td>
-                                                        <td style={{ textAlign: 'right', fontWeight: '700', color: 'var(--navy)', fontSize: '15px' }}>
-                                                            {ab.totalBetrag.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
-                                                        </td>
-                                                        <td>
-                                                            <span style={{
-                                                                display: 'inline-block',
-                                                                padding: '3px 10px',
-                                                                borderRadius: '20px',
-                                                                fontSize: '12px',
-                                                                fontWeight: 600,
-                                                                background: badge.bg,
-                                                                color: badge.color,
-                                                            }}>
-                                                                {STATUS_LABELS[ab.status] || ab.status}
-                                                            </span>
-                                                        </td>
-                                                        <td style={{ textAlign: 'right' }}>
-                                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                                                <PDFOverviewButton
-                                                                    user={ab.pankonauten_users || currentUser}
-                                                                    monthLabel={`${ab.jahr} – ${getMonthName(ab.monat)}`}
-                                                                    tage={ab.pankonauten_abrechnung_tage || []}
-                                                                    totalStunden={ab.totalStunden}
-                                                                    totalBetrag={ab.totalBetrag}
-                                                                    abrechnungId={ab.id}
-                                                                    jahr={ab.jahr}
-                                                                    monat={ab.monat}
-                                                                />
-                                                                {!isLocked && (
-                                                                    <Link
-                                                                        href={`/springerin/abrechnung/neu?jahr=${ab.jahr}&monat=${ab.monat}&springerinId=${ab.user_id}`}
-                                                                        className="btn btn-sm btn-secondary"
-                                                                        style={{ padding: '4px 10px' }}
-                                                                    >
-                                                                        Bearbeiten
-                                                                    </Link>
-                                                                )}
-                                                                {payload.role === 'admin' && ab.status === 'entwurf' && (
-                                                                    <MarkAsBezahltButton
-                                                                        id={ab.id}
-                                                                        label={`${ab.pankonauten_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
-                                                                        targetStatus="eingereicht"
-                                                                    />
-                                                                )}
-                                                                {payload.role === 'admin' && ab.status === 'eingereicht' && (
-                                                                    <MarkAsBezahltButton
-                                                                        id={ab.id}
-                                                                        label={`${ab.pankonauten_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
-                                                                        targetStatus="bezahlt"
-                                                                    />
-                                                                )}
-                                                                {payload.role === 'admin' && (
-                                                                    <DeleteAbrechnungButton
-                                                                        id={ab.id}
-                                                                        label={`${ab.pankonauten_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
-                                                                    />
-                                                                )}
-                                                            </div>
                                                         </td>
                                                     </tr>
-                                                );
-                                            })
-                                        )}
+                                                    {group.items.map(ab => {
+                                                        const badge = STATUS_BADGE[ab.status] || STATUS_BADGE.entwurf;
+                                                        const isLocked = ab.status === 'eingereicht' || ab.status === 'bezahlt';
+                                                        return (
+                                                            <tr key={ab.id}>
+                                                                <td style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+                                                                    {ab.pankonauten_users?.name || 'Unbekannt'}
+                                                                </td>
+                                                                <td style={{ textAlign: 'right' }}>
+                                                                    <span className="badge" style={{ background: 'var(--bg)', padding: '4px 10px', borderRadius: '4px', fontWeight: '500' }}>
+                                                                        {ab.totalStunden.toFixed(2)} h
+                                                                    </span>
+                                                                </td>
+                                                                <td style={{ textAlign: 'right', fontWeight: '700', color: 'var(--navy)', fontSize: '15px' }}>
+                                                                    {ab.totalBetrag.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
+                                                                </td>
+                                                                <td>
+                                                                    <span style={{
+                                                                        display: 'inline-block',
+                                                                        padding: '3px 10px',
+                                                                        borderRadius: '20px',
+                                                                        fontSize: '12px',
+                                                                        fontWeight: 600,
+                                                                        background: badge.bg,
+                                                                        color: badge.color,
+                                                                    }}>
+                                                                        {STATUS_LABELS[ab.status] || ab.status}
+                                                                    </span>
+                                                                </td>
+                                                                <td style={{ textAlign: 'right' }}>
+                                                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                                        <PDFOverviewButton
+                                                                            user={ab.pankonauten_users || currentUser}
+                                                                            monthLabel={`${ab.jahr} – ${getMonthName(ab.monat)}`}
+                                                                            tage={ab.pankonauten_abrechnung_tage || []}
+                                                                            totalStunden={ab.totalStunden}
+                                                                            totalBetrag={ab.totalBetrag}
+                                                                            abrechnungId={ab.id}
+                                                                            jahr={ab.jahr}
+                                                                            monat={ab.monat}
+                                                                        />
+                                                                        {!isLocked && (
+                                                                            <Link
+                                                                                href={`/springerin/abrechnung/neu?jahr=${ab.jahr}&monat=${ab.monat}&springerinId=${ab.user_id}`}
+                                                                                className="btn btn-sm btn-secondary"
+                                                                                style={{ padding: '4px 10px' }}
+                                                                            >
+                                                                                Bearbeiten
+                                                                            </Link>
+                                                                        )}
+                                                                        {payload.role === 'admin' && ab.status === 'entwurf' && (
+                                                                            <MarkAsBezahltButton
+                                                                                id={ab.id}
+                                                                                label={`${ab.pankonauten_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
+                                                                                targetStatus="eingereicht"
+                                                                            />
+                                                                        )}
+                                                                        {payload.role === 'admin' && ab.status === 'eingereicht' && (
+                                                                            <MarkAsBezahltButton
+                                                                                id={ab.id}
+                                                                                label={`${ab.pankonauten_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
+                                                                                targetStatus="bezahlt"
+                                                                            />
+                                                                        )}
+                                                                        {payload.role === 'admin' && (
+                                                                            <DeleteAbrechnungButton
+                                                                                id={ab.id}
+                                                                                label={`${ab.pankonauten_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
+                                                                            />
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </>
+                                            ));
+                                        })()}
                                     </tbody>
                                 </table>
                             </div>
