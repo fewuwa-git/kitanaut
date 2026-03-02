@@ -25,6 +25,11 @@ interface AbrechnungTag {
     betrag: number;
 }
 
+interface Abrechnung {
+    id: string;
+    status: string;
+}
+
 interface MonthOption {
     jahr: number;
     monat: number;
@@ -34,6 +39,18 @@ interface MonthOption {
 
 const HOURS = ['07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'];
 const MINUTES = ['00', '15', '30', '45'];
+
+const STATUS_LABELS: Record<string, string> = {
+    entwurf: 'Entwurf',
+    eingereicht: 'Eingereicht',
+    bezahlt: 'Bezahlt',
+};
+
+const STATUS_BADGE: Record<string, string> = {
+    entwurf: 'badge-warning',
+    eingereicht: 'badge-info',
+    bezahlt: 'badge-success',
+};
 
 export default function AbrechnungForm({
     user,
@@ -77,8 +94,10 @@ export default function AbrechnungForm({
         return '';
     });
     const [tage, setTage] = useState<AbrechnungTag[]>([]);
+    const [abrechnung, setAbrechnung] = useState<Abrechnung | null>(null);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [recalculating, setRecalculating] = useState(false);
     const [error, setError] = useState('');
@@ -112,6 +131,7 @@ export default function AbrechnungForm({
     useEffect(() => {
         if (!selectedMonth) {
             setTage([]);
+            setAbrechnung(null);
             return;
         }
 
@@ -127,6 +147,7 @@ export default function AbrechnungForm({
             if (!res.ok) throw new Error('Fehler beim Laden der Abrechnung');
             const data = await res.json();
             setTage(data.tage || []);
+            setAbrechnung(data.abrechnung || null);
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -144,6 +165,8 @@ export default function AbrechnungForm({
 
         return Math.round((diffMinutes / 60) * 100) / 100; // 2 decimals
     };
+
+    const isLocked = abrechnung?.status === 'eingereicht' || abrechnung?.status === 'bezahlt';
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -213,6 +236,7 @@ export default function AbrechnungForm({
 
             const data = await res.json();
             setTage([...tage, data.tag].sort((a, b) => new Date(a.datum).getTime() - new Date(b.datum).getTime()));
+            if (data.abrechnung) setAbrechnung(data.abrechnung);
 
             // Reset form fields
             setDatum('');
@@ -238,6 +262,37 @@ export default function AbrechnungForm({
             setTage(tage.filter(t => t.id !== tagId));
         } catch (err: any) {
             setError(err.message);
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!abrechnung?.id) return;
+        if (!confirm('Abrechnung wirklich einreichen? Sie kann danach nicht mehr bearbeitet werden.')) return;
+
+        setSubmitting(true);
+        setError('');
+        try {
+            const res = await fetch('/api/abrechnungen', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'update_status',
+                    id: abrechnung.id,
+                    status: 'eingereicht',
+                })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Fehler beim Einreichen');
+            }
+
+            const data = await res.json();
+            setAbrechnung(data.abrechnung);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -346,7 +401,7 @@ export default function AbrechnungForm({
                 </div>
             )}
 
-            {rateDiscrepancy && (
+            {rateDiscrepancy && !isLocked && (
                 <div className="alert alert-info" style={{
                     marginBottom: '1.5rem',
                     padding: '16px',
@@ -452,90 +507,119 @@ export default function AbrechnungForm({
                             <div className="stat-card-label">
                                 <span>💰</span> Gesamtbetrag
                             </div>
-                            <div className="stat-card-value">
+                            <div className="stat-card-value" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                                 {totalBetrag.toLocaleString('de-DE', { minimumFractionDigits: 2 })} <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>€</span>
+                                {abrechnung && (
+                                    <span className={`badge ${STATUS_BADGE[abrechnung.status] || 'badge-warning'}`} style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '20px', fontWeight: 600 }}>
+                                        {STATUS_LABELS[abrechnung.status] || abrechnung.status}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    <div className="card" style={{ marginBottom: '2.5rem', background: 'var(--bg)', borderStyle: 'dashed' }}>
-                        <div className="card-header">
-                            <h2 className="card-title">➕ Neuen Tag erfassen</h2>
+                    {isLocked && (
+                        <div style={{
+                            marginBottom: '1.5rem',
+                            padding: '14px 16px',
+                            backgroundColor: abrechnung?.status === 'bezahlt' ? 'var(--green-bg)' : 'var(--blue-bg)',
+                            color: abrechnung?.status === 'bezahlt' ? '#16a34a' : 'var(--blue)',
+                            borderRadius: 'var(--radius-sm)',
+                            border: `1px solid ${abrechnung?.status === 'bezahlt' ? '#bbf7d0' : '#bfdbfe'}`,
+                            fontSize: '14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px'
+                        }}>
+                            <span>{abrechnung?.status === 'bezahlt' ? '✅' : '🔒'}</span>
+                            <div>
+                                {abrechnung?.status === 'bezahlt'
+                                    ? 'Diese Abrechnung wurde bezahlt.'
+                                    : 'Diese Abrechnung wurde eingereicht und kann nicht mehr bearbeitet werden.'}
+                            </div>
                         </div>
-                        <div className="card-body">
-                            <form onSubmit={handleAdd} className="add-tag-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', alignItems: 'flex-end' }}>
-                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label className="form-label">Datum</label>
-                                    <input
-                                        type="date"
-                                        className="form-input"
-                                        value={datum}
-                                        onChange={e => setDatum(e.target.value)}
-                                        min={minDate}
-                                        max={maxDate}
-                                        required
-                                    />
-                                </div>
-                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label className="form-label">Von</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <select
-                                            className="form-select"
-                                            value={von.split(':')[0] || ''}
-                                            onChange={e => setVon(`${e.target.value}:${von.split(':')[1] || '00'}`)}
+                    )}
+
+                    {!isLocked && (
+                        <div className="card" style={{ marginBottom: '2.5rem', background: 'var(--bg)', borderStyle: 'dashed' }}>
+                            <div className="card-header">
+                                <h2 className="card-title">➕ Neuen Tag erfassen</h2>
+                            </div>
+                            <div className="card-body">
+                                <form onSubmit={handleAdd} className="add-tag-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', alignItems: 'flex-end' }}>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label">Datum</label>
+                                        <input
+                                            type="date"
+                                            className="form-input"
+                                            value={datum}
+                                            onChange={e => setDatum(e.target.value)}
+                                            min={minDate}
+                                            max={maxDate}
                                             required
-                                            style={{ padding: '10px 8px' }}
-                                        >
-                                            <option value="">Std</option>
-                                            {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
-                                        </select>
-                                        <span style={{ fontWeight: 'bold' }}>:</span>
-                                        <select
-                                            className="form-select"
-                                            value={von.split(':')[1] || ''}
-                                            onChange={e => setVon(`${von.split(':')[0] || '07'}:${e.target.value}`)}
-                                            required
-                                            style={{ padding: '10px 8px' }}
-                                        >
-                                            <option value="">Min</option>
-                                            {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
-                                        </select>
+                                        />
                                     </div>
-                                </div>
-                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label className="form-label">Bis</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <select
-                                            className="form-select"
-                                            value={bis.split(':')[0] || ''}
-                                            onChange={e => setBis(`${e.target.value}:${bis.split(':')[1] || '00'}`)}
-                                            required
-                                            style={{ padding: '10px 8px' }}
-                                        >
-                                            <option value="">Std</option>
-                                            {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
-                                        </select>
-                                        <span style={{ fontWeight: 'bold' }}>:</span>
-                                        <select
-                                            className="form-select"
-                                            value={bis.split(':')[1] || ''}
-                                            onChange={e => setBis(`${bis.split(':')[0] || '07'}:${e.target.value}`)}
-                                            required
-                                            style={{ padding: '10px 8px' }}
-                                        >
-                                            <option value="">Min</option>
-                                            {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
-                                        </select>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label">Von</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <select
+                                                className="form-select"
+                                                value={von.split(':')[0] || ''}
+                                                onChange={e => setVon(`${e.target.value}:${von.split(':')[1] || '00'}`)}
+                                                required
+                                                style={{ padding: '10px 8px' }}
+                                            >
+                                                <option value="">Std</option>
+                                                {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+                                            </select>
+                                            <span style={{ fontWeight: 'bold' }}>:</span>
+                                            <select
+                                                className="form-select"
+                                                value={von.split(':')[1] || ''}
+                                                onChange={e => setVon(`${von.split(':')[0] || '07'}:${e.target.value}`)}
+                                                required
+                                                style={{ padding: '10px 8px' }}
+                                            >
+                                                <option value="">Min</option>
+                                                {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                                <div style={{ minWidth: '160px' }}>
-                                    <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={saving}>
-                                        {saving ? 'Speichere...' : 'Tag hinzufügen'}
-                                    </button>
-                                </div>
-                            </form>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label">Bis</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <select
+                                                className="form-select"
+                                                value={bis.split(':')[0] || ''}
+                                                onChange={e => setBis(`${e.target.value}:${bis.split(':')[1] || '00'}`)}
+                                                required
+                                                style={{ padding: '10px 8px' }}
+                                            >
+                                                <option value="">Std</option>
+                                                {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+                                            </select>
+                                            <span style={{ fontWeight: 'bold' }}>:</span>
+                                            <select
+                                                className="form-select"
+                                                value={bis.split(':')[1] || ''}
+                                                onChange={e => setBis(`${bis.split(':')[0] || '07'}:${e.target.value}`)}
+                                                required
+                                                style={{ padding: '10px 8px' }}
+                                            >
+                                                <option value="">Min</option>
+                                                {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div style={{ minWidth: '160px' }}>
+                                        <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={saving}>
+                                            {saving ? 'Speichere...' : 'Tag hinzufügen'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="card">
                         <div className="card-header">
@@ -552,13 +636,13 @@ export default function AbrechnungForm({
                                             <th style={{ textAlign: 'right' }}>Dauer</th>
                                             <th>Stundensatz</th>
                                             <th style={{ textAlign: 'right' }}>Betrag</th>
-                                            <th style={{ width: '50px' }}></th>
+                                            {!isLocked && <th style={{ width: '50px' }}></th>}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {tage.length === 0 ? (
                                             <tr>
-                                                <td colSpan={6} style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--text-muted)' }}>
+                                                <td colSpan={isLocked ? 5 : 6} style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--text-muted)' }}>
                                                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>☕</div>
                                                     Noch keine Einträge für diesen Monat vorhanden.
                                                 </td>
@@ -580,28 +664,30 @@ export default function AbrechnungForm({
                                                     <td style={{ textAlign: 'right', fontWeight: '700', color: 'var(--navy)' }}>
                                                         {tag.betrag.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
                                                     </td>
-                                                    <td style={{ textAlign: 'right' }}>
-                                                        <button
-                                                            onClick={() => tag.id && handleDelete(tag.id)}
-                                                            className="btn-icon"
-                                                            style={{
-                                                                background: 'none',
-                                                                border: 'none',
-                                                                cursor: 'pointer',
-                                                                padding: '6px',
-                                                                borderRadius: '4px',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                transition: 'background 0.2s'
-                                                            }}
-                                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--red-bg)'}
-                                                            onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                                                            title="Löschen"
-                                                        >
-                                                            🗑️
-                                                        </button>
-                                                    </td>
+                                                    {!isLocked && (
+                                                        <td style={{ textAlign: 'right' }}>
+                                                            <button
+                                                                onClick={() => tag.id && handleDelete(tag.id)}
+                                                                className="btn-icon"
+                                                                style={{
+                                                                    background: 'none',
+                                                                    border: 'none',
+                                                                    cursor: 'pointer',
+                                                                    padding: '6px',
+                                                                    borderRadius: '4px',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    transition: 'background 0.2s'
+                                                                }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = 'var(--red-bg)'}
+                                                                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                                                title="Löschen"
+                                                            >
+                                                                🗑️
+                                                            </button>
+                                                        </td>
+                                                    )}
                                                 </tr>
                                             ))
                                         )}
@@ -615,7 +701,7 @@ export default function AbrechnungForm({
                                                 <td style={{ textAlign: 'right', fontSize: '16px', color: 'var(--navy)' }}>
                                                     {totalBetrag.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
                                                 </td>
-                                                <td></td>
+                                                {!isLocked && <td></td>}
                                             </tr>
                                         </tfoot>
                                     )}
@@ -624,6 +710,17 @@ export default function AbrechnungForm({
                         </div>
                     </div>
 
+                    {user.role === 'springerin' && !isLocked && tage.length > 0 && (
+                        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+                            <button
+                                onClick={handleSubmit}
+                                className="btn btn-success"
+                                disabled={submitting}
+                            >
+                                {submitting ? 'Wird eingereicht...' : '✅ Abrechnung einreichen'}
+                            </button>
+                        </div>
+                    )}
                 </>
             )}
         </div>

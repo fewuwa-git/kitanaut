@@ -350,6 +350,18 @@ export async function saveAbrechnung(ab: Partial<Abrechnung>): Promise<Abrechnun
     return data;
 }
 
+export async function updateAbrechnungStatus(id: string, status: string): Promise<Abrechnung> {
+    const { data, error } = await supabase
+        .from('pankonauten_abrechnungen')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) throw new Error('Failed to update abrechnung status: ' + error.message);
+    return data;
+}
+
 export async function saveAbrechnungTag(tag: Partial<AbrechnungTag>): Promise<AbrechnungTag> {
     const { data, error } = await supabase
         .from('pankonauten_abrechnung_tage')

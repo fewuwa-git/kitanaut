@@ -684,6 +684,31 @@ body {
   background: #fecaca;
 }
 
+.btn-success {
+  background: var(--green-bg);
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.btn-success:hover {
+  background: #bbf7d0;
+}
+
+.badge-success {
+  background: var(--green-bg);
+  color: #16a34a;
+}
+
+.badge-warning {
+  background: var(--orange-bg);
+  color: var(--orange);
+}
+
+.badge-info {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+
 .btn-sm {
   padding: 6px 12px;
   font-size: 13px;

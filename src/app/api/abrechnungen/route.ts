@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { getAbrechnung, saveAbrechnung, saveAbrechnungTag, deleteAbrechnungTag, deleteAbrechnung } from '@/lib/data';
+import { getAbrechnung, saveAbrechnung, saveAbrechnungTag, deleteAbrechnungTag, deleteAbrechnung, updateAbrechnungStatus } from '@/lib/data';
 
 export async function GET(request: NextRequest) {
     const token = request.cookies.get('token')?.value;
@@ -66,6 +66,25 @@ export async function POST(request: NextRequest) {
             });
 
             return NextResponse.json({ abrechnung, tag: savedTag });
+        }
+
+        if (action === 'update_status') {
+            const { id, status } = body;
+            if (!id || !status) {
+                return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
+            }
+
+            // Springerin darf nur auf 'eingereicht' setzen
+            if (payload.role === 'springerin' && status !== 'eingereicht') {
+                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+            }
+            // Admin darf auf 'eingereicht' und 'bezahlt' setzen
+            if (payload.role === 'admin' && !['eingereicht', 'bezahlt'].includes(status)) {
+                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+            }
+
+            const updated = await updateAbrechnungStatus(id, status);
+            return NextResponse.json({ abrechnung: updated });
         }
 
         if (action === 'recalculate_rates') {

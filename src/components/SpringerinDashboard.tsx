@@ -425,8 +425,8 @@ export default function SpringerinDashboard({ abrechnungen, initialNotes = [], c
                                             <td style={{ textAlign: 'right' }}>{ab.totalStunden}h</td>
                                             <td style={{ textAlign: 'right' }}>{formatCurrency(ab.totalBetrag)}</td>
                                             <td style={{ textAlign: 'center' }}>
-                                                <span className={`badge badge-${ab.status === 'abgerechnet' ? 'success' : 'warning'}`}>
-                                                    {ab.status}
+                                                <span className={`badge badge-${ab.status === 'bezahlt' ? 'success' : ab.status === 'eingereicht' ? 'info' : 'warning'}`}>
+                                                    {ab.status === 'bezahlt' ? 'Bezahlt' : ab.status === 'eingereicht' ? 'Eingereicht' : 'Entwurf'}
                                                 </span>
                                             </td>
                                         </tr>
