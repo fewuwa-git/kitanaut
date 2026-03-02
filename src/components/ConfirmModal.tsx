@@ -25,7 +25,7 @@ export default function ConfirmModal({
 
     return (
         <div className="modal-overlay" onClick={onCancel}>
-            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px', textAlign: 'left' }}>
                 <div className="modal-title">{title}</div>
                 <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '24px', lineHeight: '1.6' }}>
                     {message}
