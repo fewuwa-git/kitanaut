@@ -17,6 +17,7 @@ export const CHANGELOG: ChangelogEntry[] = [
             'PDF-Öffnung in Safari: Popup-Blockierung umgangen – Abrechnungs-PDFs öffnen jetzt zuverlässig in einem neuen Tab',
 
             '— Eltern-Bereich —',
+            'Neue Seite „Meine Belege": Eltern, Vorstandsmitglieder und Admins können Belege verwalten – mit Filter nach Benutzer und Status (Entwurf / Eingereicht / Genehmigt / Abgelehnt)',
             'Eltern-Accounts können sich einloggen und sehen ihre eigenen Buchungen sowie ihr Benutzerprofil',
             'Neue Seite „Meine Buchungen": Eltern sehen ausschließlich ihre eigenen Buchungen; Admins können per Dropdown zwischen allen Eltern-Accounts wechseln',
             'Neuer Sidebar-Bereich „Eltern" mit direktem Link zu den Buchungen – sichtbar für Eltern, Vorstandsmitglieder und Admins',

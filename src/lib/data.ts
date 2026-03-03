@@ -474,6 +474,48 @@ export async function recalculateAbrechnungRates(userId: string, jahr: number, m
     }
 }
 
+// ─── Belege ──────────────────────────────────────────────────────────────────
+
+export interface Beleg {
+    id: string;
+    user_id: string;
+    titel: string;
+    beschreibung?: string;
+    betrag: number;
+    datum: string;
+    status: 'entwurf' | 'eingereicht' | 'genehmigt' | 'abgelehnt';
+    created_at?: string;
+    updated_at?: string;
+    pankonauten_users?: { id: string; name: string; email: string };
+}
+
+export async function getBelege(userId?: string): Promise<Beleg[]> {
+    let query = supabase
+        .from('pankonauten_belege')
+        .select('*, pankonauten_users(id, name, email)')
+        .order('datum', { ascending: false });
+    if (userId) query = query.eq('user_id', userId);
+    const { data, error } = await query;
+    if (error) { console.error('Error fetching belege:', error); return []; }
+    return (data || []).map((b: any) => ({ ...b, betrag: Number(b.betrag) }));
+}
+
+export async function saveBeleg(beleg: Partial<Beleg>): Promise<Beleg> {
+    const payload = { ...beleg, updated_at: new Date().toISOString() };
+    const { data, error } = await supabase
+        .from('pankonauten_belege')
+        .upsert(payload, { onConflict: 'id' })
+        .select()
+        .single();
+    if (error) throw new Error('Failed to save Beleg: ' + error.message);
+    return data;
+}
+
+export async function deleteBeleg(id: string): Promise<void> {
+    const { error } = await supabase.from('pankonauten_belege').delete().eq('id', id);
+    if (error) throw new Error('Failed to delete Beleg: ' + error.message);
+}
+
 // ─── Springerin Notes ─────────────────────────────────────────────────────────
 
 export interface SpringerinNote {
