@@ -23,7 +23,7 @@ export default async function ChangelogPage() {
                     </div>
                 </div>
                 <div className="page-body">
-                    <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ maxWidth: '80%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {CHANGELOG.map((entry, i) => (
                             <div key={i} className="card">
                                 <div className="card-header">
