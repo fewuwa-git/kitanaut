@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Beleg, User } from '@/lib/data';
 import { generateBelegPDF } from '@/lib/belegPdf';
 import BelegStatusButton from '@/components/BelegStatusButton';
+import DeleteBelegButton from '@/components/DeleteBelegButton';
 
 const STATUS_BADGE: Record<string, { bg: string; color: string }> = {
     entwurf:     { bg: 'var(--orange-bg)', color: 'var(--orange)' },
@@ -115,6 +116,7 @@ export default function BelegeTable({
                                     const isEingereicht = b.status === 'eingereicht';
                                     const canEdit = isEntwurf && (isAdmin || b.user_id === currentUserId);
                                     const canSubmit = isEntwurf && (isAdmin || b.user_id === currentUserId);
+                                    const canDelete = isEntwurf && (isAdmin || b.user_id === currentUserId);
                                     return (
                                         <tr key={b.id}>
                                             {isAdmin && (
@@ -155,6 +157,9 @@ export default function BelegeTable({
                                                     )}
                                                     {isAdmin && isEingereicht && (
                                                         <BelegStatusButton id={b.id} label={b.titel} targetStatus="abgelehnt" />
+                                                    )}
+                                                    {canDelete && (
+                                                        <DeleteBelegButton id={b.id} label={b.titel} />
                                                     )}
                                                 </div>
                                             </td>

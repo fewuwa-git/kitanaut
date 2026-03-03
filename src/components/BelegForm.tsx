@@ -5,16 +5,29 @@ import { useRouter } from 'next/navigation';
 import { Beleg } from '@/lib/data';
 
 interface UserProfile {
+    id: string;
     name: string;
     strasse?: string;
     ort?: string;
     unterschrift?: string;
 }
 
-export default function BelegForm({ userId, beleg }: { userId: string; beleg?: Beleg }) {
+export default function BelegForm({
+    userId,
+    beleg,
+    isAdmin = false,
+    selectableUsers = [],
+}: {
+    userId: string;
+    beleg?: Beleg;
+    isAdmin?: boolean;
+    selectableUsers?: { id: string; name: string }[];
+}) {
     const router = useRouter();
     const isEdit = !!beleg;
 
+    const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+    const [selectedUserId, setSelectedUserId] = useState(beleg?.user_id || userId);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [titel, setTitel] = useState(beleg?.titel || '');
     const [beschreibung, setBeschreibung] = useState(beleg?.beschreibung || '');
@@ -30,10 +43,14 @@ export default function BelegForm({ userId, beleg }: { userId: string; beleg?: B
 
     useEffect(() => {
         fetch('/api/users').then(r => r.json()).then((users: any[]) => {
-            const me = users.find((u: any) => u.id === userId);
-            if (me) setProfile({ name: me.name, strasse: me.strasse, ort: me.ort, unterschrift: me.unterschrift });
+            setAllUsers(users.map((u: any) => ({ id: u.id, name: u.name, strasse: u.strasse, ort: u.ort, unterschrift: u.unterschrift })));
         });
-    }, [userId]);
+    }, []);
+
+    useEffect(() => {
+        const me = allUsers.find(u => u.id === selectedUserId);
+        setProfile(me || null);
+    }, [selectedUserId, allUsers]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,7 +70,7 @@ export default function BelegForm({ userId, beleg }: { userId: string; beleg?: B
                     mwst_satz: mwstSatz,
                     betrag: brutto,
                     datum,
-                    ...(isEdit ? {} : { status: 'entwurf' }),
+                    ...(isEdit ? {} : { status: 'entwurf', user_id: selectedUserId }),
                 }),
             });
             if (!res.ok) { setError('Fehler beim Speichern.'); return; }
@@ -69,6 +86,20 @@ export default function BelegForm({ userId, beleg }: { userId: string; beleg?: B
         <div style={{ maxWidth: '640px' }}>
             <div className="card">
                 <div className="card-body">
+                    {/* User-Auswahl für Admins */}
+                    {isAdmin && !isEdit && selectableUsers.length > 0 && (
+                        <div className="form-group" style={{ margin: '16px 0 8px 0' }}>
+                            <label className="form-label">Beleg für</label>
+                            <select className="form-select" value={selectedUserId}
+                                onChange={e => setSelectedUserId(e.target.value)}>
+                                <option value="">– Person auswählen –</option>
+                                {selectableUsers.map(u => (
+                                    <option key={u.id} value={u.id}>{u.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
                     {/* Adresse des Users */}
                     {profile && (
                         <div style={{ margin: '16px 0 24px 0', padding: '12px 16px', background: 'var(--bg)', borderRadius: '8px', border: '1px solid var(--border)' }}>

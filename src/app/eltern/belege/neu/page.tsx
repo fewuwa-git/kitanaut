@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import BelegForm from '@/components/BelegForm';
+import { getUsers } from '@/lib/data';
 
 export default async function BelegNeuPage() {
     const headersList = await headers();
@@ -12,6 +13,13 @@ export default async function BelegNeuPage() {
 
     if (!userId || !role) redirect('/login');
     if (role !== 'eltern' && role !== 'member' && role !== 'admin') redirect('/dashboard');
+
+    const isAdmin = role === 'admin' || role === 'member';
+    const selectableUsers = isAdmin
+        ? (await getUsers())
+            .filter(u => ['eltern', 'member', 'admin'].includes(u.role))
+            .sort((a, b) => a.name.localeCompare(b.name))
+        : [];
 
     return (
         <div className="app-layout">
@@ -24,7 +32,7 @@ export default async function BelegNeuPage() {
                     </div>
                 </div>
                 <div className="page-body">
-                    <BelegForm userId={userId} />
+                    <BelegForm userId={userId!} isAdmin={isAdmin} selectableUsers={selectableUsers} />
                 </div>
             </main>
         </div>

@@ -145,15 +145,14 @@ export async function generateBelegPDF(beleg: Beleg): Promise<string> {
 
     // ─── EUR in Worten (hellblauer Hintergrund) ──────────────────────────────
     const wortenY  = nrY + nrH;
-    const wortenH  = 14;
+    const wortenH  = 9;
     doc.setFillColor(BLUE_LIGHT[0], BLUE_LIGHT[1], BLUE_LIGHT[2]);
     doc.rect(M, wortenY, col, wortenH, 'F');
 
-    // "EUR\nin Worten" links
+    // "EUR in Worten" links
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.text('EUR', M + 2, wortenY + 4.5);
-    doc.text('in Worten', M + 2, wortenY + 8.5);
+    doc.text('EUR in Worten', M + 2, wortenY + wortenH / 2 + 2);
 
     // "Cent wie oben" rechts
     doc.setFontSize(7);
@@ -164,7 +163,7 @@ export async function generateBelegPDF(beleg: Beleg): Promise<string> {
     const worteText = worte.charAt(0).toUpperCase() + worte.slice(1);
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(9);
-    doc.text(worteText, M + 22, wortenY + wortenH / 2 + 2);
+    doc.text(worteText, M + 40, wortenY + wortenH / 2 + 2);
 
     line(M, wortenY + wortenH, W - M, wortenY + wortenH);
 
