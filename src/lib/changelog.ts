@@ -13,6 +13,7 @@ export const CHANGELOG: ChangelogEntry[] = [
 
             '— Abrechnung —',
             'Neuer Statusfilter auf der Abrechnungsübersicht: Einträge lassen sich jetzt nach Status (Entwurf / Eingereicht / Bezahlt) filtern, ergänzend zu den bestehenden Filtern nach Springerin, Monat und Jahr',
+            'Abrechnungs-PDF: Die hinterlegte Unterschrift erscheint jetzt im PDF neben der Zusammenfassung – mit Linie und Name darunter, wie eine echte Unterschrift. Wenn keine Unterschrift hinterlegt ist, bleibt der Bereich leer',
             'PDF-Öffnung in Safari: Popup-Blockierung umgangen – Abrechnungs-PDFs öffnen jetzt zuverlässig in einem neuen Tab',
 
             '— Eltern-Bereich —',

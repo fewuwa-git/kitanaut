@@ -425,7 +425,7 @@ export async function getAllAbrechnungen(userId?: string): Promise<any[]> {
         .from('pankonauten_abrechnungen')
         .select(`
             *,
-            pankonauten_users (id, name, email, strasse, ort, iban, steuerid),
+            pankonauten_users (id, name, email, strasse, ort, iban, steuerid, unterschrift),
             pankonauten_abrechnung_tage (*)
         `);
 

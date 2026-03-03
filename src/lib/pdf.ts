@@ -9,6 +9,7 @@ export interface User {
     ort?: string;
     iban?: string;
     steuerid?: string;
+    unterschrift?: string;
 }
 
 export interface AbrechnungTag {
@@ -274,6 +275,42 @@ export const generateAbrechnungPDF = async (
         finalY + 33,
         { align: 'right' }
     );
+
+    // ─── Unterschrift ─────────────────────────────────────────────────────────
+    const sigX = margin;
+    const sigWidth = summaryX - margin - 10;
+    const lineY = finalY + 35;
+
+    if (user.unterschrift) {
+        try {
+            const img = new Image();
+            img.src = user.unterschrift;
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+            const maxH = 28;
+            const maxW = sigWidth;
+            const ratio = img.width / img.height;
+            let drawW = maxH * ratio;
+            let drawH = maxH;
+            if (drawW > maxW) { drawW = maxW; drawH = drawW / ratio; }
+            doc.addImage(img, 'PNG', sigX, finalY + 4, drawW, drawH);
+        } catch (e) {
+            console.error('Could not load signature for PDF', e);
+        }
+    }
+
+    // Linie unter Unterschrift
+    doc.setDrawColor(COLORS.navy[0], COLORS.navy[1], COLORS.navy[2]);
+    doc.setLineWidth(0.4);
+    doc.line(sigX, lineY, sigX + sigWidth, lineY);
+
+    // Name unter Linie
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(COLORS.textMuted[0], COLORS.textMuted[1], COLORS.textMuted[2]);
+    doc.text(user.name, sigX, lineY + 5);
 
     const pdfBlob = doc.output('blob');
     return URL.createObjectURL(pdfBlob);
