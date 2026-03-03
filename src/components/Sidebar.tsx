@@ -121,6 +121,14 @@ export default function Sidebar({ user }: SidebarProps) {
                         <span style={{ fontSize: '16px' }}>🚪</span>
                         Abmelden
                     </button>
+                    <a
+                        href="/changelog"
+                        className={`sidebar-link ${pathname === '/changelog' ? 'active' : ''}`}
+                        style={{ fontSize: '12px', opacity: 0.6, marginTop: '2px' }}
+                    >
+                        <span style={{ fontSize: '14px' }}>📋</span>
+                        Changelog
+                    </a>
                 </div>
             </aside>
         </>
