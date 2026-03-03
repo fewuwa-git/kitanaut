@@ -45,7 +45,7 @@ export default async function KontoauszugPage() {
                 </div>
                 <div className="page-body">
                     <Suspense fallback={<KontoauszugSkeleton />}>
-                        <KontoauszugSection role={role} />
+                        <KontoauszugSection role={role as 'admin' | 'member'} />
                     </Suspense>
                 </div>
             </main>
