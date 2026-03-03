@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export type PeriodKey = '30d' | '6m' | '12m' | 'custom';
+export type PeriodKey = '30d' | '6m' | '12m' | 'all' | 'custom';
 
 export function useFilterState(defaultPeriod: PeriodKey = '30d') {
     const [isMounted, setIsMounted] = useState(false);

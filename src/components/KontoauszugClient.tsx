@@ -30,7 +30,9 @@ function getDateRange(period: PeriodKey, customStart?: string, customEnd?: strin
     const start = new Date();
     start.setHours(0, 0, 0, 0);
 
-    if (period === '30d') {
+    if (period === 'all') {
+        start.setFullYear(2000, 0, 1);
+    } else if (period === '30d') {
         start.setDate(end.getDate() - 30);
     } else if (period === '6m') {
         start.setMonth(start.getMonth() - 6);
@@ -50,9 +52,10 @@ function getDateRange(period: PeriodKey, customStart?: string, customEnd?: strin
 interface KontoauszugClientProps {
     transactions: Transaction[];
     userRole?: 'admin' | 'member';
+    elternView?: boolean;
 }
 
-export default function KontoauszugClient({ transactions: initialTransactions, userRole }: KontoauszugClientProps) {
+export default function KontoauszugClient({ transactions: initialTransactions, userRole, elternView }: KontoauszugClientProps) {
     const { period, setPeriod, customStart, setCustomStart, customEnd, setCustomEnd } = useFilterState('30d');
     const [searchTerm, setSearchTerm] = useState('');
     const [transactions, setTransactions] = useState(initialTransactions);
@@ -128,13 +131,18 @@ export default function KontoauszugClient({ transactions: initialTransactions, u
 
     // Summary statistics for the filtered period
     const stats = useMemo(() => {
-        const income = filteredTransactions.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
-        const expense = filteredTransactions.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+        // In elternView: Kita's expenses (negative amounts) = parent's income
+        const income = elternView
+            ? filteredTransactions.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
+            : filteredTransactions.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+        const expense = elternView
+            ? 0
+            : filteredTransactions.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
         const startBalance = filteredTransactions.length > 0 ? filteredTransactions[filteredTransactions.length - 1].balance - filteredTransactions[filteredTransactions.length - 1].amount : 0;
         const endBalance = filteredTransactions.length > 0 ? filteredTransactions[0].balance : 0;
 
         return { income, expense, startBalance, endBalance, count: filteredTransactions.length };
-    }, [filteredTransactions]);
+    }, [filteredTransactions, elternView]);
 
 
     return (
@@ -144,7 +152,7 @@ export default function KontoauszugClient({ transactions: initialTransactions, u
                 <div className="card-header" style={{ flexWrap: 'wrap', gap: '12px', paddingBottom: period === 'custom' ? 0 : '16px' }}>
                     <div className="card-title">📅 Filter</div>
                     <div className="period-selector">
-                        {([['30d', '30 Tage'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['custom', 'Freie Wahl']] as [PeriodKey, string][]).map(([key, label]) => (
+                        {([['30d', '30 Tage'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['all', 'Alle'], ['custom', 'Freie Wahl']] as [PeriodKey, string][]).map(([key, label]) => (
                             <button
                                 key={key}
                                 className={`period-btn ${period === key ? 'active' : ''}`}
@@ -191,6 +199,7 @@ export default function KontoauszugClient({ transactions: initialTransactions, u
                     </div>
                     <div className="stat-card-sub">Im gewählten Zeitraum</div>
                 </div>
+                {!elternView && (
                 <div className="stat-card">
                     <div className="stat-card-label">
                         <span style={{ color: 'var(--red)' }}>↓</span> Ausgaben
@@ -200,6 +209,7 @@ export default function KontoauszugClient({ transactions: initialTransactions, u
                     </div>
                     <div className="stat-card-sub">Im gewählten Zeitraum</div>
                 </div>
+                )}
             </div>
 
             {/* Transactions Table */}
@@ -226,7 +236,7 @@ export default function KontoauszugClient({ transactions: initialTransactions, u
                                 <th>Gegenüber</th>
                                 <th>Kategorie</th>
                                 <th style={{ textAlign: 'right' }}>Betrag</th>
-                                <th style={{ textAlign: 'right' }}>Saldo</th>
+                                {!elternView && <th style={{ textAlign: 'right' }}>Saldo</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -319,12 +329,17 @@ export default function KontoauszugClient({ transactions: initialTransactions, u
                                                 </div>
                                             )}
                                         </td>
-                                        <td className={`tx-amount ${tx.amount >= 0 ? 'positive' : 'negative'}`} style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                                            {tx.amount >= 0 ? '+' : ''}{formatCurrency(tx.amount)}
+                                        <td className={`tx-amount ${elternView ? (tx.amount < 0 ? 'positive' : 'negative') : (tx.amount >= 0 ? 'positive' : 'negative')}`} style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                            {elternView
+                                                ? (tx.amount < 0 ? '+' : '') + formatCurrency(tx.amount * -1)
+                                                : (tx.amount >= 0 ? '+' : '') + formatCurrency(tx.amount)
+                                            }
                                         </td>
+                                        {!elternView && (
                                         <td style={{ textAlign: 'right', fontWeight: 500, whiteSpace: 'nowrap', fontSize: '13px' }}>
                                             {formatCurrency(tx.balance)}
                                         </td>
+                                        )}
                                     </tr>
                                 ))
                             )}

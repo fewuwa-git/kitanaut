@@ -16,7 +16,7 @@ async function MeineBuchungenSection({ name }: { name: string }) {
                     Keine Buchungen für „{name}" gefunden.
                 </div>
             ) : (
-                <KontoauszugClient transactions={transactions} />
+                <KontoauszugClient transactions={transactions} elternView={true} />
             )}
         </>
     );
