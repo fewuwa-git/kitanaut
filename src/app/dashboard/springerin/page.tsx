@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { getAllAbrechnungen, getSpringerinNotes } from '@/lib/data';
 import Sidebar from '@/components/Sidebar';
 
-export const metadata: Metadata = { title: 'Dashboard' };
+export const metadata: Metadata = { title: 'Springerin Dashboard' };
 import SpringerinDashboard from '@/components/SpringerinDashboard';
 
 async function SpringerinSection({ currentUserName }: { currentUserName: string }) {
