@@ -30,6 +30,7 @@ const NAV_ITEMS: NavGroup[] = [
         section: 'ELTERN',
         items: [
             { href: '/eltern/buchungen', icon: '📒', label: 'Meine Buchungen', roles: ['eltern', 'member', 'admin'] },
+            { href: '/eltern/belege', icon: '🧾', label: 'Meine Belege', roles: ['eltern', 'member', 'admin'] },
         ],
     },
     {
