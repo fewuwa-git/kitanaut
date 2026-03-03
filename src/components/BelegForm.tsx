@@ -81,15 +81,16 @@ export default function BelegForm({ userId }: { userId: string }) {
                         {/* Titel / Für */}
                         <div className="form-group" style={{ margin: 0 }}>
                             <label className="form-label">Für (Verwendungszweck)</label>
-                            <input className="form-input" type="text" value={titel}
-                                onChange={e => setTitel(e.target.value)} required />
+                            <textarea className="form-input" rows={2} value={titel}
+                                onChange={e => setTitel(e.target.value)} required
+                                style={{ resize: 'none' }} />
                         </div>
 
                         <div className="form-group" style={{ margin: 0 }}>
                             <label className="form-label">Zusätzliche Beschreibung <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>(optional)</span></label>
-                            <textarea className="form-input" rows={2} value={beschreibung}
+                            <textarea className="form-input" rows={1} value={beschreibung}
                                 onChange={e => setBeschreibung(e.target.value)}
-                                style={{ resize: 'vertical' }} />
+                                style={{ resize: 'none' }} />
                         </div>
 
                         {/* Beträge */}
