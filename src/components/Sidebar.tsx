@@ -29,7 +29,7 @@ const NAV_ITEMS: NavGroup[] = [
     {
         section: 'ELTERN',
         items: [
-            { href: '/eltern/buchungen', icon: '📒', label: 'Eltern-Buchungen', roles: ['eltern', 'member', 'admin'] },
+            { href: '/eltern/buchungen', icon: '📒', label: 'Meine Buchungen', roles: ['eltern', 'member', 'admin'] },
         ],
     },
     {

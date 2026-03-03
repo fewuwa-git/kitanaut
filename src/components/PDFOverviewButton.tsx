@@ -28,11 +28,13 @@ export default function PDFOverviewButton({
 
     const handleGenerate = async () => {
         setGenerating(true);
+        const win = window.open('', '_blank');
         try {
             const url = await generateAbrechnungPDF(user, monthLabel, tage, totalStunden, totalBetrag, abrechnungId, jahr, monat);
-            window.open(url, '_blank');
+            if (win) win.location.href = url;
         } catch (error) {
             console.error('Error generating PDF:', error);
+            if (win) win.close();
             alert('Fehler beim Generieren des PDFs.');
         } finally {
             setGenerating(false);
