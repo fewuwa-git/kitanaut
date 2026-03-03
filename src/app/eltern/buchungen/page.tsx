@@ -49,6 +49,7 @@ export default async function MeineBuchungenPage({
     const isAdmin = role === 'admin';
     const params = await searchParams;
     const selectedUserId = params?.userId as string | undefined;
+    const customSearch = params?.customSearch as string | undefined;
 
     // Admin: load all eltern users for the selector
     const elternUsers = isAdmin
@@ -57,13 +58,17 @@ export default async function MeineBuchungenPage({
 
     // Determine whose transactions to show
     let displayName: string | null = null;
+    let searchName: string | undefined;
     if (isAdmin) {
         if (selectedUserId) {
             const selected = elternUsers.find(u => u.id === selectedUserId);
-            displayName = selected?.name ?? null;
+            searchName = selected?.name;
+            // customSearch overrides the auto-detected name
+            displayName = customSearch ?? searchName ?? null;
         }
     } else {
-        displayName = name;
+        displayName = customSearch ?? name;
+        searchName = name;
     }
 
     return (
@@ -81,6 +86,7 @@ export default async function MeineBuchungenPage({
                         <ElternUserSelector
                             users={elternUsers}
                             selectedUserId={selectedUserId}
+                            searchName={customSearch ?? searchName}
                         />
                     )}
                     {displayName ? (
