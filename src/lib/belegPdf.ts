@@ -154,10 +154,6 @@ export async function generateBelegPDF(beleg: Beleg): Promise<string> {
     doc.setFontSize(8);
     doc.text('EUR in Worten', M + 2, wortenY + wortenH / 2 + 2);
 
-    // "Cent wie oben" rechts
-    doc.setFontSize(7);
-    doc.text('Cent wie oben', W - M - 2, wortenY + wortenH / 2 + 2, { align: 'right' });
-
     // Betrag in Worten – eine Zeile
     const worte = euroInWorte(betragFuerWorte);
     const worteText = worte.charAt(0).toUpperCase() + worte.slice(1);

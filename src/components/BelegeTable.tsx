@@ -87,17 +87,16 @@ export default function BelegeTable({
             {/* Tabelle */}
             <div className="card">
                 <div className="card-header">
-                    <h2 className="card-title">📋 Alle Belege</h2>
+                    <div className="card-title">📋 Alle Belege</div>
                 </div>
-                <div className="card-body" style={{ padding: 0, marginTop: '0.5rem' }}>
-                    <div className="table-responsive">
-                        <table className="data-table">
+                <div style={{ overflowX: 'auto' }}>
+                    <table className="data-table">
                             <thead>
                                 <tr>
                                     {isAdmin && <th>Name</th>}
                                     <th>Titel</th>
                                     <th>Datum</th>
-                                    <th style={{ textAlign: 'right' }}>Betrag €</th>
+                                    <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>Betrag €</th>
                                     <th>Status</th>
                                     <th style={{ width: '220px' }}></th>
                                 </tr>
@@ -128,7 +127,7 @@ export default function BelegeTable({
                                             <td style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
                                                 {new Date(b.datum).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                             </td>
-                                            <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--navy)', fontSize: '15px' }}>
+                                            <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--navy)', fontSize: '15px', whiteSpace: 'nowrap' }}>
                                                 {b.betrag.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
                                             </td>
                                             <td>
@@ -168,7 +167,6 @@ export default function BelegeTable({
                                 })}
                             </tbody>
                         </table>
-                    </div>
                 </div>
             </div>
         </>
