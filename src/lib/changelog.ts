@@ -7,6 +7,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     {
         date: '03.03.2026',
         changes: [
+            'Eltern-Accounts können sich jetzt einloggen und sehen ihre Buchungen sowie ihr Benutzerprofil',
             'Neue Seite „Eltern-Buchungen": Eltern sehen nur ihre eigenen Buchungen, Admins können per Dropdown zwischen allen Eltern-Accounts wechseln',
             'Neuer Sidebar-Bereich „Eltern" mit Link zu Eltern-Buchungen (sichtbar für Eltern, Vorstandsmitglieder und Admins)',
         ],

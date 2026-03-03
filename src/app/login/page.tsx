@@ -27,6 +27,8 @@ export default function LoginPage() {
             }
             if (data.user?.role === 'springerin') {
                 router.push('/springerin/abrechnung');
+            } else if (data.user?.role === 'eltern') {
+                router.push('/eltern/buchungen');
             } else {
                 router.push('/dashboard');
             }
