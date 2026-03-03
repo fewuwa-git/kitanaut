@@ -226,7 +226,6 @@ export async function getTransactionsByCounterparty(name: string): Promise<Trans
     const { data, error } = await supabase
         .from('pankonauten_transactions')
         .select('*')
-        .ilike('counterparty', `%${name}%`)
         .order('date', { ascending: true });
 
     if (error) {
@@ -234,12 +233,20 @@ export async function getTransactionsByCounterparty(name: string): Promise<Trans
         return [];
     }
 
+    // Filter in JavaScript for reliable Unicode handling (ß, ö, ü, etc.)
+    const nameLower = name.toLowerCase();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data || []).map((t: any) => ({
-        ...t,
-        amount: Number(t.amount),
-        balance: Number(t.balance),
-    }));
+    return (data || [])
+        .filter((t: any) =>
+            (t.counterparty ?? '').toLowerCase().includes(nameLower) ||
+            (t.description ?? '').toLowerCase().includes(nameLower)
+        )
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((t: any) => ({
+            ...t,
+            amount: Number(t.amount),
+            balance: Number(t.balance),
+        }));
 }
 
 export async function updateTransactionCategory(id: string, category: string): Promise<void> {
