@@ -416,7 +416,7 @@ export default function AbrechnungForm({
                 </div>
             )}
 
-            {rateDiscrepancy && !isLocked && (
+            {rateDiscrepancy && (!isLocked || user.role === 'admin') && (
                 <div className="alert alert-info" style={{
                     marginBottom: '1.5rem',
                     padding: '16px',
