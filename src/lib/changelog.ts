@@ -9,11 +9,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         changes: [
             '— Verwaltung —',
             'Neuer Bereich „E-Mails": Admins können die Texte aller automatisch versendeten E-Mails (Einladung, Freischaltung, Passwort-Reset) direkt im Portal bearbeiten – inkl. Betreff, Inhalt und Live-Vorschau.',
-        ],
-    },
-    {
-        date: '04.03.2026',
-        changes: [
+
             '— Registrierung & Zugangsverwaltung —',
             'Neue Registrierungsseite: Benutzer können sich selbst registrieren. Der Account wird erst nach manueller Freischaltung durch einen Admin aktiviert.',
             'Admins sehen ausstehende Registrierungen in der Benutzerverwaltung und können Rolle zuweisen und freischalten – oder ablehnen.',
