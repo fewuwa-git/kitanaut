@@ -13,13 +13,6 @@ export const CHANGELOG: ChangelogEntry[] = [
             'Nach der Freischaltung erhält der Benutzer automatisch eine Bestätigungs-E-Mail mit Login-Link.',
             'Neue Funktion „Passwort vergessen": Benutzer können sich einen Reset-Link per E-Mail zuschicken lassen.',
             'Benutzer bearbeiten öffnet jetzt eine eigene Seite statt eines Modals.',
-        ],
-    },
-    {
-        date: '04.03.2026',
-        changes: [
-            '— Abrechnung —',
-            'Formular „Neuen Tag erfassen": Die Felder Von und Bis werden jetzt nebeneinander angezeigt – der Bereich ist kompakter und übersichtlicher.',
 
             '— Benutzerverwaltung —',
             'Neuer Einladungs-Workflow: Admins können Benutzer jetzt per E-Mail einladen – kein Passwort mehr manuell vergeben. Der neue Benutzer erhält eine Einladungsmail und setzt sein Passwort selbst.',
