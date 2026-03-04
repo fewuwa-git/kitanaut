@@ -121,10 +121,10 @@ export default function AdminClient({ currentUser }: AdminClientProps) {
             if (['springerin', 'eltern', 'member'].includes(editForm.role)) {
                 body.strasse = editForm.strasse;
                 body.ort = editForm.ort;
+                body.iban = editForm.iban;
                 body.unterschrift = editForm.unterschrift;
             }
             if (editForm.role === 'springerin') {
-                body.iban = editForm.iban;
                 body.steuerid = editForm.steuerid;
                 body.handynummer = editForm.handynummer;
                 body.stundensatz = Number(editForm.stundensatz);
@@ -419,6 +419,11 @@ export default function AdminClient({ currentUser }: AdminClientProps) {
                                             value={editForm.ort} onChange={(e) => setEditForm({ ...editForm, ort: e.target.value })} />
                                     </div>
                                     <div className="form-group">
+                                        <label className="form-label">IBAN</label>
+                                        <input className="form-input" type="text"
+                                            value={editForm.iban} onChange={(e) => setEditForm({ ...editForm, iban: e.target.value })} />
+                                    </div>
+                                    <div className="form-group">
                                         <label className="form-label">Unterschrift</label>
                                         {!showSignaturePad ? (
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
@@ -447,11 +452,6 @@ export default function AdminClient({ currentUser }: AdminClientProps) {
 
                             {editForm.role === 'springerin' && (
                                 <>
-                                    <div className="form-group">
-                                        <label className="form-label">IBAN</label>
-                                        <input className="form-input" type="text"
-                                            value={editForm.iban} onChange={(e) => setEditForm({ ...editForm, iban: e.target.value })} />
-                                    </div>
                                     <div className="form-group">
                                         <label className="form-label">Steuer-ID</label>
                                         <input className="form-input" type="text"

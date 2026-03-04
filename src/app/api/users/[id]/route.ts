@@ -48,17 +48,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         if (body.status !== undefined) user.status = body.status;
     }
 
-    // Eltern und Vorstandsmitglieder können Adresse und Unterschrift ändern
+    // Eltern und Vorstandsmitglieder können Adresse, IBAN und Unterschrift ändern
     if (isAdmin || (isSelf && ['eltern', 'member', 'springerin'].includes(user.role))) {
         if (body.strasse !== undefined) user.strasse = body.strasse;
         if (body.ort !== undefined) user.ort = body.ort;
+        if (body.iban !== undefined) user.iban = body.iban;
         if (body.unterschrift !== undefined) user.unterschrift = body.unterschrift;
     }
 
     // Springerin kann zusätzlich folgende Felder ändern (auch Admin kann sie ändern, falls nötig)
     if (isAdmin || (isSelf && user.role === 'springerin')) {
         if (body.name !== undefined) user.name = body.name;
-        if (body.iban !== undefined) user.iban = body.iban;
         if (body.steuerid !== undefined) user.steuerid = body.steuerid;
         if (body.handynummer !== undefined) user.handynummer = body.handynummer;
         if (body.stundensatz !== undefined) user.stundensatz = body.stundensatz;
