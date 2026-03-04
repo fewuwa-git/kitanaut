@@ -14,6 +14,7 @@ const VARIABLES = ['{{name}}', '{{url}}'];
 
 export default function EmailTemplateEditClient({ template }: { template: EmailTemplate }) {
     const router = useRouter();
+    const [name, setName] = useState(template.name);
     const [subject, setSubject] = useState(template.subject);
     const [body, setBody] = useState(template.body);
     const [loading, setLoading] = useState(false);
@@ -30,7 +31,7 @@ export default function EmailTemplateEditClient({ template }: { template: EmailT
             const res = await fetch(`/api/email-templates/${template.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subject, body }),
+                body: JSON.stringify({ name, subject, body }),
             });
             const data = await res.json();
             if (!res.ok) { setError(data.error); return; }
@@ -61,6 +62,17 @@ export default function EmailTemplateEditClient({ template }: { template: EmailT
             </div>
 
             <div className="card" style={{ padding: '24px', marginBottom: '16px' }}>
+                <div className="form-group">
+                    <label className="form-label">Name</label>
+                    <input
+                        className="form-input"
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                    />
+                </div>
+
                 <div className="form-group">
                     <label className="form-label">Betreff</label>
                     <input

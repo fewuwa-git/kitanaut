@@ -21,12 +21,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
     const { id } = await params;
-    const { subject, body } = await req.json();
+    const { name, subject, body } = await req.json();
     if (!subject || !body) {
         return NextResponse.json({ error: 'Betreff und Inhalt erforderlich' }, { status: 400 });
     }
     try {
-        await saveEmailTemplate(id, subject, body);
+        await saveEmailTemplate(id, subject, body, name);
         return NextResponse.json({ success: true });
     } catch (err: unknown) {
         return NextResponse.json({ error: err instanceof Error ? err.message : 'Server-Fehler' }, { status: 500 });

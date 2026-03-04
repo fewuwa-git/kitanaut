@@ -615,10 +615,12 @@ export async function getEmailTemplate(id: string): Promise<EmailTemplate | null
     return data;
 }
 
-export async function saveEmailTemplate(id: string, subject: string, body: string): Promise<void> {
+export async function saveEmailTemplate(id: string, subject: string, body: string, name?: string): Promise<void> {
+    const payload: Record<string, string> = { subject, body, updated_at: new Date().toISOString() };
+    if (name) payload.name = name;
     const { error } = await supabase
         .from('pankonauten_email_templates')
-        .update({ subject, body, updated_at: new Date().toISOString() })
+        .update(payload)
         .eq('id', id);
     if (error) throw new Error('Failed to save email template: ' + error.message);
 }
