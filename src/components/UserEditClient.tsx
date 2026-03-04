@@ -167,34 +167,6 @@ export default function UserEditClient({ user, currentUserRole }: Props) {
                             onChange={(e) => setForm({ ...form, iban: e.target.value })}
                         />
                     </div>
-                    <div className="form-group">
-                        <label className="form-label">Unterschrift</label>
-                        {!showSignaturePad ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                                {form.unterschrift ? (
-                                    <img
-                                        src={form.unterschrift}
-                                        alt="Unterschrift"
-                                        style={{ maxHeight: '60px', border: '1px solid var(--border)', borderRadius: '6px', padding: '4px', background: '#fff' }}
-                                    />
-                                ) : (
-                                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Noch keine Unterschrift hinterlegt</span>
-                                )}
-                                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowSignaturePad(true)}>
-                                    {form.unterschrift ? 'Unterschrift ändern' : 'Unterschrift erstellen'}
-                                </button>
-                            </div>
-                        ) : (
-                            <SignaturePad
-                                existing={form.unterschrift || null}
-                                onSave={(dataUrl) => {
-                                    setForm({ ...form, unterschrift: dataUrl });
-                                    setShowSignaturePad(false);
-                                }}
-                                onCancel={() => setShowSignaturePad(false)}
-                            />
-                        )}
-                    </div>
                 </>
             )}
 
@@ -231,6 +203,39 @@ export default function UserEditClient({ user, currentUserRole }: Props) {
                         />
                     </div>
                 </>
+            )}
+
+            {['springerin', 'eltern', 'member'].includes(form.role) && (
+                <div className="form-group">
+                    <label className="form-label">Unterschrift</label>
+                    <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '16px', background: 'var(--bg)' }}>
+                        {!showSignaturePad ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                {form.unterschrift ? (
+                                    <img
+                                        src={form.unterschrift}
+                                        alt="Unterschrift"
+                                        style={{ maxHeight: '60px', border: '1px solid var(--border)', borderRadius: '6px', padding: '4px', background: '#fff' }}
+                                    />
+                                ) : (
+                                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Noch keine Unterschrift hinterlegt</span>
+                                )}
+                                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowSignaturePad(true)}>
+                                    {form.unterschrift ? 'Unterschrift ändern' : 'Unterschrift erstellen'}
+                                </button>
+                            </div>
+                        ) : (
+                            <SignaturePad
+                                existing={form.unterschrift || null}
+                                onSave={(dataUrl) => {
+                                    setForm({ ...form, unterschrift: dataUrl });
+                                    setShowSignaturePad(false);
+                                }}
+                                onCancel={() => setShowSignaturePad(false)}
+                            />
+                        )}
+                    </div>
+                </div>
             )}
 
             {error && <div className="error-msg">⚠️ {error}</div>}
