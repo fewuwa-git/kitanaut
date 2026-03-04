@@ -209,6 +209,9 @@ export default function UserEditClient({ user, currentUserRole }: Props) {
                 <div className="form-group">
                     <label className="form-label">Unterschrift</label>
                     <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '16px', background: 'var(--bg)' }}>
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                            ℹ️ Unterschriften werden für Belege und Abrechnungen genutzt.
+                        </p>
                         {!showSignaturePad ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                                 {form.unterschrift ? (
