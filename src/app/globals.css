@@ -833,6 +833,7 @@ body {
   border: 2px dashed var(--border);
   border-radius: var(--radius);
   padding: 24px 16px;
+  margin-top: 16px;
   text-align: center;
   cursor: pointer;
   transition: all var(--transition);
