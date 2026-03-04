@@ -157,6 +157,7 @@ export default function AdminClient({ currentUser }: AdminClientProps) {
                     )}
                 </div>
 
+                <div className="page-body" style={{ paddingBottom: 0 }}>
                 {currentUser.role === 'admin' && (() => {
                     const pending = users.filter(u => u.status === 'pending');
                     if (pending.length === 0) return null;
@@ -230,6 +231,7 @@ export default function AdminClient({ currentUser }: AdminClientProps) {
                         </div>
                     </div>
                 </div>}
+                </div>
 
                 <div className="page-body">
                     {(() => {
