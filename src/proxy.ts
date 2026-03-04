@@ -19,7 +19,8 @@ export async function proxy(req: NextRequest) {
         pathname.startsWith('/login') ||
         pathname.startsWith('/api/auth') ||
         pathname.startsWith('/einladen') ||
-        pathname.startsWith('/api/invite')
+        pathname.startsWith('/api/invite') ||
+        pathname.startsWith('/api/debug-env')
     ) {
         return NextResponse.next();
     }
