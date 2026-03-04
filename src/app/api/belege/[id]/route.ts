@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { saveBeleg, deleteBeleg } from '@/lib/data';
+import { saveBeleg, deleteBeleg, getBelegById } from '@/lib/data';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const token = req.cookies.get('token')?.value;
@@ -9,8 +9,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const { id } = await params;
     const body = await req.json();
-    const beleg = await saveBeleg({ id, ...body });
-    return NextResponse.json(beleg);
+
+    const existing = await getBelegById(id);
+    if (!existing) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
+
+    try {
+        const beleg = await saveBeleg({ ...existing, ...body });
+        return NextResponse.json(beleg);
+    } catch (err: any) {
+        return NextResponse.json({ error: err.message }, { status: 500 });
+    }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
