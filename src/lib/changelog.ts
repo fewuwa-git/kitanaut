@@ -5,19 +5,10 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
     {
-        date: '05.03.2026',
-        changes: [
-            '— Abrechnungen —',
-            'Beim Markieren einer Abrechnung als „Bezahlt" kann nun gewählt werden, ob eine Benachrichtigungs-E-Mail an die Springerin gesendet werden soll (Checkbox im Bestätigungsdialog, standardmäßig aktiviert).',
-
-            '— Benutzerverwaltung —',
-            'Beim Anlegen eines neuen Benutzers wird die Einladungs-E-Mail nicht mehr automatisch versendet. Stattdessen erscheint ein Dialog mit dem Einladungslink und der Option, die E-Mail auf Wunsch manuell zu senden.',
-        ],
-    },
-    {
         date: '04.03.2026',
         changes: [
             '— Abrechnungen —',
+            'Beim Markieren einer Abrechnung als „Bezahlt" kann nun gewählt werden, ob eine Benachrichtigungs-E-Mail an die Springerin gesendet werden soll (Checkbox im Bestätigungsdialog, standardmäßig aktiviert).',
             'Springerinnen erhalten automatisch eine E-Mail, wenn ihre Abrechnung als „Bezahlt" markiert wird – mit Betrag, IBAN und einer persönlichen Dankesnachricht.',
 
             '— Verwaltung —',
@@ -31,6 +22,7 @@ export const CHANGELOG: ChangelogEntry[] = [
             'Benutzer bearbeiten öffnet jetzt eine eigene Seite statt eines Modals.',
 
             '— Benutzerverwaltung —',
+            'Beim Anlegen eines neuen Benutzers wird die Einladungs-E-Mail nicht mehr automatisch versendet. Stattdessen erscheint ein Dialog mit dem Einladungslink und der Option, die E-Mail auf Wunsch manuell zu senden.',
             'Neuer Einladungs-Workflow: Admins können Benutzer jetzt per E-Mail einladen – kein Passwort mehr manuell vergeben. Der neue Benutzer erhält eine Einladungsmail und setzt sein Passwort selbst.',
             'Einladungslink wird nach dem Anlegen eines Benutzers auch direkt im Admin-Bereich angezeigt und kann per Klick kopiert werden.',
             'Eingeladene (noch nicht aktivierte) Benutzer werden in der Benutzerliste mit dem Hinweis „Eingeladen" gekennzeichnet.',
