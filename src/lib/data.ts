@@ -490,7 +490,7 @@ export interface Beleg {
     betrag: number; // brutto
     belegnummer?: string;
     datum: string;
-    status: 'entwurf' | 'eingereicht' | 'genehmigt' | 'abgelehnt';
+    status: 'entwurf' | 'eingereicht' | 'bezahlt' | 'abgelehnt';
     created_at?: string;
     updated_at?: string;
     pankonauten_users?: { id: string; name: string; email: string; strasse?: string; ort?: string; unterschrift?: string };

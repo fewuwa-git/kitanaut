@@ -11,7 +11,7 @@ import DeleteBelegButton from '@/components/DeleteBelegButton';
 const STATUS_BADGE: Record<string, { bg: string; color: string }> = {
     entwurf:     { bg: 'var(--orange-bg)', color: 'var(--orange)' },
     eingereicht: { bg: 'var(--blue-bg)',   color: 'var(--blue)' },
-    genehmigt:   { bg: 'var(--green-bg)',  color: '#16a34a' },
+    bezahlt:   { bg: 'var(--green-bg)',  color: '#16a34a' },
     abgelehnt:   { bg: '#fee2e2',          color: '#dc2626' },
 };
 
@@ -113,8 +113,9 @@ export default function BelegeTable({
                                     const badge = STATUS_BADGE[b.status] || STATUS_BADGE.entwurf;
                                     const isEntwurf = b.status === 'entwurf';
                                     const isEingereicht = b.status === 'eingereicht';
-                                    const canEdit = isEntwurf && (isAdmin || b.user_id === currentUserId);
-                                    const canSubmit = isEntwurf && (isAdmin || b.user_id === currentUserId);
+                                    const isAbgelehnt = b.status === 'abgelehnt';
+                                    const canEdit = (isEntwurf || isAbgelehnt) && (isAdmin || b.user_id === currentUserId);
+                                    const canSubmit = (isEntwurf || isAbgelehnt) && (isAdmin || b.user_id === currentUserId);
                                     const canDelete = isEntwurf && (isAdmin || b.user_id === currentUserId);
                                     return (
                                         <tr key={b.id}>
@@ -152,7 +153,7 @@ export default function BelegeTable({
                                                         <BelegStatusButton id={b.id} label={b.titel} targetStatus="eingereicht" />
                                                     )}
                                                     {isAdmin && isEingereicht && (
-                                                        <BelegStatusButton id={b.id} label={b.titel} targetStatus="genehmigt" />
+                                                        <BelegStatusButton id={b.id} label={b.titel} targetStatus="bezahlt" />
                                                     )}
                                                     {isAdmin && isEingereicht && (
                                                         <BelegStatusButton id={b.id} label={b.titel} targetStatus="abgelehnt" />

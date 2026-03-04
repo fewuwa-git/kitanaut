@@ -12,7 +12,7 @@ import BelegeTable from '@/components/BelegeTable';
 const STATUS_LABELS: Record<string, string> = {
     entwurf: 'Entwurf',
     eingereicht: 'Eingereicht',
-    genehmigt: 'Genehmigt',
+    bezahlt: 'Bezahlt',
     abgelehnt: 'Abgelehnt',
 };
 

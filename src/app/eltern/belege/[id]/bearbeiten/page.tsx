@@ -28,7 +28,7 @@ export default async function BelegBearbeitenPage({
     // Non-admins can only edit their own entwurf belege
     const isAdmin = role === 'admin' || role === 'member';
     if (!isAdmin && beleg.user_id !== userId) redirect('/eltern/belege');
-    if (beleg.status !== 'entwurf') redirect('/eltern/belege');
+    if (beleg.status !== 'entwurf' && beleg.status !== 'abgelehnt') redirect('/eltern/belege');
 
     return (
         <div className="app-layout">

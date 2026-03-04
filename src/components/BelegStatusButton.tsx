@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmModal from '@/components/ConfirmModal';
 
-type TargetStatus = 'eingereicht' | 'genehmigt' | 'abgelehnt';
+type TargetStatus = 'eingereicht' | 'bezahlt' | 'abgelehnt';
 
 const CONFIG: Record<TargetStatus, {
     label: string;
@@ -22,12 +22,12 @@ const CONFIG: Record<TargetStatus, {
         confirmLabel: '📤 Ja, einreichen',
         confirmClass: 'btn-primary',
     },
-    genehmigt: {
-        label: '✅ Genehmigen',
+    bezahlt: {
+        label: '💶 Als bezahlt markieren',
         btnClass: 'btn btn-sm btn-success',
-        title: 'Beleg genehmigen',
-        message: (l) => `Möchtest du den Beleg „${l}" genehmigen?`,
-        confirmLabel: '✅ Ja, genehmigen',
+        title: 'Beleg als bezahlt markieren',
+        message: (l) => `Möchtest du den Beleg „${l}" als bezahlt markieren?`,
+        confirmLabel: '💶 Ja, als bezahlt markieren',
         confirmClass: 'btn-success',
     },
     abgelehnt: {
