@@ -37,6 +37,7 @@ export default function EmailTemplateEditClient({ template }: { template: EmailT
             if (!res.ok) { setError(data.error); return; }
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
+            router.refresh();
         } catch {
             setError('Server-Fehler');
         } finally {
