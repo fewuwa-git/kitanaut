@@ -8,7 +8,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         date: '03.03.2026',
         changes: [
             '— Benutzerprofil & Berechtigungen —',
-            'Eltern- und Vorstandsmitglieder-Accounts können jetzt ihre Adresse (Straße + Hausnummer, PLZ + Ort) im Profil hinterlegen und bearbeiten',
+            'Eltern- und Vorstandsmitglieder-Accounts können jetzt ihre Adresse (Straße + Hausnummer, PLZ + Ort) und IBAN im Profil hinterlegen und bearbeiten',
             'Neue Unterschrift-Funktion: Springerinnen, Eltern und Vorstandsmitglieder können ihre Unterschrift direkt im Browser per Maus, Trackpad oder Finger auf dem Touchscreen zeichnen und speichern – mit Vorschau und der Option, sie jederzeit zu ändern',
 
             '— Abrechnung —',
