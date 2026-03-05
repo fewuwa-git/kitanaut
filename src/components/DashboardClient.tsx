@@ -408,12 +408,12 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
                     <table className="data-table">
                         <thead>
                             <tr>
-                                <th style={{ width: '1%', whiteSpace: 'nowrap' }}>Datum</th>
+                                <th>Datum</th>
                                 <th>Beschreibung</th>
-                                <th style={{ width: '1%', whiteSpace: 'nowrap' }}>Gegenüber</th>
-                                <th style={{ width: '1%', whiteSpace: 'nowrap' }}>Kategorie</th>
-                                <th style={{ width: '1%', whiteSpace: 'nowrap', textAlign: 'right' }}>Betrag</th>
-                                <th style={{ width: '1%', whiteSpace: 'nowrap', textAlign: 'right' }}>Saldo</th>
+                                <th>Gegenüber</th>
+                                <th>Kategorie</th>
+                                <th style={{ textAlign: 'right' }}>Betrag</th>
+                                <th style={{ textAlign: 'right' }}>Saldo</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -422,12 +422,12 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
                                     <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '13px' }}>
                                         {new Date(tx.date).toLocaleDateString('de-DE')}
                                     </td>
-                                    <td style={{ width: 200, maxWidth: 200 }}>
-                                        <div title={tx.description} style={{ fontWeight: 500, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    <td style={{ maxWidth: 200 }}>
+                                        <div style={{ fontWeight: 500, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {tx.description}
                                         </div>
                                     </td>
-                                    <td style={{ fontSize: '13px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                    <td style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {tx.counterparty}
                                     </td>
                                     <td style={{ fontSize: '13px' }}>
