@@ -59,28 +59,6 @@ function parseDate(raw: string): string {
     return raw;
 }
 
-const CATEGORY_KEYWORDS: Record<string, string[]> = {
-    'Elternbeiträge': ['eltern', 'beitrag', 'familie', 'mueller', 'schmidt', 'wagner', 'klein', 'becker', 'hoffmann', 'fischer', 'weber', 'wolf'],
-    'Fördermittel Senat': ['senat', 'förder', 'zuschuss', 'verwaltung berlin'],
-    'Spenden': ['spen', 'förderverein', 'anonym'],
-    'Miete': ['miete', 'wohnungs', 'pacht'],
-    'Personal': ['gehalt', 'lohn', 'personal', 'sozial'],
-    'Lebensmittel': ['metro', 'bio', 'rewe', 'edeka', 'lebensmittel', 'lidl', 'aldi'],
-    'Bastelmaterial': ['modulor', 'idee', 'bastel', 'kreativ'],
-    'Versicherungen': ['versicher', 'arag', 'aon'],
-    'Strom & Gas': ['vattenfall', 'gas', 'strom', 'energie', 'stadtwerke'],
-    'Reinigung': ['reinig', 'putzen', 'clean'],
-    'Verwaltung': ['steuerberat', 'datev', 'bank', 'gebühr', 'konto', 'post'],
-    'Reparaturen': ['handwerk', 'reparatur', 'wartung', 'schreiner', 'elektriker'],
-};
-
-function guessCategory(description: string, counterparty: string): string {
-    const text = `${description} ${counterparty}`.toLowerCase();
-    for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-        if (keywords.some((k) => text.includes(k))) return cat;
-    }
-    return 'Nicht kategorisiert';
-}
 
 interface UploadClientProps {
     user: User;
@@ -162,7 +140,7 @@ export default function UploadClient({ user }: UploadClientProps) {
             const counterparty = anonymizeText(row[m.counterparty] || '');
             const amountStr = row[m.amount] || '0';
             const amount = parseFloat(amountStr.replace(/\./g, '').replace(',', '.').replace(/[^0-9.-]/g, '')) || 0;
-            const category = guessCategory(description, counterparty);
+            const category = 'Nicht kategorisiert';
             return { date, description, counterparty, amount, category };
         }).filter((r) => r.date && r.amount !== 0);
         setPreview(parsed);
@@ -256,7 +234,7 @@ export default function UploadClient({ user }: UploadClientProps) {
             description = anonymizeText(description);
             counterparty = anonymizeText(counterparty);
             const amount = parseFloat(amountStr.replace(/\./g, '').replace(',', '.')) || 0;
-            const category = guessCategory(description, counterparty);
+            const category = 'Nicht kategorisiert';
 
             return { date, description, counterparty, amount, category };
         }).filter((r): r is PreviewRow => r !== null && r.date !== '' && r.amount !== 0);
