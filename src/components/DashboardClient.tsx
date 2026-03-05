@@ -422,8 +422,8 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
                                     <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '13px' }}>
                                         {new Date(tx.date).toLocaleDateString('de-DE')}
                                     </td>
-                                    <td style={{ width: '100%' }}>
-                                        <div style={{ fontWeight: 500, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    <td style={{ width: 260, maxWidth: 260 }}>
+                                        <div title={tx.description} style={{ fontWeight: 500, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {tx.description}
                                         </div>
                                     </td>
