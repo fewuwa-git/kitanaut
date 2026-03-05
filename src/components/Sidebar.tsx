@@ -47,7 +47,6 @@ const NAV_ITEMS: NavGroup[] = [
             { href: '/verwaltung/kategorien', icon: '🏷️', label: 'Kategorien', roles: ['admin'] },
             { href: '/verwaltung/emails', icon: '✉️', label: 'E-Mails', roles: ['admin'] },
             { href: '/verwaltung/zugriffsrechte', icon: '🔐', label: 'Zugriffsrechte', roles: ['admin'] },
-            { href: '/logfiles', icon: '📋', label: 'Logfiles', roles: ['admin'] },
         ],
     },
 ];
@@ -168,6 +167,16 @@ export default function Sidebar({ user }: SidebarProps) {
                         >
                             <span style={{ fontSize: '12px' }}>📋</span>
                             Changelog
+                        </a>
+                    )}
+                    {user.role === 'admin' && (
+                        <a
+                            href="/logfiles"
+                            className={`sidebar-link ${pathname === '/logfiles' ? 'active' : ''}`}
+                            style={{ fontSize: '11px', opacity: 0.4, marginTop: '2px' }}
+                        >
+                            <span style={{ fontSize: '12px' }}>🗒️</span>
+                            Logfiles
                         </a>
                     )}
                 </div>
