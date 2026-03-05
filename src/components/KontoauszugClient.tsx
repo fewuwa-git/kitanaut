@@ -56,7 +56,7 @@ interface KontoauszugClientProps {
 }
 
 export default function KontoauszugClient({ transactions: initialTransactions, userRole, elternView }: KontoauszugClientProps) {
-    const { period, setPeriod, customStart, setCustomStart, customEnd, setCustomEnd } = useFilterState('30d');
+    const { period, setPeriod, customStart, setCustomStart, customEnd, setCustomEnd } = useFilterState(elternView ? 'all' : '30d');
     const [searchTerm, setSearchTerm] = useState('');
     const [transactions, setTransactions] = useState(initialTransactions);
     const [editingId, setEditingId] = useState<string | null>(null);
