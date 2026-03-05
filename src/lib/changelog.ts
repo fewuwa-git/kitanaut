@@ -5,6 +5,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
     {
+        date: '05.03.2026',
+        changes: [
+            '— Verwaltung —',
+            'Neue Seite „Zugriffsrechte": Admins sehen auf einen Blick, welche Rollen auf welche Seiten zugreifen dürfen.',
+        ],
+    },
+    {
         date: '04.03.2026',
         changes: [
             '— Abrechnungen —',
