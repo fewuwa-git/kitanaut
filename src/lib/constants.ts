@@ -13,6 +13,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
     'Verwaltung': '#64748b',
     'Reparaturen': '#78716c',
     'Sonstige': '#6b7280',
+    'Nicht kategorisiert': '#d1d5db',
 };
 
 export const ALL_CATEGORIES = Object.keys(CATEGORY_COLORS).sort();

@@ -79,7 +79,7 @@ function guessCategory(description: string, counterparty: string): string {
     for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
         if (keywords.some((k) => text.includes(k))) return cat;
     }
-    return 'Sonstige';
+    return 'Nicht kategorisiert';
 }
 
 interface UploadClientProps {
