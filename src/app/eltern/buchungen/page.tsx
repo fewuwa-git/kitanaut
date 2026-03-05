@@ -56,7 +56,7 @@ export default async function MeineBuchungenPage({
 
     // Admin: load all eltern users for the selector
     const elternUsers = isAdmin
-        ? (await getUsers()).filter(u => u.role === 'eltern').sort((a, b) => a.name.localeCompare(b.name))
+        ? (await getUsers()).filter(u => u.role === 'eltern' || u.role === 'member').sort((a, b) => a.name.localeCompare(b.name))
         : [];
 
     // Determine whose transactions to show
