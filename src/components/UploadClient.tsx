@@ -300,25 +300,14 @@ export default function UploadClient({ user }: UploadClientProps) {
                         </div>
                         {formatOpen && (
                             <div className="card-body">
-                                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                                    Unterstützte Spaltenbezeichnungen (kompatibel mit Sparkasse, ING, DKB, Commerzbank):
+                                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                                    <strong>Trennzeichen:</strong> Semikolon (;) oder Komma (,) – wird automatisch erkannt.
                                 </p>
-                                <code style={{
-                                    display: 'block',
-                                    background: 'var(--bg)',
-                                    padding: '12px 16px',
-                                    borderRadius: 'var(--radius-sm)',
-                                    fontSize: '12px',
-                                    color: 'var(--text)',
-                                    fontFamily: 'monospace',
-                                }}>
-                                    Buchungstag;Buchungstext;Beguenstigter/Zahlungspflichtiger;Betrag<br />
-                                    oder:<br />
-                                    date;description;counterparty;amount
-                                </code>
-                                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '12px' }}>
-                                    Duplikate werden beim Import automatisch erkannt und ignoriert.
-                                    Du kannst also bedenkenlos Zeiträume hochladen, die sich überschneiden.
+                                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                                    <strong>Zeichenkodierung:</strong> ISO-8859-1 und UTF-8 werden unterstützt (kompatibel mit Sparkasse, ING, DKB, Commerzbank u.a.).
+                                </p>
+                                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                                    <strong>Duplikate:</strong> Bereits vorhandene Buchungen werden beim Import automatisch erkannt und ignoriert – Zeiträume dürfen sich überschneiden.
                                 </p>
                             </div>
                         )}
