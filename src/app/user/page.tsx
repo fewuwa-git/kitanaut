@@ -13,6 +13,7 @@ export default async function AdminPage() {
     const email = headersList.get('x-user-email') || '';
 
     if (!userId || !role) redirect('/login');
+    if (role !== 'admin') redirect(`/user/${userId}/edit`);
 
     return (
         <AdminClient currentUser={{ name, email, role }} />

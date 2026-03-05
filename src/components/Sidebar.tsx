@@ -30,8 +30,8 @@ const NAV_ITEMS: NavGroup[] = [
     {
         section: 'ELTERN',
         items: [
-            { href: '/eltern/buchungen', icon: '📒', label: 'Meine Buchungen', roles: ['eltern', 'member', 'admin'] },
             { href: '/eltern/belege', icon: '🧾', label: 'Meine Belege', roles: ['eltern', 'member', 'admin'] },
+            { href: '/eltern/buchungen', icon: '📒', label: 'Meine Buchungen', roles: ['eltern', 'member', 'admin'] },
         ],
     },
     {
@@ -159,14 +159,16 @@ export default function Sidebar({ user }: SidebarProps) {
                         <span style={{ fontSize: '16px' }}>🚪</span>
                         Abmelden
                     </button>
-                    <a
-                        href="/changelog"
-                        className={`sidebar-link ${pathname === '/changelog' ? 'active' : ''}`}
-                        style={{ fontSize: '12px', opacity: 0.6, marginTop: '2px' }}
-                    >
-                        <span style={{ fontSize: '14px' }}>📋</span>
-                        Changelog
-                    </a>
+                    {(user.role === 'admin' || user.role === 'member') && (
+                        <a
+                            href="/changelog"
+                            className={`sidebar-link ${pathname === '/changelog' ? 'active' : ''}`}
+                            style={{ fontSize: '11px', opacity: 0.4, marginTop: '2px' }}
+                        >
+                            <span style={{ fontSize: '12px' }}>📋</span>
+                            Changelog
+                        </a>
+                    )}
                 </div>
             </aside>
         </>
