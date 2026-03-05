@@ -7,6 +7,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     {
         date: '05.03.2026',
         changes: [
+            '— CSV-Import —',
+            'Duplikat-Erkennung verbessert: Buchungen mit identischem Datum, Betrag, Beschreibung und Gegenüber werden jetzt korrekt als separate Buchungen importiert, wenn sie mehrfach in der CSV vorkommen – z.B. zwei gleich hohe Auslagen am selben Tag.',
             '— Verwaltung —',
             'Neue Seite „Zugriffsrechte": Admins sehen auf einen Blick, welche Rollen auf welche Seiten zugreifen dürfen.',
             'Der Bereich „Verwaltung" in der Navigation lässt sich für Admins ein- und ausklappen.',

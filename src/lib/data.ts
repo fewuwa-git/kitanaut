@@ -211,17 +211,22 @@ export async function saveTransactions(transactions: Transaction[]): Promise<voi
 export async function addTransactions(newTransactions: Transaction[]): Promise<number> {
     const existing = await getTransactions();
 
-    const existingSignatures = new Set(existing.map(tx =>
-        `${tx.date}_${tx.amount}_${tx.description}_${tx.counterparty}`
-    ));
+    const sig = (tx: Transaction) => `${tx.date}_${tx.amount}_${tx.description}_${tx.counterparty}`;
 
+    // Count how many times each signature appears in existing data
+    const existingCounts = new Map<string, number>();
+    for (const tx of existing) {
+        const s = sig(tx);
+        existingCounts.set(s, (existingCounts.get(s) || 0) + 1);
+    }
+
+    // Allow a new transaction through only if we've seen more copies in the new batch than already exist
+    const newCounts = new Map<string, number>();
     const uniqueNewTransactions = newTransactions.filter(tx => {
-        const signature = `${tx.date}_${tx.amount}_${tx.description}_${tx.counterparty}`;
-        if (existingSignatures.has(signature)) {
-            return false;
-        }
-        existingSignatures.add(signature);
-        return true;
+        const s = sig(tx);
+        const seen = (newCounts.get(s) || 0) + 1;
+        newCounts.set(s, seen);
+        return seen > (existingCounts.get(s) || 0);
     });
 
     if (uniqueNewTransactions.length === 0) {
