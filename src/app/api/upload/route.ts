@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
             amount: Number(t.amount) || 0,
             category: t.category || 'Sonstige',
             type: Number(t.amount) >= 0 ? 'income' : 'expense',
-            balance: 0,
+            balance: Number(t.balance) || 0,
         }));
 
         const uniqueImportedCount = await addTransactions(mapped);
