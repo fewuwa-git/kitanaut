@@ -477,10 +477,30 @@ export default function UploadClient({ user }: UploadClientProps) {
                                 <table className="data-table">
                                     <thead>
                                         <tr>
-                                            <th>Datum</th>
+                                            <th>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    Datum
+                                                    <span
+                                                        title="Die Vorschau zeigt das Datum im Format JJJJ-MM-TT. Im Dashboard wird es als TT.MM.JJJJ angezeigt."
+                                                        style={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            width: '14px',
+                                                            height: '14px',
+                                                            borderRadius: '50%',
+                                                            background: 'var(--text-muted)',
+                                                            color: '#fff',
+                                                            fontSize: '9px',
+                                                            fontWeight: 700,
+                                                            cursor: 'default',
+                                                            flexShrink: 0,
+                                                        }}
+                                                    >i</span>
+                                                </span>
+                                            </th>
                                             <th>Beschreibung</th>
                                             <th>Gegenüber</th>
-                                            <th>Kategorie</th>
                                             <th style={{ textAlign: 'right' }}>Betrag</th>
                                         </tr>
                                     </thead>
@@ -492,17 +512,6 @@ export default function UploadClient({ user }: UploadClientProps) {
                                                     {row.description}
                                                 </td>
                                                 <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{row.counterparty}</td>
-                                                <td>
-                                                    <span style={{
-                                                        padding: '2px 8px',
-                                                        borderRadius: '12px',
-                                                        fontSize: '12px',
-                                                        background: 'var(--primary-light)',
-                                                        color: 'var(--navy)',
-                                                    }}>
-                                                        {row.category}
-                                                    </span>
-                                                </td>
                                                 <td
                                                     className={`tx-amount ${row.amount >= 0 ? 'positive' : 'negative'}`}
                                                     style={{ textAlign: 'right', fontSize: '13px', whiteSpace: 'nowrap' }}
