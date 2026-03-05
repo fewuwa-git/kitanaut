@@ -160,7 +160,8 @@ export async function getTransactions(): Promise<Transaction[]> {
     const { data, error } = await supabase
         .from('pankonauten_transactions')
         .select('*')
-        .order('date', { ascending: true });
+        .order('date', { ascending: true })
+        .range(0, 99999);
 
     if (error) {
         console.error("Database error in getTransactions:", error);
