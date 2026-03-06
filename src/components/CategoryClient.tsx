@@ -60,6 +60,11 @@ function getDateRange(period: PeriodKey, customStart?: string, customEnd?: strin
         start.setHours(0, 0, 0, 0);
     } else if (period === 'custom' && customStart && customEnd) {
         return { start: new Date(customStart), end: new Date(customEnd + 'T23:59:59') };
+    } else {
+        // Fallback (z.B. 'all' aus localStorage): 6 Monate
+        start.setMonth(start.getMonth() - 6);
+        start.setDate(1);
+        start.setHours(0, 0, 0, 0);
     }
     return { start, end };
 }

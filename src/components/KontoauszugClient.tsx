@@ -31,9 +31,7 @@ function getDateRange(period: PeriodKey, customStart?: string, customEnd?: strin
     const start = new Date();
     start.setHours(0, 0, 0, 0);
 
-    if (period === 'all') {
-        start.setFullYear(2000, 0, 1);
-    } else if (period === '30d') {
+    if (period === '30d') {
         start.setDate(end.getDate() - 30);
     } else if (period === '6m') {
         start.setMonth(start.getMonth() - 6);
@@ -46,6 +44,9 @@ function getDateRange(period: PeriodKey, customStart?: string, customEnd?: strin
         const parsedEnd = new Date(customEnd);
         parsedEnd.setHours(23, 59, 59, 999);
         return { start: parsedStart, end: parsedEnd };
+    } else {
+        // Fallback (z.B. 'all' aus localStorage): 6 Monate
+        start.setMonth(start.getMonth() - 6);
     }
     return { start, end };
 }
@@ -169,7 +170,7 @@ export default function KontoauszugClient({ transactions: initialTransactions, c
                 <div className="card-header" style={{ flexWrap: 'wrap', gap: '12px', paddingBottom: period === 'custom' ? 0 : '16px' }}>
                     <div className="card-title">📅 Filter</div>
                     <div className="period-selector">
-                        {([['30d', '30 Tage'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['all', 'Alle'], ['custom', 'Freie Wahl']] as [PeriodKey, string][]).map(([key, label]) => (
+                        {([['30d', '30 Tage'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['custom', 'Freie Wahl']] as [PeriodKey, string][]).map(([key, label]) => (
                             <button
                                 key={key}
                                 className={`period-btn ${period === key ? 'active' : ''}`}
