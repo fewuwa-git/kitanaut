@@ -45,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const { data, error } = await supabase
         .from('pankonauten_transaction_receipts')
-        .insert({ transaction_id: id, file_path: filePath, file_name: file.name })
+        .insert({ transaction_id: id, file_path: filePath, file_name: file.name, file_size: file.size })
         .select()
         .single();
 

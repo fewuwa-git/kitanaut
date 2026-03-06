@@ -2,9 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+function formatSize(bytes: number | null | undefined): string {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 interface Receipt {
     id: string;
     file_name: string;
+    file_size: number | null;
     uploaded_at: string;
     url: string | null;
 }
@@ -108,6 +116,7 @@ export default function ReceiptModal({ transactionId, transactionLabel, onReceip
                                         </div>
                                         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                                             {new Date(r.uploaded_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                            {r.file_size ? <span style={{ marginLeft: 6 }}>{formatSize(r.file_size)}</span> : null}
                                         </div>
                                     </div>
                                     {r.url && (
