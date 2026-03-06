@@ -456,7 +456,7 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
                                     <Bar dataKey="negative" stackId="wf" fill="#ef4444" radius={[3, 3, 0, 0]} name="Rückgang" />
                                 </BarChart>
                             ) : (
-                                <BarChart data={columnData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                                <BarChart data={columnData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }} barSize={18} barGap={-18}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                                     <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#6b7280' }} tickLine={false} axisLine={{ stroke: '#e5e7eb' }} />
                                     <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} tickLine={false} axisLine={false} tickFormatter={(v) => `€${(Math.abs(v) / 1000).toFixed(0)}k`} />
