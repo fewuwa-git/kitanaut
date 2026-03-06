@@ -141,7 +141,10 @@ export default function KontoauszugClient({ transactions: initialTransactions, u
         const startBalance = filteredTransactions.length > 0 ? filteredTransactions[filteredTransactions.length - 1].balance - filteredTransactions[filteredTransactions.length - 1].amount : 0;
         const endBalance = filteredTransactions.length > 0 ? filteredTransactions[0].balance : 0;
 
-        return { income, expense, startBalance, endBalance, count: filteredTransactions.length };
+        const distinctMonths = new Set(filteredTransactions.map((t) => t.date.slice(0, 7))).size;
+        const avgPerMonth = distinctMonths > 0 ? (income - expense) / distinctMonths : 0;
+
+        return { income, expense, startBalance, endBalance, count: filteredTransactions.length, avgPerMonth, distinctMonths };
     }, [filteredTransactions, elternView]);
 
 
@@ -208,6 +211,15 @@ export default function KontoauszugClient({ transactions: initialTransactions, u
                         {formatCurrency(stats.expense)}
                     </div>
                     <div className="stat-card-sub">Im gewählten Zeitraum</div>
+                </div>
+                )}
+                {!elternView && (
+                <div className="stat-card">
+                    <div className="stat-card-label">📅 Ø pro Monat</div>
+                    <div className="stat-card-value" style={{ color: stats.avgPerMonth >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                        {(stats.avgPerMonth >= 0 ? '+' : '') + formatCurrency(stats.avgPerMonth)}
+                    </div>
+                    <div className="stat-card-sub">Netto über {stats.distinctMonths} {stats.distinctMonths === 1 ? 'Monat' : 'Monate'}</div>
                 </div>
                 )}
             </div>
