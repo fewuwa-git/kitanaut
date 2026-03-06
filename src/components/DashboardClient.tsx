@@ -94,6 +94,9 @@ function getDateRange(period: PeriodKey, customStart?: string, customEnd?: strin
         const customE = new Date(customEnd);
         customE.setHours(23, 59, 59, 999);
         return { start: customS, end: customE };
+    } else {
+        // Fallback (z.B. 'all' aus localStorage): 6 Monate
+        start.setMonth(start.getMonth() - 6);
     }
     return { start, end };
 }
