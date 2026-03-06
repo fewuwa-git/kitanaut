@@ -236,19 +236,17 @@ export default function KontoauszugClient({ transactions: initialTransactions, u
 
             {/* Transactions Table */}
             <div className="card">
-                <div className="card-header" style={{ flexWrap: 'wrap', gap: '16px', paddingBottom: '16px' }}>
+                <div className="card-header" style={{ flexWrap: 'wrap', gap: '16px', paddingBottom: '16px', justifyContent: 'space-between' }}>
                     <div className="card-title">📖 Alle Buchungen</div>
-                    <div style={{ flex: '1 1 200px', maxWidth: '300px' }}>
+                    <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
                         <input
                             type="text"
                             placeholder="Suchen (Beschreibung, Gegenüber)..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="form-input"
-                            style={{ padding: '8px 12px' }}
+                            style={{ padding: '8px 12px', width: 260 }}
                         />
-                    </div>
-                    <div style={{ flex: '0 0 auto' }}>
                         <select
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
