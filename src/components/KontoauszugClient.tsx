@@ -60,6 +60,9 @@ interface KontoauszugClientProps {
 export default function KontoauszugClient({ transactions: initialTransactions, categories = [], userRole, elternView }: KontoauszugClientProps) {
     const categoryColorMap: Record<string, string> = { ...CATEGORY_COLORS };
     for (const cat of categories) categoryColorMap[cat.name] = cat.color;
+    const allCategoryNames = categories.length > 0
+        ? [...categories].sort((a, b) => a.name.localeCompare(b.name)).map((c) => c.name)
+        : ALL_CATEGORIES;
     const { period, setPeriod, customStart, setCustomStart, customEnd, setCustomEnd } = useFilterState(elternView ? 'all' : '30d');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
@@ -342,7 +345,7 @@ export default function KontoauszugClient({ transactions: initialTransactions, c
                                                     }}
                                                 >
                                                     <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                                        {ALL_CATEGORIES.map((cat) => (
+                                                        {allCategoryNames.map((cat) => (
                                                             <button
                                                                 key={cat}
                                                                 className="category-badge"
