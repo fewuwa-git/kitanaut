@@ -1,4 +1,6 @@
 import { supabase } from './db';
+import type { CategoryRule } from './categoryMatcher';
+export type { CategoryRule };
 
 export interface Category {
     name: string;
@@ -655,4 +657,42 @@ export async function saveEmailTemplate(id: string, subject: string, body: strin
         .update(payload)
         .eq('id', id);
     if (error) throw new Error('Failed to save email template: ' + error.message);
+}
+
+// ─── Category Rules ───────────────────────────────────────────────────────────
+
+export async function getCategoryRules(): Promise<CategoryRule[]> {
+    const { data, error } = await supabase
+        .from('pankonauten_category_rules')
+        .select('*')
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: true });
+    if (error) { console.error('Error fetching category rules:', error); return []; }
+    return data || [];
+}
+
+export async function createCategoryRule(rule: Omit<CategoryRule, 'id' | 'created_at'>): Promise<CategoryRule> {
+    const { data, error } = await supabase
+        .from('pankonauten_category_rules')
+        .insert(rule)
+        .select()
+        .single();
+    if (error) throw new Error('Failed to create category rule: ' + error.message);
+    return data;
+}
+
+export async function updateCategoryRule(id: string, updates: Partial<Omit<CategoryRule, 'id' | 'created_at'>>): Promise<void> {
+    const { error } = await supabase
+        .from('pankonauten_category_rules')
+        .update(updates)
+        .eq('id', id);
+    if (error) throw new Error('Failed to update category rule: ' + error.message);
+}
+
+export async function deleteCategoryRule(id: string): Promise<void> {
+    const { error } = await supabase
+        .from('pankonauten_category_rules')
+        .delete()
+        .eq('id', id);
+    if (error) throw new Error('Failed to delete category rule: ' + error.message);
 }

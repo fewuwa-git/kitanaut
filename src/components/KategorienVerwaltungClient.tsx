@@ -345,6 +345,23 @@ export default function KategorienVerwaltungClient({ initialCategories }: Props)
 
     return (
         <div>
+            {/* Tab Nav */}
+            <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border)', marginBottom: 24 }}>
+                <span style={{
+                    padding: '8px 20px', fontSize: 13, fontWeight: 600,
+                    color: 'var(--primary)', borderBottom: '2px solid var(--primary)', marginBottom: -2,
+                }}>
+                    Kategorien
+                </span>
+                <a href="/verwaltung/kategorien/regeln" style={{
+                    padding: '8px 20px', fontSize: 13, fontWeight: 500,
+                    color: 'var(--text-muted)', textDecoration: 'none',
+                    borderBottom: '2px solid transparent', marginBottom: -2,
+                }}>
+                    Import-Regeln
+                </a>
+            </div>
+
             {/* Notifications */}
             {(error || success) && (
                 <div style={{

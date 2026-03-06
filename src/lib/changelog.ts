@@ -5,6 +5,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
     {
+        date: '06.03.2026',
+        changes: [
+            '— Kategorien —',
+            'Neue Seite „Import-Regeln": Automatische Kategorie-Zuweisung beim CSV-Import konfigurieren – über Stichwörter im Verwendungszweck oder Empfängernamen. Bedingungen: enthält, beginnt mit, exakt. Priorität steuerbar.',
+            'Live-Tester auf der Regelseite: Verwendungszweck und Empfänger eingeben und sofort sehen, welche Regel greifen würde.',
+            'Im CSV-Import erscheint in der Vorschau jetzt eine Kategorie-Spalte – automatisch zugewiesene Kategorien werden direkt angezeigt, bevor der Import bestätigt wird.',
+        ],
+    },
+    {
         date: '05.03.2026',
         changes: [
             '— CSV-Import —',

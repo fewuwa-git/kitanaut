@@ -4,6 +4,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Papa from 'papaparse';
 import Sidebar from '@/components/Sidebar';
+import { type CategoryRule, applyRules } from '@/lib/categoryMatcher';
 
 interface User {
     name: string;
@@ -97,6 +98,9 @@ export default function UploadClient({ user }: UploadClientProps) {
     const [mapping, setMapping] = useState<CsvMapping>({ date: '', description: '', counterparty: '', amount: '', balance: '' });
     const [mappingFromStorage, setMappingFromStorage] = useState(false);
 
+    const [categoryRules, setCategoryRules] = useState<CategoryRule[]>([]);
+    const [categoryColors, setCategoryColors] = useState<Record<string, string>>({});
+
     useEffect(() => {
         const stored = localStorage.getItem('anonymizeNames');
         if (stored) {
@@ -108,6 +112,23 @@ export default function UploadClient({ user }: UploadClientProps) {
         } else {
             setNamesToAnonymize(['Annett Kirchner', 'Marlene Brecht']);
         }
+    }, []);
+
+    useEffect(() => {
+        fetch('/api/category-rules')
+            .then(r => r.json())
+            .then(data => { if (Array.isArray(data)) setCategoryRules(data); })
+            .catch(() => {});
+        fetch('/api/categories')
+            .then(r => r.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    const map: Record<string, string> = {};
+                    for (const cat of data) map[cat.name] = cat.color;
+                    setCategoryColors(map);
+                }
+            })
+            .catch(() => {});
     }, []);
 
     const saveNames = (names: string[]) => {
@@ -147,12 +168,12 @@ export default function UploadClient({ user }: UploadClientProps) {
             const amount = parseFloat(amountStr.replace(/\./g, '').replace(',', '.').replace(/[^0-9.-]/g, '')) || 0;
             const balanceStr = m.balance ? (row[m.balance] || '0') : '0';
             const balance = parseFloat(balanceStr.replace(/\./g, '').replace(',', '.').replace(/[^0-9.-]/g, '')) || 0;
-            const category = 'Nicht kategorisiert';
+            const category = applyRules(categoryRules, description, counterparty);
             return { date, description, counterparty, amount, balance, category };
         }).filter((r) => r.date && r.amount !== 0);
         setPreview(parsed);
         localStorage.setItem(MAPPING_STORAGE_KEY, JSON.stringify(m));
-    }, [anonymizeText]);
+    }, [anonymizeText, categoryRules]);
 
     const processCSV = useCallback((file: File) => {
         setFileName(file.name);
@@ -241,7 +262,7 @@ export default function UploadClient({ user }: UploadClientProps) {
             description = anonymizeText(description);
             counterparty = anonymizeText(counterparty);
             const amount = parseFloat(amountStr.replace(/\./g, '').replace(',', '.')) || 0;
-            const category = 'Nicht kategorisiert';
+            const category = applyRules(categoryRules, description, counterparty);
 
             return { date, description, counterparty, amount, balance: 0, category };
         }).filter((r): r is PreviewRow => r !== null && r.date !== '' && r.amount !== 0);
@@ -514,6 +535,7 @@ export default function UploadClient({ user }: UploadClientProps) {
                                             </th>
                                             <th>Beschreibung</th>
                                             <th>Gegenüber</th>
+                                            <th>Kategorie</th>
                                             <th style={{ textAlign: 'right' }}>Betrag</th>
                                         </tr>
                                     </thead>
@@ -525,6 +547,20 @@ export default function UploadClient({ user }: UploadClientProps) {
                                                     {row.description}
                                                 </td>
                                                 <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{row.counterparty}</td>
+                                                <td style={{ fontSize: '13px' }}>
+                                                    <span style={{
+                                                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                                                        padding: '2px 8px', borderRadius: 12,
+                                                        background: categoryColors[row.category] ? categoryColors[row.category] + '22' : '#f3f4f6',
+                                                        color: categoryColors[row.category] || '#6b7280',
+                                                        fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
+                                                    }}>
+                                                        {row.category !== 'Nicht kategorisiert' && (
+                                                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: categoryColors[row.category] || '#6b7280', flexShrink: 0 }} />
+                                                        )}
+                                                        {row.category}
+                                                    </span>
+                                                </td>
                                                 <td
                                                     className={`tx-amount ${row.amount >= 0 ? 'positive' : 'negative'}`}
                                                     style={{ textAlign: 'right', fontSize: '13px', whiteSpace: 'nowrap' }}
