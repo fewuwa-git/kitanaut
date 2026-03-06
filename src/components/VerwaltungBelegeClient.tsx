@@ -173,7 +173,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                                     const data = await res.json();
                                                     if (data.url) window.open(data.url, '_blank');
                                                 }}
-                                                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 13, color: 'var(--primary)' }}
+                                                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 13, color: 'inherit' }}
                                                 title="Öffnen"
                                             >
                                                 <span>{r.file_name.toLowerCase().endsWith('.pdf') ? '📄' : '🖼️'}</span>
