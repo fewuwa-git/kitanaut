@@ -1,13 +1,13 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import { getTransactions } from '@/lib/data';
+import { getTransactions, getCategories } from '@/lib/data';
 import Sidebar from '@/components/Sidebar';
 import CategoryClient from '@/components/CategoryClient';
 
 async function CategoriesSection() {
-    const transactions = await getTransactions();
-    return <CategoryClient transactions={transactions} />;
+    const [transactions, categories] = await Promise.all([getTransactions(), getCategories()]);
+    return <CategoryClient transactions={transactions} categories={categories} />;
 }
 
 function CategoriesSkeleton() {

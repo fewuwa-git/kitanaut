@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 
 import { CATEGORY_COLORS, EXPENSE_CATEGORIES } from '@/lib/constants';
+import type { Category } from '@/lib/data';
 
 interface Transaction {
     id: string;
@@ -26,8 +27,6 @@ interface Transaction {
     balance: number;
 }
 
-// Only expense categories
-const EXPENSE_CATEGORY_COLORS = CATEGORY_COLORS;
 
 function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('de-DE', {
@@ -111,7 +110,8 @@ function aggregateByCategory(
     transactions: Transaction[],
     start: Date,
     end: Date,
-    activeCategories: string[]
+    activeCategories: string[],
+    colorMap: Record<string, string>
 ) {
     const filtered = transactions.filter((t) => {
         const d = new Date(t.date);
@@ -136,7 +136,7 @@ function aggregateByCategory(
             name,
             total: Math.round(val.expense * 100) / 100,
             count: val.count,
-            color: EXPENSE_CATEGORY_COLORS[name] || '#64748b',
+            color: colorMap[name] || '#64748b',
         }))
         .sort((a, b) => b.total - a.total);
 }
@@ -183,9 +183,15 @@ function StackedTooltip({ active, payload, label }: StackedTooltipProps) {
 
 interface CategoryClientProps {
     transactions: Transaction[];
+    categories: Category[];
 }
 
-export default function CategoryClient({ transactions }: CategoryClientProps) {
+export default function CategoryClient({ transactions, categories }: CategoryClientProps) {
+    // Build color map: DB colors take precedence over constants fallback
+    const categoryColorMap: Record<string, string> = { ...CATEGORY_COLORS };
+    for (const cat of categories) {
+        categoryColorMap[cat.name] = cat.color;
+    }
     const { period, setPeriod, customStart, setCustomStart, customEnd, setCustomEnd } = useFilterState('6m');
     const [activeCategories, setActiveCategories] = useState<string[]>([]);
 
@@ -217,8 +223,9 @@ export default function CategoryClient({ transactions }: CategoryClientProps) {
 
     // Table data
     const tableData = useMemo(
-        () => aggregateByCategory(transactions, start, end, activeCategories),
-        [transactions, start, end, activeCategories]
+        () => aggregateByCategory(transactions, start, end, activeCategories, categoryColorMap),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [transactions, start, end, activeCategories, categoryColorMap]
     );
 
     const totalExpense = useMemo(() => tableData.reduce((s, d) => s + d.total, 0), [tableData]);
@@ -286,14 +293,14 @@ export default function CategoryClient({ transactions }: CategoryClientProps) {
                                 className={`category-filter-btn ${activeCategories.includes(cat) ? 'active' : ''}`}
                                 onClick={() => toggleCategory(cat)}
                                 style={activeCategories.includes(cat) ? {
-                                    background: EXPENSE_CATEGORY_COLORS[cat] || '#1a2e45',
-                                    borderColor: EXPENSE_CATEGORY_COLORS[cat] || '#1a2e45',
+                                    background: categoryColorMap[cat] || '#1a2e45',
+                                    borderColor: categoryColorMap[cat] || '#1a2e45',
                                     color: 'white',
                                 } : {}}
                             >
                                 <span
                                     className="category-dot"
-                                    style={{ background: EXPENSE_CATEGORY_COLORS[cat] || '#6b7280' }}
+                                    style={{ background: categoryColorMap[cat] || '#6b7280' }}
                                 />
                                 {cat}
                             </button>
@@ -350,7 +357,7 @@ export default function CategoryClient({ transactions }: CategoryClientProps) {
                                             key={cat}
                                             dataKey={cat}
                                             stackId="expenses"
-                                            fill={EXPENSE_CATEGORY_COLORS[cat] || '#64748b'}
+                                            fill={categoryColorMap[cat] || '#64748b'}
                                             radius={categoriesToShow[categoriesToShow.length - 1] === cat ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                                         />
                                     ))}
