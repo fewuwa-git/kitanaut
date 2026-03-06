@@ -45,25 +45,17 @@ function TabNav() {
             <a
                 href="/verwaltung/kategorien"
                 style={{
-                    padding: '8px 20px',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: 'var(--text-muted)',
-                    textDecoration: 'none',
-                    borderBottom: '2px solid transparent',
-                    marginBottom: -2,
+                    padding: '8px 20px', fontSize: 13, fontWeight: 500,
+                    color: 'var(--text-muted)', textDecoration: 'none',
+                    borderBottom: '2px solid transparent', marginBottom: -2,
                 }}
             >
                 Kategorien
             </a>
             <span
                 style={{
-                    padding: '8px 20px',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: 'var(--primary)',
-                    borderBottom: '2px solid var(--primary)',
-                    marginBottom: -2,
+                    padding: '8px 20px', fontSize: 13, fontWeight: 600,
+                    color: 'var(--primary)', borderBottom: '2px solid var(--primary)', marginBottom: -2,
                 }}
             >
                 Import-Regeln
@@ -101,14 +93,41 @@ export default function KategorienRegelnClient({ initialRules, categories }: Pro
     const [testDesc, setTestDesc] = useState('');
     const [testCounterparty, setTestCounterparty] = useState('');
 
+    // Apply to existing
+    const [applyModalOpen, setApplyModalOpen] = useState(false);
+    const [applyMode, setApplyMode] = useState<'uncategorized' | 'all'>('uncategorized');
+    const [isApplying, setIsApplying] = useState(false);
+    const [applyResult, setApplyResult] = useState<{ updated: number; skipped: number } | null>(null);
+
     const showSuccess = useCallback((msg: string) => {
         setSuccess(msg);
         setTimeout(() => setSuccess(null), 3000);
     }, []);
+
     const showError = useCallback((msg: string) => {
         setError(msg);
         setTimeout(() => setError(null), 5000);
     }, []);
+
+    const handleApply = useCallback(async () => {
+        setIsApplying(true);
+        setApplyResult(null);
+        try {
+            const res = await fetch('/api/category-rules/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ overwrite: applyMode === 'all' }),
+            });
+            const data = await res.json();
+            if (!res.ok) { showError(data.error || 'Fehler beim Anwenden.'); setApplyModalOpen(false); return; }
+            setApplyResult(data);
+        } catch {
+            showError('Fehler beim Anwenden der Regeln.');
+            setApplyModalOpen(false);
+        } finally {
+            setIsApplying(false);
+        }
+    }, [applyMode, showError]);
 
     // ── Create ───────────────────────────────────────────────────────────────
 
@@ -343,7 +362,7 @@ export default function KategorienRegelnClient({ initialRules, categories }: Pro
             )}
 
             {/* Stats */}
-            <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
                 {[
                     { label: '📋 Regeln', value: rules.length, sub: 'aktive Regeln' },
                     { label: '🏷️ Kategorien', value: coveredCategories, sub: 'abgedeckt' },
@@ -355,6 +374,18 @@ export default function KategorienRegelnClient({ initialRules, categories }: Pro
                         <div className="stat-card-sub">{s.sub}</div>
                     </div>
                 ))}
+            </div>
+
+            {/* Apply to existing button */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
+                <button
+                    className="btn btn-secondary"
+                    onClick={() => { setApplyModalOpen(true); setApplyResult(null); }}
+                    disabled={rules.length === 0}
+                    style={{ fontSize: 13 }}
+                >
+                    ⚡ Regeln auf bestehende Buchungen anwenden
+                </button>
             </div>
 
             {/* New Rule */}
@@ -422,7 +453,6 @@ export default function KategorienRegelnClient({ initialRules, categories }: Pro
                             </div>
                         </div>
 
-                        {/* Preview */}
                         {newRule.value && (
                             <div style={{
                                 padding: '10px 14px', borderRadius: 6,
@@ -490,21 +520,13 @@ export default function KategorienRegelnClient({ initialRules, categories }: Pro
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16, maxWidth: 640 }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Verwendungszweck</label>
-                            <input
-                                className="form-input"
-                                placeholder="z.B. Monatsbeitrag ADAC"
-                                value={testDesc}
-                                onChange={e => setTestDesc(e.target.value)}
-                            />
+                            <input className="form-input" placeholder="z.B. Monatsbeitrag ADAC"
+                                value={testDesc} onChange={e => setTestDesc(e.target.value)} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">Empfänger</label>
-                            <input
-                                className="form-input"
-                                placeholder="z.B. Stadtwerke Berlin"
-                                value={testCounterparty}
-                                onChange={e => setTestCounterparty(e.target.value)}
-                            />
+                            <input className="form-input" placeholder="z.B. Stadtwerke Berlin"
+                                value={testCounterparty} onChange={e => setTestCounterparty(e.target.value)} />
                         </div>
                     </div>
 
@@ -568,6 +590,104 @@ export default function KategorienRegelnClient({ initialRules, categories }: Pro
                     Groß- und Kleinschreibung wird ignoriert.
                 </div>
             </div>
+
+            {/* Apply Modal */}
+            {applyModalOpen && (
+                <div
+                    style={{
+                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 1000,
+                    }}
+                    onClick={e => { if (e.target === e.currentTarget && !isApplying) { setApplyModalOpen(false); setApplyResult(null); } }}
+                >
+                    <div style={{
+                        background: 'var(--card)', borderRadius: 'var(--radius)',
+                        padding: 32, maxWidth: 480, width: '90%',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+                    }}>
+                        <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700 }}>
+                            Regeln auf bestehende Buchungen anwenden
+                        </h3>
+
+                        {applyResult ? (
+                            <>
+                                <div style={{
+                                    padding: '16px 20px', borderRadius: 8, marginBottom: 24,
+                                    background: '#f0fdf4', border: '1px solid #bbf7d0',
+                                    display: 'flex', gap: 12, alignItems: 'flex-start',
+                                }}>
+                                    <span style={{ fontSize: 22 }}>✅</span>
+                                    <div>
+                                        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>
+                                            {applyResult.updated} Buchung{applyResult.updated !== 1 ? 'en' : ''} kategorisiert
+                                        </div>
+                                        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                                            {applyResult.skipped} Buchung{applyResult.skipped !== 1 ? 'en' : ''} unverändert
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                    <button className="btn btn-primary" onClick={() => { setApplyModalOpen(false); setApplyResult(null); }}>
+                                        Schließen
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
+                                    {rules.length} Regel{rules.length !== 1 ? 'n' : ''} werden auf alle vorhandenen Buchungen angewendet.
+                                    Wähle, wie mit bereits kategorisierten Buchungen umgegangen werden soll:
+                                </p>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
+                                    {([
+                                        {
+                                            value: 'uncategorized' as const,
+                                            label: 'Nur „Nicht kategorisiert" befüllen',
+                                            sub: 'Manuell gesetzte Kategorien bleiben erhalten.',
+                                        },
+                                        {
+                                            value: 'all' as const,
+                                            label: 'Alle Buchungen neu kategorisieren',
+                                            sub: 'Alle bestehenden Kategorien werden überschrieben.',
+                                        },
+                                    ]).map(opt => (
+                                        <label key={opt.value} style={{
+                                            display: 'flex', gap: 12, alignItems: 'flex-start',
+                                            padding: '12px 16px', borderRadius: 8, cursor: 'pointer',
+                                            border: `2px solid ${applyMode === opt.value ? 'var(--primary)' : 'var(--border)'}`,
+                                            background: applyMode === opt.value ? '#eff6ff' : 'transparent',
+                                        }}>
+                                            <input
+                                                type="radio"
+                                                name="applyMode"
+                                                value={opt.value}
+                                                checked={applyMode === opt.value}
+                                                onChange={() => setApplyMode(opt.value)}
+                                                style={{ marginTop: 2, flexShrink: 0 }}
+                                            />
+                                            <div>
+                                                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{opt.label}</div>
+                                                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{opt.sub}</div>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+
+                                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                                    <button className="btn btn-secondary" onClick={() => setApplyModalOpen(false)} disabled={isApplying}>
+                                        Abbrechen
+                                    </button>
+                                    <button className="btn btn-primary" onClick={handleApply} disabled={isApplying}>
+                                        {isApplying ? 'Wird angewendet…' : 'Anwenden'}
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

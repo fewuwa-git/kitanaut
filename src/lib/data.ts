@@ -1,5 +1,5 @@
 import { supabase } from './db';
-import type { CategoryRule } from './categoryMatcher';
+import { type CategoryRule, applyRules } from './categoryMatcher';
 export type { CategoryRule };
 
 export interface Category {
@@ -695,4 +695,42 @@ export async function deleteCategoryRule(id: string): Promise<void> {
         .delete()
         .eq('id', id);
     if (error) throw new Error('Failed to delete category rule: ' + error.message);
+}
+
+export async function applyRulesToTransactions(overwrite: boolean): Promise<{ updated: number; skipped: number }> {
+    const [rules, transactions] = await Promise.all([getCategoryRules(), getTransactions()]);
+
+    const updates: { id: string; category: string }[] = [];
+    let skipped = 0;
+
+    for (const tx of transactions) {
+        if (!overwrite && tx.category !== 'Nicht kategorisiert') {
+            skipped++;
+            continue;
+        }
+        const newCategory = applyRules(rules, tx.description, tx.counterparty);
+        if (newCategory !== tx.category) {
+            updates.push({ id: tx.id, category: newCategory });
+        } else {
+            skipped++;
+        }
+    }
+
+    if (updates.length > 0) {
+        // Group by category for efficient bulk updates
+        const byCategory = new Map<string, string[]>();
+        for (const { id, category } of updates) {
+            if (!byCategory.has(category)) byCategory.set(category, []);
+            byCategory.get(category)!.push(id);
+        }
+        for (const [category, ids] of byCategory) {
+            const { error } = await supabase
+                .from('pankonauten_transactions')
+                .update({ category })
+                .in('id', ids);
+            if (error) throw new Error('Failed to batch update categories: ' + error.message);
+        }
+    }
+
+    return { updated: updates.length, skipped };
 }

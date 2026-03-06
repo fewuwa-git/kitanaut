@@ -11,6 +11,7 @@ export const CHANGELOG: ChangelogEntry[] = [
             'Neue Seite „Import-Regeln": Automatische Kategorie-Zuweisung beim CSV-Import konfigurieren – über Stichwörter im Verwendungszweck oder Empfängernamen. Bedingungen: enthält, beginnt mit, exakt. Priorität steuerbar.',
             'Live-Tester auf der Regelseite: Verwendungszweck und Empfänger eingeben und sofort sehen, welche Regel greifen würde.',
             'Im CSV-Import erscheint in der Vorschau jetzt eine Kategorie-Spalte – automatisch zugewiesene Kategorien werden direkt angezeigt, bevor der Import bestätigt wird.',
+            'Neue Funktion auf der Regelseite: Regeln lassen sich auf alle bestehenden Buchungen anwenden – wahlweise nur für noch nicht kategorisierte Buchungen oder als vollständige Neukategorisierung aller Buchungen.',
         ],
     },
     {
