@@ -28,7 +28,7 @@ export async function PATCH(
         // Revalidate the pages
         revalidatePath('/dashboard');
         revalidatePath('/kontoauszug');
-        revalidatePath('/kategorien');
+        revalidatePath('/categories');
 
         return NextResponse.json({ success: true });
     } catch (error) {

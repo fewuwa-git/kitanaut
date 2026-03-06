@@ -6,6 +6,7 @@ import { getTransactions, getCategories } from '@/lib/data';
 import Sidebar from '@/components/Sidebar';
 
 export const metadata: Metadata = { title: 'Kontoauszug' };
+export const dynamic = 'force-dynamic';
 import KontoauszugClient from '@/components/KontoauszugClient';
 
 async function KontoauszugSection({ role }: { role: 'admin' | 'member' }) {
