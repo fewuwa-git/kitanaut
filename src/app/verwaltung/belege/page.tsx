@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import { getAllTransactionReceipts } from '@/lib/data';
+import { getAllTransactionReceipts, getUnlinkedReceipts } from '@/lib/data';
 import Sidebar from '@/components/Sidebar';
 import VerwaltungBelegeClient from '@/components/VerwaltungBelegeClient';
 
@@ -10,8 +10,11 @@ export const metadata: Metadata = { title: 'Buchungsbelege' };
 export const dynamic = 'force-dynamic';
 
 async function BelegeSection() {
-    const receipts = await getAllTransactionReceipts();
-    return <VerwaltungBelegeClient receipts={receipts} />;
+    const [receipts, unlinked] = await Promise.all([
+        getAllTransactionReceipts(),
+        getUnlinkedReceipts(),
+    ]);
+    return <VerwaltungBelegeClient receipts={receipts} unlinked={unlinked} />;
 }
 
 function BelegeSkeleton() {
@@ -41,7 +44,7 @@ export default async function VerwaltungBelegePage() {
                 <div className="page-header">
                     <div className="page-header-left">
                         <h1>Buchungsbelege</h1>
-                        <p>Alle hochgeladenen Belege mit zugehörigen Buchungen</p>
+                        <p>Belege hochladen, Buchungen zuordnen und verwalten</p>
                     </div>
                 </div>
                 <div className="page-body">

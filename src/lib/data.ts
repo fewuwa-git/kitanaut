@@ -787,3 +787,13 @@ export async function getAllTransactionReceipts(): Promise<TransactionReceipt[]>
         };
     });
 }
+
+export async function getUnlinkedReceipts(): Promise<Omit<TransactionReceipt, 'transaction_date' | 'transaction_description' | 'transaction_counterparty' | 'transaction_amount' | 'transaction_category'>[]> {
+    const { data, error } = await supabase
+        .from('pankonauten_transaction_receipts')
+        .select('*')
+        .is('transaction_id', null)
+        .order('uploaded_at', { ascending: false });
+    if (error) { console.error('Error fetching unlinked receipts:', error); return []; }
+    return data || [];
+}
