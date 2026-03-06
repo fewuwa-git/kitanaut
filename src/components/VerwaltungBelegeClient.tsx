@@ -20,6 +20,10 @@ interface UnlinkedReceipt {
     file_name: string;
     file_size: number | null;
     uploaded_at: string;
+    ai_vendor: string | null;
+    ai_amount: number | null;
+    ai_date: string | null;
+    ai_description: string | null;
 }
 
 interface Suggestion {
@@ -48,7 +52,24 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
     const [uploading, setUploading] = useState(false);
     const [linkModal, setLinkModal] = useState<{ id: string; fileName: string } | null>(null);
     const [suggestingId, setSuggestingId] = useState<string | null>(null);
-    const [suggestionResults, setSuggestionResults] = useState<Record<string, SuggestResult>>({});
+    const [suggestionResults, setSuggestionResults] = useState<Record<string, SuggestResult>>(() => {
+        // Pre-populate from saved AI data on unlinked receipts
+        const initial: Record<string, SuggestResult> = {};
+        for (const r of initialUnlinked) {
+            if (r.ai_vendor || r.ai_amount != null || r.ai_date || r.ai_description) {
+                initial[r.id] = {
+                    extracted: {
+                        vendor: r.ai_vendor ?? undefined,
+                        amount: r.ai_amount ?? undefined,
+                        date: r.ai_date ?? undefined,
+                        description: r.ai_description ?? undefined,
+                    },
+                    suggestions: [],
+                };
+            }
+        }
+        return initial;
+    });
     const fileRef = useRef<HTMLInputElement>(null);
 
     const filtered = useMemo(() => {
@@ -70,7 +91,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
         fd.append('file', file);
         const res = await fetch('/api/receipts', { method: 'POST', body: fd });
         const data = await res.json();
-        if (data.id) setUnlinked(prev => [data, ...prev]);
+        if (data.id) setUnlinked(prev => [{ ...data, ai_vendor: null, ai_amount: null, ai_date: null, ai_description: null }, ...prev]);
         setUploading(false);
         if (fileRef.current) fileRef.current.value = '';
     }
@@ -83,6 +104,14 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
             const data = text ? JSON.parse(text) : {};
             if (data.suggestions) {
                 setSuggestionResults(prev => ({ ...prev, [r.id]: data }));
+                // Update local state with saved AI data
+                setUnlinked(prev => prev.map(u => u.id === r.id ? {
+                    ...u,
+                    ai_vendor: data.extracted?.vendor ?? null,
+                    ai_amount: data.extracted?.amount ?? null,
+                    ai_date: data.extracted?.date ?? null,
+                    ai_description: data.extracted?.description ?? null,
+                } : u));
             } else {
                 alert('KI-Analyse fehlgeschlagen: ' + (data.error ?? 'Unbekannter Fehler'));
             }
@@ -253,7 +282,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                                         }}
                                                     >
                                                         <span>{suggestingId === r.id ? '⏳' : '✨'}</span>
-                                                        <span>{suggestingId === r.id ? 'Analysiere…' : 'KI-Vorschlag'}</span>
+                                                        <span>{suggestingId === r.id ? 'Analysiere…' : (suggestionResults[r.id] ? 'Neu analysieren' : 'KI-Vorschlag')}</span>
                                                     </button>
                                                 </div>
                                             </td>
@@ -281,7 +310,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                                 <td colSpan={5} style={{ padding: '0 16px 12px', background: 'var(--bg)' }}>
                                                     <div style={{ borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', overflow: 'hidden' }}>
                                                         {/* Extracted info */}
-                                                        <div style={{ padding: '10px 14px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 12 }}>
+                                                        <div style={{ padding: '10px 14px', background: 'var(--bg-secondary)', borderBottom: suggestionResults[r.id].suggestions.length > 0 ? '1px solid var(--border)' : 'none', display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 12 }}>
                                                             <span style={{ color: 'var(--text-muted)' }}>✨ KI-Analyse:</span>
                                                             {suggestionResults[r.id].extracted.vendor && <span><strong>Aussteller:</strong> {suggestionResults[r.id].extracted.vendor}</span>}
                                                             {suggestionResults[r.id].extracted.amount != null && <span><strong>Betrag:</strong> {formatCurrency(suggestionResults[r.id].extracted.amount!)}</span>}
@@ -290,6 +319,11 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                                             <button onClick={() => setSuggestionResults(prev => { const next = { ...prev }; delete next[r.id]; return next; })} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13 }}>✕</button>
                                                         </div>
                                                         {/* Suggestions */}
+                                                        {suggestionResults[r.id].suggestions.length === 0 && (
+                                                            <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)' }}>
+                                                                Keine passende Buchung gefunden – bitte manuell zuordnen.
+                                                            </div>
+                                                        )}
                                                         {suggestionResults[r.id].suggestions.map((s, i) => (
                                                             <div key={s.transaction_id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderBottom: i < suggestionResults[r.id].suggestions.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 13 }}>
                                                                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0, color: s.confidence > 0.8 ? 'var(--green)' : 'var(--text-muted)' }}>

@@ -15,6 +15,7 @@ export const CHANGELOG: ChangelogEntry[] = [
             'Neue Seite "Buchungsbelege" unter Verwaltung: Übersicht aller hochgeladenen Belege mit zugehörigen Buchungsdaten, Dateigröße, Öffnen- und Löschen-Funktion sowie Suche und Statistiken.',
             'Belege können jetzt auch ohne sofortige Buchungszuordnung hochgeladen werden. Über das Feld "Buchung wählen…" lässt sich die Verknüpfung später manuell durchführen.',
             'Neuer "✨ KI-Vorschlag"-Button: Gemini analysiert den Beleg automatisch (Aussteller, Betrag, Datum) und schlägt die drei passendsten Buchungen mit Confidence-Score und Begründung vor – ein Klick genügt zur Zuordnung.',
+            'Die KI-Analyse-Ergebnisse (Aussteller, Betrag, Datum, Zweck) werden dauerhaft gespeichert und beim nächsten Laden der Seite sofort angezeigt – ohne erneute Analyse.',
             '— Kategorien —',
             'In der Detailübersicht nach Kategorie wird jetzt der Durchschnitt pro Monat je Kategorie angezeigt – sowohl in der Tabelle als neue Spalte als auch in der Fußzeile.',
             'Neue Seite „Import-Regeln": Automatische Kategorie-Zuweisung beim CSV-Import konfigurieren – über Stichwörter im Verwendungszweck oder Empfängernamen. Bedingungen: enthält, beginnt mit, exakt. Priorität steuerbar.',

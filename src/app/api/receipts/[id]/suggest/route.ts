@@ -11,7 +11,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
         const { data: receipt } = await supabase
             .from('pankonauten_transaction_receipts')
-            .select('file_path, file_name')
+            .select('file_path, file_name, ai_vendor, ai_amount, ai_date, ai_description')
             .eq('id', id)
             .single();
 
@@ -30,22 +30,54 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         const mimeType = receipt.file_name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/webp';
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
-            generationConfig: { maxOutputTokens: 256, temperature: 0.1 },
+        const getModel = (name: string, maxTokens: number) => genAI.getGenerativeModel({
+            model: name,
+            generationConfig: { maxOutputTokens: maxTokens, temperature: 0.1 },
         });
 
+        const generateWithFallback = async (
+            contents: Parameters<ReturnType<typeof getModel>['generateContent']>[0],
+            maxTokens: number,
+        ) => {
+            try {
+                return await getModel('gemini-2.5-flash', maxTokens).generateContent(contents);
+            } catch (err: any) {
+                if (err?.message?.includes('503') || err?.message?.includes('Service Unavailable') || err?.message?.includes('high demand')) {
+                    return await getModel('gemini-2.0-flash', maxTokens).generateContent(contents);
+                }
+                throw err;
+            }
+        };
+
+        const extractJSON = (text: string): string => {
+            const cleaned = text.trim();
+            const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
+            if (fenceMatch) return fenceMatch[1].trim();
+            const start = cleaned.indexOf('{');
+            const end = cleaned.lastIndexOf('}');
+            if (start !== -1 && end > start) return cleaned.slice(start, end + 1);
+            return cleaned;
+        };
+
         // Step 1: Extract key facts from the receipt first
-        const extractResult = await model.generateContent([
+        const extractResult = await generateWithFallback([
             { inlineData: { mimeType, data: base64 } },
             'Extrahiere aus diesem Beleg: Aussteller/Firma, Betrag (Zahl), Datum (YYYY-MM-DD), kurze Beschreibung. Antworte NUR mit JSON (kein Markdown): {"vendor":"...","amount":0.00,"date":"YYYY-MM-DD","description":"..."}. Falls ein Wert nicht erkennbar ist, setze null.',
-        ]);
-
-        const extractText = extractResult.response.text().trim()
-            .replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+        ], 256);
 
         let extracted: { vendor?: string; amount?: number; date?: string; description?: string } = {};
-        try { extracted = JSON.parse(extractText); } catch { /* use empty */ }
+        try { extracted = JSON.parse(extractJSON(extractResult.response.text())); } catch { /* use empty */ }
+
+        // Save extracted data to DB
+        await supabase
+            .from('pankonauten_transaction_receipts')
+            .update({
+                ai_vendor: extracted.vendor ?? null,
+                ai_amount: extracted.amount ?? null,
+                ai_date: extracted.date ?? null,
+                ai_description: extracted.description ?? null,
+            })
+            .eq('id', id);
 
         // Step 2: Filter transactions to a relevant window around the receipt date
         const allTransactions = await getTransactions();
@@ -77,38 +109,37 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
             ).slice(0, 300);
         }
 
-        const txList = candidates.map(t =>
-            `${t.id} | ${t.date} | ${t.counterparty} | ${t.description} | ${t.amount}€`
+        // Use short numeric indices instead of UUIDs so the AI doesn't hallucinate IDs
+        const indexedCandidates = candidates.map((t, i) => ({ idx: i + 1, tx: t }));
+        const txList = indexedCandidates.map(({ idx, tx }) =>
+            `${idx} | ${tx.date} | ${tx.counterparty} | ${tx.description} | ${tx.amount}€`
         ).join('\n');
 
         // Step 3: Find best matches
-        const matchResult = await model.generateContent([
+        const matchResult = await generateWithFallback([
             { inlineData: { mimeType, data: base64 } },
             `Beleg-Info: Aussteller="${extracted.vendor ?? '?'}", Betrag=${extracted.amount ?? '?'}€, Datum=${extracted.date ?? '?'}
 
-Buchungen (ID | Datum | Gegenüber | Beschreibung | Betrag):
+Buchungen (Nr | Datum | Gegenüber | Beschreibung | Betrag):
 ${txList}
 
 Welche 3 Buchungen passen am besten zu diesem Beleg? Antworte NUR mit JSON (kein Markdown):
-{"suggestions":[{"transaction_id":"...","confidence":0.9,"reason":"..."}]}`,
-        ]);
+{"suggestions":[{"nr":1,"confidence":0.9,"reason":"..."}]}`,
+        ], 512);
 
-        const matchText = matchResult.response.text().trim()
-            .replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
-
-        let matchParsed: { suggestions: { transaction_id: string; confidence: number; reason: string }[] };
+        let matchParsed: { suggestions: { nr: number; confidence: number; reason: string }[] };
         try {
-            matchParsed = JSON.parse(matchText);
+            matchParsed = JSON.parse(extractJSON(matchResult.response.text()));
         } catch {
-            return NextResponse.json({ error: 'KI-Antwort konnte nicht verarbeitet werden', raw: matchText }, { status: 500 });
+            return NextResponse.json({ error: 'KI-Antwort konnte nicht verarbeitet werden', raw: matchResult.response.text() }, { status: 500 });
         }
 
-        const txMap = new Map(allTransactions.map(t => [t.id, t]));
+        const idxMap = new Map(indexedCandidates.map(({ idx, tx }) => [idx, tx]));
         const enriched = (matchParsed.suggestions || [])
             .map(s => {
-                const tx = txMap.get(s.transaction_id);
+                const tx = idxMap.get(s.nr);
                 if (!tx) return null;
-                return { ...s, transaction: tx };
+                return { transaction_id: tx.id, confidence: s.confidence, reason: s.reason, transaction: tx };
             })
             .filter(Boolean);
 
