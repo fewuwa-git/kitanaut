@@ -157,6 +157,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                             <thead>
                                 <tr>
                                     <th>Dateiname</th>
+                                    <th>Buchung</th>
                                     <th style={{ textAlign: 'right' }}>Größe</th>
                                     <th style={{ width: '1%', whiteSpace: 'nowrap' }}>Hochgeladen am</th>
                                     <th style={{ width: '1%' }} />
@@ -165,11 +166,26 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                             <tbody>
                                 {unlinked.map(r => (
                                     <tr key={r.id}>
-                                        <td style={{ fontSize: 13 }}>
+                                        <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
                                             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                                 <span>{r.file_name.toLowerCase().endsWith('.pdf') ? '📄' : '🖼️'}</span>
                                                 <span>{r.file_name}</span>
                                             </span>
+                                        </td>
+                                        <td>
+                                            <button
+                                                onClick={() => setLinkModal({ id: r.id, fileName: r.file_name })}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: 6,
+                                                    padding: '5px 10px', borderRadius: 'var(--radius-sm)',
+                                                    border: '1px dashed var(--border)', background: 'var(--bg)',
+                                                    cursor: 'pointer', fontSize: 12, color: 'var(--text-muted)',
+                                                    whiteSpace: 'nowrap', minWidth: 180,
+                                                }}
+                                            >
+                                                <span style={{ opacity: 0.5 }}>🔗</span>
+                                                <span>Buchung wählen…</span>
+                                            </button>
                                         </td>
                                         <td style={{ textAlign: 'right', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                                             {formatSize(r.file_size)}
@@ -177,23 +193,15 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                         <td style={{ whiteSpace: 'nowrap', fontSize: 12, color: 'var(--text-muted)' }}>
                                             {new Date(r.uploaded_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                         </td>
-                                        <td style={{ whiteSpace: 'nowrap' }}>
-                                            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                                                <button
-                                                    onClick={() => setLinkModal({ id: r.id, fileName: r.file_name })}
-                                                    style={{ fontSize: 12, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 600 }}
-                                                >
-                                                    🔗 Buchung zuordnen
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteUnlinked(r)}
-                                                    disabled={deletingId === r.id}
-                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--red)', padding: '2px 4px', opacity: deletingId === r.id ? 0.5 : 1 }}
-                                                    title="Löschen"
-                                                >
-                                                    🗑
-                                                </button>
-                                            </div>
+                                        <td>
+                                            <button
+                                                onClick={() => handleDeleteUnlinked(r)}
+                                                disabled={deletingId === r.id}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--red)', padding: '2px 4px', opacity: deletingId === r.id ? 0.5 : 1 }}
+                                                title="Löschen"
+                                            >
+                                                🗑
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
