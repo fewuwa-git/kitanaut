@@ -9,6 +9,12 @@ export const CHANGELOG: ChangelogEntry[] = [
         changes: [
             '— Kontoauszug —',
             'Neue Funktion „Belege“: Zu jeder Buchung können jetzt Belege (PDF, JPG, PNG) hochgeladen werden. Das Büroklammer-Symbol 📎 in jeder Zeile öffnet ein Modal zum Hochladen, Anzeigen und Löschen von Belegen.',
+            'Das 📎-Symbol im Kontoauszug ist farbig hervorgehoben, sobald mindestens ein Beleg hochgeladen wurde – so sieht man auf einen Blick, welche Buchungen bereits belegt sind.',
+            'Bilder (JPG, PNG, WebP) werden beim Upload automatisch komprimiert und in WebP konvertiert – typische Größenersparnis 50–80 %.',
+            '— Verwaltung —',
+            'Neue Seite "Buchungsbelege" unter Verwaltung: Übersicht aller hochgeladenen Belege mit zugehörigen Buchungsdaten, Dateigröße, Öffnen- und Löschen-Funktion sowie Suche und Statistiken.',
+            'Belege können jetzt auch ohne sofortige Buchungszuordnung hochgeladen werden. Über das Feld "Buchung wählen…" lässt sich die Verknüpfung später manuell durchführen.',
+            'Neuer "✨ KI-Vorschlag"-Button: Gemini analysiert den Beleg automatisch (Aussteller, Betrag, Datum) und schlägt die drei passendsten Buchungen mit Confidence-Score und Begründung vor – ein Klick genügt zur Zuordnung.',
             '— Kategorien —',
             'In der Detailübersicht nach Kategorie wird jetzt der Durchschnitt pro Monat je Kategorie angezeigt – sowohl in der Tabelle als neue Spalte als auch in der Fußzeile.',
             'Neue Seite „Import-Regeln": Automatische Kategorie-Zuweisung beim CSV-Import konfigurieren – über Stichwörter im Verwendungszweck oder Empfängernamen. Bedingungen: enthält, beginnt mit, exakt. Priorität steuerbar.',
