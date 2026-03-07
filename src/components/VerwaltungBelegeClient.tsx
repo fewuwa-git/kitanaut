@@ -328,7 +328,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
             </div>
 
             {/* Stats */}
-            {tab !== 'ki-workflow' && <div className="stats-grid mb-6" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+            {tab !== 'ki-workflow' && tab !== 'ki-settings' && <div className="stats-grid mb-6" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
                 <div className="stat-card" style={{ padding: '12px 16px' }}>
                     <div className="stat-card-label">📎 Belege gesamt</div>
                     <div className="stat-card-value" style={{ fontSize: 20 }}>{receipts.length + unlinked.length}</div>
