@@ -296,8 +296,10 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
         });
         const income = periodTx.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
         const expense = periodTx.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
-        const latestBalance = transactions.length > 0 ? transactions[transactions.length - 1].balance : 0;
-        return { income, expense, net: income - expense, balance: latestBalance };
+        const latestTx = transactions.length > 0 ? transactions[transactions.length - 1] : null;
+        const latestBalance = latestTx ? latestTx.balance : 0;
+        const latestDate = latestTx ? latestTx.date : null;
+        return { income, expense, net: income - expense, balance: latestBalance, latestDate };
     }, [transactions, start, end]);
 
     // Recent transactions
@@ -378,7 +380,7 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
 
             {/* Hero Balance */}
             <div className="hero-card">
-                <div className="hero-label">Aktueller Kontostand</div>
+                <div className="hero-label">Aktueller Kontostand{stats.latestDate ? ` (${new Date(stats.latestDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })})` : ''}</div>
                 <div className="hero-balance">
                     <span>€</span> {stats.balance.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>

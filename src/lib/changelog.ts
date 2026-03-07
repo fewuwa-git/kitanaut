@@ -7,6 +7,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     {
         date: '07.03.2026',
         changes: [
+            '— Dashboard —',
+            'Der aktuelle Kontostand zeigt jetzt in Klammern das Datum der letzten Buchung an.',
             '— Chat —',
             'Neue Chat-Seite: KI-Assistent beantwortet Fragen ausschließlich auf Basis der Dashboard-Daten (Buchungen, Kategorien, Belege) – kein Internetzugriff. Unterstützt Gemini, Claude und OpenAI als Anbieter.',
             '— Buchungsbelege —',
