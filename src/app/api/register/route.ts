@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { getUserByEmail, saveUser } from '@/lib/data';
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
+    const limited = rateLimit(req, 'register', 5, 60 * 60 * 1000);
+    if (limited) return limited;
+
     try {
         const { name, email, password } = await req.json();
 

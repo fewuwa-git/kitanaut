@@ -12,6 +12,7 @@ export const CHANGELOG: ChangelogEntry[] = [
             'Der „Verlinkt von"-Eintrag bei Belegen wird jetzt aus dem verifizierten Login-Token gelesen statt aus einem fälschbaren HTTP-Header.',
             'Der KI-Log und die Kategorieregeln sind jetzt nur noch für eingeloggte Nutzer abrufbar.',
             'Beim Nutzer-Wechsel (Admin-Impersonation) wird die Identität jetzt immer gegen die Datenbank geprüft.',
+            'Rate-Limiting: Login (10 Versuche/15 Min.), Passwort-Reset und Registrierung (je 5/Stunde) sind jetzt gegen Brute-Force und Spam geschützt.',
             '— Kontoauszug —',
             'Im Kontoauszug ersetzt jetzt ein navy „📄 PDF"-Button das Büroklammer-Symbol, sobald ein Beleg vorhanden ist – ein Klick öffnet den Beleg direkt. Ohne Beleg bleibt das Büroklammer-Symbol zum Hochladen.',
             '— Buchungsbelege —',
