@@ -70,7 +70,7 @@ export default async function VerwaltungBelegePage({ searchParams }: { searchPar
     if (role !== 'admin') redirect('/dashboard');
 
     const { tab } = await searchParams;
-    const activeTab = tab === 'linked' || tab === 'ki' || tab === 'ki-workflow' ? tab : 'unlinked';
+    const activeTab = tab === 'linked' || tab === 'unlinked' || tab === 'ki' || tab === 'ki-workflow' ? tab : 'upload';
 
     return (
         <div className="app-layout">

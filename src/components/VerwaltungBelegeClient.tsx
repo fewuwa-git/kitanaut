@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { TransactionReceipt, Category } from '@/lib/data';
 import { CATEGORY_COLORS } from '@/lib/constants';
 import LinkReceiptModal from './LinkReceiptModal';
 import BelegeKiWorkflow from './BelegeKiWorkflow';
+import BelegeUpload from './BelegeUpload';
 
 function formatSize(bytes: number | null | undefined): string {
     if (!bytes) return '–';
@@ -49,7 +50,7 @@ interface Props {
 }
 
 export default function VerwaltungBelegeClient({ receipts: initialReceipts, unlinked: initialUnlinked, initialTab, categories }: Props) {
-    const tab = initialTab as 'linked' | 'unlinked' | 'ki' | 'ki-workflow';
+    const tab = initialTab as 'upload' | 'linked' | 'unlinked' | 'ki' | 'ki-workflow';
     const categoryColorMap: Record<string, string> = { ...CATEGORY_COLORS };
     for (const cat of categories) categoryColorMap[cat.name] = cat.color;
     const [receipts, setReceipts] = useState(initialReceipts);
@@ -58,7 +59,6 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [loadingUrl, setLoadingUrl] = useState<string | null>(null);
     const [infoReceipt, setInfoReceipt] = useState<TransactionReceipt | null>(null);
-    const [uploading, setUploading] = useState(false);
     const [linkModal, setLinkModal] = useState<{ id: string; fileName: string } | null>(null);
     const [suggestingId, setSuggestingId] = useState<string | null>(null);
     const [suggestionResults, setSuggestionResults] = useState<Record<string, SuggestResult>>(() => {
@@ -78,8 +78,6 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
         }
         return initial;
     });
-    const fileRef = useRef<HTMLInputElement>(null);
-
     const filtered = useMemo(() => {
         if (!search.trim()) return receipts;
         const term = search.toLowerCase();
@@ -90,19 +88,6 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
             r.file_name.toLowerCase().includes(term)
         );
     }, [receipts, search]);
-
-    async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setUploading(true);
-        const fd = new FormData();
-        fd.append('file', file);
-        const res = await fetch('/api/receipts', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.id) setUnlinked(prev => [{ ...data, ai_vendor: null, ai_amount: null, ai_date: null, ai_description: null }, ...prev]);
-        setUploading(false);
-        if (fileRef.current) fileRef.current.value = '';
-    }
 
     async function handleSuggest(r: UnlinkedReceipt) {
         setSuggestingId(r.id);
@@ -187,6 +172,14 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
         <div>
             {/* Tab Nav */}
             <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border)', marginBottom: 24 }}>
+                <a href="/verwaltung/belege?tab=upload" style={{
+                    padding: '8px 20px', fontSize: 13, fontWeight: tab === 'upload' ? 600 : 500,
+                    color: tab === 'upload' ? 'var(--navy)' : 'var(--text-muted)',
+                    borderBottom: tab === 'upload' ? '2px solid var(--primary)' : '2px solid transparent',
+                    marginBottom: -2, textDecoration: 'none', whiteSpace: 'nowrap',
+                }}>
+                    Beleg hochladen
+                </a>
                 <a href="/verwaltung/belege?tab=linked" style={{
                     padding: '8px 20px', fontSize: 13, fontWeight: tab === 'linked' ? 600 : 500,
                     color: tab === 'linked' ? 'var(--navy)' : 'var(--text-muted)',
@@ -247,22 +240,16 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                 </div>
             </div>}
 
+            {/* Tab: Beleg hochladen */}
+            {tab === 'upload' && (
+                <BelegeUpload onUploaded={r => setUnlinked(prev => [r, ...prev])} />
+            )}
+
             {/* Tab: Unzugeordnete Belege */}
             {tab === 'unlinked' && (
             <div className="card mb-6">
-                <div className="card-header" style={{ justifyContent: 'space-between' }}>
+                <div className="card-header">
                     <div className="card-title">⚠️ Nicht zugeordnete Belege</div>
-                    <div>
-                        <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" style={{ display: 'none' }} onChange={handleUpload} disabled={uploading} />
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => fileRef.current?.click()}
-                            disabled={uploading}
-                            style={{ opacity: uploading ? 0.6 : 1 }}
-                        >
-                            {uploading ? 'Hochladen…' : '+ Beleg hochladen'}
-                        </button>
-                    </div>
                 </div>
                 {unlinked.length === 0 ? (
                     <div className="card-body" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px 0' }}>
@@ -548,10 +535,10 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                             <button
                                                 onClick={() => handleOpenLinked(r)}
                                                 disabled={loadingUrl === r.id}
-                                                className="btn"
-                                                style={{ fontSize: 11, padding: '4px 8px', opacity: loadingUrl === r.id ? 0.5 : 1 }}
+                                                className="btn btn-sm"
+                                                style={{ padding: '4px 10px', backgroundColor: 'var(--navy)', color: 'white', opacity: loadingUrl === r.id ? 0.5 : 1 }}
                                             >
-                                                {loadingUrl === r.id ? 'Laden…' : 'Öffnen ↗'}
+                                                {loadingUrl === r.id ? '…' : '📄 PDF'}
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteLinked(r)}
