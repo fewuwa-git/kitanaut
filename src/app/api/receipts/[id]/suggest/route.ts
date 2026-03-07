@@ -11,7 +11,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
         const { data: receipt } = await supabase
             .from('pankonauten_transaction_receipts')
-            .select('file_path, file_name, ai_vendor, ai_amount, ai_date, ai_description')
+            .select('file_path, file_name, ai_vendor, ai_amount, ai_date, ai_description, ai_invoice_number, ai_suggestions')
             .eq('id', id)
             .single();
 
@@ -40,7 +40,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
             try {
                 return await getModel('gemini-2.5-flash', 256).generateContent(contents);
             } catch (err: any) {
-                if (err?.message?.includes('503') || err?.message?.includes('Service Unavailable') || err?.message?.includes('high demand')) {
+                if (err?.message?.includes('503') || err?.message?.includes('Service Unavailable') || err?.message?.includes('high demand') || err?.message?.includes('429') || err?.message?.includes('quota') || err?.message?.includes('Too Many Requests')) {
                     return await getModel('gemini-2.0-flash', 256).generateContent(contents);
                 }
                 throw err;
@@ -61,7 +61,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
             try {
                 return await matchModel.generateContent(contents);
             } catch (err: any) {
-                if (err?.message?.includes('503') || err?.message?.includes('Service Unavailable') || err?.message?.includes('high demand')) {
+                if (err?.message?.includes('503') || err?.message?.includes('Service Unavailable') || err?.message?.includes('high demand') || err?.message?.includes('429') || err?.message?.includes('quota') || err?.message?.includes('Too Many Requests')) {
                     await new Promise(r => setTimeout(r, 3000));
                     return await matchModel.generateContent(contents);
                 }
@@ -79,25 +79,38 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
             return cleaned;
         };
 
-        // Step 1: Extract key facts from the receipt first
+        // Step 1: Extract key facts from the receipt first (including invoice/order number)
         const extractResult = await extractWithFallback([
             { inlineData: { mimeType, data: base64 } },
-            'Extrahiere aus diesem Beleg: Aussteller/Firma, Betrag (Zahl), Datum (YYYY-MM-DD), kurze Beschreibung. Antworte NUR mit JSON (kein Markdown): {"vendor":"...","amount":0.00,"date":"YYYY-MM-DD","description":"..."}. Falls ein Wert nicht erkennbar ist, setze null.',
+            'Extrahiere aus diesem Beleg: Aussteller/Firma, Betrag (Zahl), Datum (YYYY-MM-DD), kurze Beschreibung, Rechnungsnummer oder Auftragsnummer (nur die Zahl/Nummer). Antworte NUR mit JSON (kein Markdown): {"vendor":"...","amount":0.00,"date":"YYYY-MM-DD","description":"...","invoice_number":"..."}. Falls ein Wert nicht erkennbar ist, setze null.',
         ], 256);
 
-        let extracted: { vendor?: string; amount?: number; date?: string; description?: string } = {};
+        let extracted: { vendor?: string; amount?: number; date?: string; description?: string; invoice_number?: string } = {};
         try { extracted = JSON.parse(extractJSON(extractResult.response.text())); } catch { /* use empty */ }
 
-        // Save extracted data to DB
-        await supabase
-            .from('pankonauten_transaction_receipts')
-            .update({
-                ai_vendor: extracted.vendor ?? null,
-                ai_amount: extracted.amount ?? null,
-                ai_date: extracted.date ?? null,
-                ai_description: extracted.description ?? null,
-            })
-            .eq('id', id);
+        // Also extract numbers from the filename as additional hints
+        const filenameNumbers = (receipt.file_name.match(/\d{4,}/g) || []);
+        const invoiceNumbers = [
+            extracted.invoice_number,
+            ...filenameNumbers,
+        ].filter(Boolean).map(n => String(n).trim());
+
+        // Save extracted data to DB – only overwrite fields that are new (non-null) or changed
+        const extractionUpdate: Record<string, any> = {};
+        const mergeField = (key: string, newVal: any, oldVal: any) => {
+            if (newVal != null && newVal !== oldVal) extractionUpdate[key] = newVal;
+        };
+        mergeField('ai_vendor', extracted.vendor, receipt.ai_vendor);
+        mergeField('ai_amount', extracted.amount, receipt.ai_amount);
+        mergeField('ai_date', extracted.date, receipt.ai_date);
+        mergeField('ai_description', extracted.description, receipt.ai_description);
+        mergeField('ai_invoice_number', extracted.invoice_number, receipt.ai_invoice_number);
+        if (Object.keys(extractionUpdate).length > 0) {
+            await supabase
+                .from('pankonauten_transaction_receipts')
+                .update(extractionUpdate)
+                .eq('id', id);
+        }
 
         // Step 2: Filter transactions to a relevant window around the receipt date
         const allTransactions = await getTransactions();
@@ -130,20 +143,39 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         }
 
         // Use short numeric indices instead of UUIDs so the AI doesn't hallucinate IDs
-        const indexedCandidates = candidates.map((t, i) => ({ idx: i + 1, tx: t }));
-        const txList = indexedCandidates.map(({ idx, tx }) =>
-            `${idx} | ${tx.date} | ${tx.counterparty} | ${tx.description} | ${tx.amount}€`
+        // Mark transactions that contain an invoice/filename number with ★
+        const indexedCandidates = candidates.map((t, i) => {
+            const haystack = `${t.description} ${t.counterparty}`.toLowerCase();
+            const hasNumberMatch = invoiceNumbers.some(n => haystack.includes(n.toLowerCase()));
+            return { idx: i + 1, tx: t, hasNumberMatch };
+        });
+
+        // Sort number-matched candidates to the top
+        indexedCandidates.sort((a, b) => {
+            if (a.hasNumberMatch && !b.hasNumberMatch) return -1;
+            if (!a.hasNumberMatch && b.hasNumberMatch) return 1;
+            return 0;
+        });
+        // Re-index after sort
+        indexedCandidates.forEach((c, i) => { c.idx = i + 1; });
+
+        const txList = indexedCandidates.map(({ idx, tx, hasNumberMatch }) =>
+            `${hasNumberMatch ? '★' : ' '} ${idx} | ${tx.date} | ${tx.counterparty} | ${tx.description} | ${tx.amount}€`
         ).join('\n');
+
+        const invoiceHint = invoiceNumbers.length > 0
+            ? `\nRechnungs-/Auftragsnummern aus Beleg/Dateiname: ${invoiceNumbers.join(', ')} – Buchungen mit ★ enthalten diese Nummer.`
+            : '';
 
         // Step 3: Find best matches
         const matchResult = await matchWithModel([
             { inlineData: { mimeType, data: base64 } },
-            `Beleg-Info: Aussteller="${extracted.vendor ?? '?'}", Betrag=${extracted.amount ?? '?'}€, Datum=${extracted.date ?? '?'}
+            `Beleg-Info: Aussteller="${extracted.vendor ?? '?'}", Betrag=${extracted.amount ?? '?'}€, Datum=${extracted.date ?? '?'}${invoiceHint}
 
-Buchungen (Nr | Datum | Gegenüber | Beschreibung | Betrag):
+Buchungen (★=Nummernübereinstimmung | Nr | Datum | Gegenüber | Beschreibung | Betrag):
 ${txList}
 
-Welche 3 Buchungen passen am besten zu diesem Beleg? Antworte NUR mit JSON (kein Markdown), reason max. 8 Wörter auf Deutsch:
+Welche 3 Buchungen passen am besten zu diesem Beleg? ★-markierte Buchungen haben sehr hohe Priorität. Antworte NUR mit JSON (kein Markdown), reason max. 8 Wörter auf Deutsch:
 {"suggestions":[{"nr":1,"confidence":0.9,"reason":"..."}]}`,
         ], 256);
 
@@ -157,19 +189,55 @@ Welche 3 Buchungen passen am besten zu diesem Beleg? Antworte NUR mit JSON (kein
             return NextResponse.json({ error: 'KI-Antwort konnte nicht verarbeitet werden', raw: matchRaw }, { status: 500 });
         }
 
-        const idxMap = new Map(indexedCandidates.map(({ idx, tx }) => [idx, tx]));
+        const idxMap = new Map(indexedCandidates.map(({ idx, tx, hasNumberMatch }) => [idx, { tx, hasNumberMatch }]));
         const enriched = (matchParsed.suggestions || [])
             .map(s => {
-                const tx = idxMap.get(s.nr);
-                if (!tx) return null;
-                return { transaction_id: tx.id, confidence: s.confidence, reason: s.reason, transaction: tx };
+                const entry = idxMap.get(s.nr);
+                if (!entry) return null;
+                const { tx, hasNumberMatch } = entry;
+
+                // Override confidence with hard facts where possible
+                let confidence = s.confidence;
+                let reason = s.reason;
+                if (hasNumberMatch) {
+                    confidence = 0.99;
+                    reason = 'Rechnungsnummer stimmt überein';
+                } else {
+                    // Boost if amount matches exactly
+                    const amountMatch = extracted.amount != null && Math.abs(Math.abs(Number(tx.amount)) - Math.abs(extracted.amount)) < 0.01;
+                    if (amountMatch && confidence < 0.85) {
+                        confidence = 0.85;
+                        reason = 'Betrag stimmt überein';
+                    }
+                }
+
+                return { transaction_id: tx.id, confidence, reason, transaction: tx };
             })
-            .filter(Boolean);
+            .filter(Boolean)
+            .sort((a: any, b: any) => b.confidence - a.confidence);
+
+        // Save suggestions to DB – only overwrite if changed
+        const newSuggestions = enriched.map((s: any) => ({
+            transaction_id: s.transaction_id,
+            confidence: s.confidence,
+            reason: s.reason,
+        }));
+        const suggestionsChanged = JSON.stringify(newSuggestions) !== JSON.stringify(receipt.ai_suggestions ?? []);
+        if (suggestionsChanged) {
+            await supabase
+                .from('pankonauten_transaction_receipts')
+                .update({ ai_suggestions: newSuggestions })
+                .eq('id', id);
+        }
 
         return NextResponse.json({ extracted, suggestions: enriched });
 
     } catch (err: any) {
         console.error('Suggest error:', err);
-        return NextResponse.json({ error: err?.message ?? 'Unbekannter Fehler' }, { status: 500 });
+        const isQuota = err?.message?.includes('429') || err?.message?.includes('quota') || err?.message?.includes('Too Many Requests');
+        const userMessage = isQuota
+            ? 'KI-Tageslimit erreicht (20 kostenlose Anfragen/Tag). Bitte morgen erneut versuchen oder API-Key upgraden.'
+            : (err?.message ?? 'Unbekannter Fehler');
+        return NextResponse.json({ error: userMessage }, { status: isQuota ? 429 : 500 });
     }
 }

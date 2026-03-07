@@ -349,7 +349,7 @@ export default function KategorienVerwaltungClient({ initialCategories }: Props)
             <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border)', marginBottom: 24 }}>
                 <span style={{
                     padding: '8px 20px', fontSize: 13, fontWeight: 600,
-                    color: 'var(--primary)', borderBottom: '2px solid var(--primary)', marginBottom: -2,
+                    color: 'var(--navy)', borderBottom: '2px solid var(--primary)', marginBottom: -2,
                 }}>
                     Kategorien
                 </span>

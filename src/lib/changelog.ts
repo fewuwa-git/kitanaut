@@ -5,6 +5,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
     {
+        date: '07.03.2026',
+        changes: [
+            '— Buchungsbelege —',
+            'Die Belege-Seite hat jetzt eine Unternavigation mit drei Tabs: „Zugeordnete Belege", „Unzugeordnete Belege" und „KI-Belegfunktion" – jeder Tab hat eine eigene URL.',
+            'Neuer Tab „KI Workflow": Visualisiert den gesamten Ablauf der KI-Beleganalyse – Prompts, Modelle, Datenbankfelder und Confidence-Logik auf einen Blick.',
+            'KI-Log-Button auf der Workflow-Seite: Öffnet ein Panel mit dem Änderungsprotokoll des KI-Workflows.',
+            'Wenn der Beleginhalt von der KI nicht gelesen werden konnte, wird jetzt „Beleginhalt nicht lesbar" angezeigt sowie Nummern aus dem Dateinamen, die für die Zuordnung verwendet wurden.',
+            'Die erneute KI-Analyse überschreibt bestehende Daten nur noch, wenn neue oder geänderte Informationen vorliegen – bestehende Felder bleiben erhalten.',
+        ],
+    },
+    {
         date: '06.03.2026',
         changes: [
             '— Kontoauszug —',

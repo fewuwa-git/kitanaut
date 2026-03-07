@@ -51,7 +51,7 @@ function TabNav() {
             </a>
             <span style={{
                 padding: '8px 20px', fontSize: 13, fontWeight: 600,
-                color: 'var(--primary)', borderBottom: '2px solid var(--primary)', marginBottom: -2,
+                color: 'var(--navy)', borderBottom: '2px solid var(--primary)', marginBottom: -2,
             }}>
                 Import-Regeln
             </span>

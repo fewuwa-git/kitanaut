@@ -3,6 +3,7 @@
 import React, { useRef, useState, useMemo } from 'react';
 import type { TransactionReceipt } from '@/lib/data';
 import LinkReceiptModal from './LinkReceiptModal';
+import BelegeKiWorkflow from './BelegeKiWorkflow';
 
 function formatSize(bytes: number | null | undefined): string {
     if (!bytes) return '–';
@@ -24,6 +25,7 @@ interface UnlinkedReceipt {
     ai_amount: number | null;
     ai_date: string | null;
     ai_description: string | null;
+    ai_suggestions: Suggestion[] | null;
 }
 
 interface Suggestion {
@@ -41,9 +43,11 @@ interface SuggestResult {
 interface Props {
     receipts: TransactionReceipt[];
     unlinked: UnlinkedReceipt[];
+    initialTab: string;
 }
 
-export default function VerwaltungBelegeClient({ receipts: initialReceipts, unlinked: initialUnlinked }: Props) {
+export default function VerwaltungBelegeClient({ receipts: initialReceipts, unlinked: initialUnlinked, initialTab }: Props) {
+    const tab = initialTab as 'linked' | 'unlinked' | 'ki' | 'ki-workflow';
     const [receipts, setReceipts] = useState(initialReceipts);
     const [unlinked, setUnlinked] = useState(initialUnlinked);
     const [search, setSearch] = useState('');
@@ -53,10 +57,9 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
     const [linkModal, setLinkModal] = useState<{ id: string; fileName: string } | null>(null);
     const [suggestingId, setSuggestingId] = useState<string | null>(null);
     const [suggestionResults, setSuggestionResults] = useState<Record<string, SuggestResult>>(() => {
-        // Pre-populate from saved AI data on unlinked receipts
         const initial: Record<string, SuggestResult> = {};
         for (const r of initialUnlinked) {
-            if (r.ai_vendor || r.ai_amount != null || r.ai_date || r.ai_description) {
+            if (r.ai_vendor || r.ai_amount != null || r.ai_date || r.ai_description || r.ai_suggestions?.length) {
                 initial[r.id] = {
                     extracted: {
                         vendor: r.ai_vendor ?? undefined,
@@ -64,7 +67,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                         date: r.ai_date ?? undefined,
                         description: r.ai_description ?? undefined,
                     },
-                    suggestions: [],
+                    suggestions: r.ai_suggestions ?? [],
                 };
             }
         }
@@ -177,8 +180,44 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
 
     return (
         <div>
+            {/* Tab Nav */}
+            <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border)', marginBottom: 24 }}>
+                <a href="/verwaltung/belege?tab=linked" style={{
+                    padding: '8px 20px', fontSize: 13, fontWeight: tab === 'linked' ? 600 : 500,
+                    color: tab === 'linked' ? 'var(--navy)' : 'var(--text-muted)',
+                    borderBottom: tab === 'linked' ? '2px solid var(--primary)' : '2px solid transparent',
+                    marginBottom: -2, textDecoration: 'none', whiteSpace: 'nowrap',
+                }}>
+                    Zugeordnete Belege {receipts.length > 0 && <span style={{ fontSize: 11, marginLeft: 4, opacity: 0.7 }}>({receipts.length})</span>}
+                </a>
+                <a href="/verwaltung/belege?tab=unlinked" style={{
+                    padding: '8px 20px', fontSize: 13, fontWeight: tab === 'unlinked' ? 600 : 500,
+                    color: tab === 'unlinked' ? 'var(--navy)' : (unlinked.length > 0 ? 'var(--red)' : 'var(--text-muted)'),
+                    borderBottom: tab === 'unlinked' ? '2px solid var(--primary)' : '2px solid transparent',
+                    marginBottom: -2, textDecoration: 'none', whiteSpace: 'nowrap',
+                }}>
+                    Unzugeordnete Belege {unlinked.length > 0 && <span style={{ fontSize: 11, marginLeft: 4, opacity: 0.7 }}>({unlinked.length})</span>}
+                </a>
+                <a href="/verwaltung/belege?tab=ki" style={{
+                    padding: '8px 20px', fontSize: 13, fontWeight: tab === 'ki' ? 600 : 500,
+                    color: tab === 'ki' ? 'var(--navy)' : 'var(--text-muted)',
+                    borderBottom: tab === 'ki' ? '2px solid var(--primary)' : '2px solid transparent',
+                    marginBottom: -2, textDecoration: 'none', whiteSpace: 'nowrap',
+                }}>
+                    KI-Belegfunktion
+                </a>
+                <a href="/verwaltung/belege?tab=ki-workflow" style={{
+                    padding: '8px 20px', fontSize: 13, fontWeight: tab === 'ki-workflow' ? 600 : 500,
+                    color: tab === 'ki-workflow' ? 'var(--navy)' : 'var(--text-muted)',
+                    borderBottom: tab === 'ki-workflow' ? '2px solid var(--primary)' : '2px solid transparent',
+                    marginBottom: -2, textDecoration: 'none', whiteSpace: 'nowrap',
+                }}>
+                    KI Workflow
+                </a>
+            </div>
+
             {/* Stats */}
-            <div className="stats-grid mb-6" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+            {tab !== 'ki-workflow' && <div className="stats-grid mb-6" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
                 <div className="stat-card" style={{ padding: '12px 16px' }}>
                     <div className="stat-card-label">📎 Belege gesamt</div>
                     <div className="stat-card-value" style={{ fontSize: 20 }}>{receipts.length + unlinked.length}</div>
@@ -201,9 +240,10 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                     </div>
                     <div className="stat-card-sub">Speicherverbrauch</div>
                 </div>
-            </div>
+            </div>}
 
-            {/* Unlinked Receipts */}
+            {/* Tab: Unzugeordnete Belege */}
+            {tab === 'unlinked' && (
             <div className="card mb-6">
                 <div className="card-header" style={{ justifyContent: 'space-between' }}>
                     <div className="card-title">⚠️ Nicht zugeordnete Belege</div>
@@ -229,10 +269,88 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                             <thead>
                                 <tr>
                                     <th>Dateiname</th>
-                                    <th>Buchung</th>
+                                    <th>Buchung zuordnen</th>
                                     <th style={{ textAlign: 'right' }}>Größe</th>
                                     <th style={{ width: '1%', whiteSpace: 'nowrap' }}>Hochgeladen am</th>
                                     <th style={{ width: '1%' }} />
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {unlinked.map(r => (
+                                    <tr key={r.id}>
+                                        <td style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
+                                            <button
+                                                onClick={async () => {
+                                                    const res = await fetch(`/api/receipts/${r.id}`);
+                                                    const data = await res.json();
+                                                    if (data.url) window.open(data.url, '_blank');
+                                                }}
+                                                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 13, color: 'inherit' }}
+                                                title="Öffnen"
+                                            >
+                                                <span>{r.file_name.toLowerCase().endsWith('.pdf') ? '📄' : '🖼️'}</span>
+                                                <span style={{ textDecoration: 'underline' }}>{r.file_name}</span>
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <button
+                                                onClick={() => setLinkModal({ id: r.id, fileName: r.file_name })}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: 6,
+                                                    padding: '5px 10px', borderRadius: 'var(--radius-sm)',
+                                                    border: '1px dashed var(--border)', background: 'var(--bg)',
+                                                    cursor: 'pointer', fontSize: 12, color: 'var(--text-muted)',
+                                                    whiteSpace: 'nowrap', minWidth: 360, justifyContent: 'flex-start',
+                                                }}
+                                            >
+                                                <span style={{ opacity: 0.5 }}>🔗</span>
+                                                <span>Buchung wählen…</span>
+                                            </button>
+                                        </td>
+                                        <td style={{ textAlign: 'right', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                            {formatSize(r.file_size)}
+                                        </td>
+                                        <td style={{ whiteSpace: 'nowrap', fontSize: 12, color: 'var(--text-muted)' }}>
+                                            {new Date(r.uploaded_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                        </td>
+                                        <td>
+                                            <button
+                                                onClick={() => handleDeleteUnlinked(r)}
+                                                disabled={deletingId === r.id}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--red)', padding: '2px 4px', opacity: deletingId === r.id ? 0.5 : 1 }}
+                                                title="Löschen"
+                                            >
+                                                🗑
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+            )}
+
+            {/* Tab: KI-Belegfunktion */}
+            {tab === 'ki' && (
+            <div className="card mb-6">
+                <div className="card-header">
+                    <div className="card-title">✨ KI-Beleganalyse</div>
+                </div>
+                {unlinked.length === 0 ? (
+                    <div className="card-body" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px 0' }}>
+                        Keine unzugeordneten Belege vorhanden.
+                    </div>
+                ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Dateiname</th>
+                                    <th>KI-Analyse</th>
+                                    <th style={{ textAlign: 'right' }}>Größe</th>
+                                    <th style={{ width: '1%', whiteSpace: 'nowrap' }}>Hochgeladen am</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -254,37 +372,22 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                                 </button>
                                             </td>
                                             <td>
-                                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                                    <button
-                                                        onClick={() => setLinkModal({ id: r.id, fileName: r.file_name })}
-                                                        style={{
-                                                            display: 'flex', alignItems: 'center', gap: 6,
-                                                            padding: '5px 10px', borderRadius: 'var(--radius-sm)',
-                                                            border: '1px dashed var(--border)', background: 'var(--bg)',
-                                                            cursor: 'pointer', fontSize: 12, color: 'var(--text-muted)',
-                                                            whiteSpace: 'nowrap', minWidth: 360, justifyContent: 'flex-start',
-                                                        }}
-                                                    >
-                                                        <span style={{ opacity: 0.5 }}>🔗</span>
-                                                        <span>Buchung wählen…</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleSuggest(r)}
-                                                        disabled={suggestingId === r.id}
-                                                        title="KI-Vorschlag generieren"
-                                                        style={{
-                                                            display: 'flex', alignItems: 'center', gap: 5,
-                                                            padding: '5px 10px', borderRadius: 'var(--radius-sm)',
-                                                            border: '1px solid var(--border)', background: 'var(--bg)',
-                                                            cursor: suggestingId === r.id ? 'default' : 'pointer',
-                                                            fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap',
-                                                            opacity: suggestingId === r.id ? 0.6 : 1,
-                                                        }}
-                                                    >
-                                                        <span>{suggestingId === r.id ? '⏳' : '✨'}</span>
-                                                        <span>{suggestingId === r.id ? 'Analysiere…' : (suggestionResults[r.id] ? 'Neu analysieren' : 'KI-Vorschlag')}</span>
-                                                    </button>
-                                                </div>
+                                                <button
+                                                    onClick={() => handleSuggest(r)}
+                                                    disabled={suggestingId === r.id}
+                                                    title="KI-Vorschlag generieren"
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: 5,
+                                                        padding: '5px 10px', borderRadius: 'var(--radius-sm)',
+                                                        border: '1px solid var(--border)', background: 'var(--bg)',
+                                                        cursor: suggestingId === r.id ? 'default' : 'pointer',
+                                                        fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap',
+                                                        opacity: suggestingId === r.id ? 0.6 : 1,
+                                                    }}
+                                                >
+                                                    <span>{suggestingId === r.id ? '⏳' : '✨'}</span>
+                                                    <span>{suggestingId === r.id ? 'Analysiere…' : (suggestionResults[r.id] ? 'Neu analysieren' : 'KI-Vorschlag')}</span>
+                                                </button>
                                             </td>
                                             <td style={{ textAlign: 'right', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                                                 {formatSize(r.file_size)}
@@ -292,32 +395,31 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                             <td style={{ whiteSpace: 'nowrap', fontSize: 12, color: 'var(--text-muted)' }}>
                                                 {new Date(r.uploaded_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </td>
-                                            <td>
-                                                <button
-                                                    onClick={() => handleDeleteUnlinked(r)}
-                                                    disabled={deletingId === r.id}
-                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--red)', padding: '2px 4px', opacity: deletingId === r.id ? 0.5 : 1 }}
-                                                    title="Löschen"
-                                                >
-                                                    🗑
-                                                </button>
-                                            </td>
                                         </tr>
 
                                         {/* KI-Vorschläge */}
                                         {suggestionResults[r.id] && (
                                             <tr key={`${r.id}-suggestions`}>
-                                                <td colSpan={5} style={{ padding: '0 16px 12px', background: 'var(--bg)' }}>
+                                                <td colSpan={4} style={{ padding: '0 16px 12px', background: 'var(--bg)' }}>
                                                     <div style={{ borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', overflow: 'hidden' }}>
                                                         {/* Extracted info */}
-                                                        <div style={{ padding: '10px 14px', background: 'var(--bg-secondary)', borderBottom: suggestionResults[r.id].suggestions.length > 0 ? '1px solid var(--border)' : 'none', display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 12 }}>
-                                                            <span style={{ color: 'var(--text-muted)' }}>✨ KI-Analyse:</span>
-                                                            {suggestionResults[r.id].extracted.vendor && <span><strong>Aussteller:</strong> {suggestionResults[r.id].extracted.vendor}</span>}
-                                                            {suggestionResults[r.id].extracted.amount != null && <span><strong>Betrag:</strong> {formatCurrency(suggestionResults[r.id].extracted.amount!)}</span>}
-                                                            {suggestionResults[r.id].extracted.date && <span><strong>Datum:</strong> {new Date(suggestionResults[r.id].extracted.date!).toLocaleDateString('de-DE')}</span>}
-                                                            {suggestionResults[r.id].extracted.description && <span><strong>Zweck:</strong> {suggestionResults[r.id].extracted.description}</span>}
-                                                            <button onClick={() => setSuggestionResults(prev => { const next = { ...prev }; delete next[r.id]; return next; })} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13 }}>✕</button>
-                                                        </div>
+                                                        {(() => {
+                                                            const ex = suggestionResults[r.id].extracted;
+                                                            const hasData = ex.vendor || ex.amount != null || ex.date || ex.description;
+                                                            const filenameNums = (r.file_name.match(/\d{4,}/g) || []);
+                                                            return (
+                                                                <div style={{ padding: '10px 14px', background: 'var(--bg-secondary)', borderBottom: suggestionResults[r.id].suggestions.length > 0 ? '1px solid var(--border)' : 'none', display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 12, alignItems: 'center' }}>
+                                                                    <span style={{ color: 'var(--text-muted)' }}>✨ KI-Analyse:</span>
+                                                                    {ex.vendor && <span><strong>Aussteller:</strong> {ex.vendor}</span>}
+                                                                    {ex.amount != null && <span><strong>Betrag:</strong> {formatCurrency(ex.amount!)}</span>}
+                                                                    {ex.date && <span><strong>Datum:</strong> {new Date(ex.date!).toLocaleDateString('de-DE')}</span>}
+                                                                    {ex.description && <span><strong>Zweck:</strong> {ex.description}</span>}
+                                                                    {!hasData && <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Beleginhalt nicht lesbar</span>}
+                                                                    {!hasData && filenameNums.length > 0 && <span><strong>Nummer aus Dateiname:</strong> {filenameNums.join(', ')}</span>}
+                                                                    <button onClick={() => setSuggestionResults(prev => { const next = { ...prev }; delete next[r.id]; return next; })} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13 }}>✕</button>
+                                                                </div>
+                                                            );
+                                                        })()}
                                                         {/* Suggestions */}
                                                         {suggestionResults[r.id].suggestions.length === 0 && (
                                                             <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)' }}>
@@ -358,8 +460,13 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                     </div>
                 )}
             </div>
+            )}
 
-            {/* Linked Receipts */}
+            {/* Tab: KI Workflow */}
+            {tab === 'ki-workflow' && <BelegeKiWorkflow />}
+
+            {/* Tab: Zugeordnete Belege */}
+            {tab === 'linked' && (
             <div className="card">
                 <div className="card-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                     <div className="card-title">📎 Zugeordnete Belege</div>
@@ -448,6 +555,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                     </table>
                 </div>
             </div>
+            )}
 
             {linkModal && (
                 <LinkReceiptModal

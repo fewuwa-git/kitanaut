@@ -3,18 +3,49 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { getAllTransactionReceipts, getUnlinkedReceipts } from '@/lib/data';
+import { supabase } from '@/lib/db';
 import Sidebar from '@/components/Sidebar';
 import VerwaltungBelegeClient from '@/components/VerwaltungBelegeClient';
 
 export const metadata: Metadata = { title: 'Buchungsbelege' };
 export const dynamic = 'force-dynamic';
 
-async function BelegeSection() {
+async function BelegeSection({ tab }: { tab: string }) {
     const [receipts, unlinked] = await Promise.all([
         getAllTransactionReceipts(),
         getUnlinkedReceipts(),
     ]);
-    return <VerwaltungBelegeClient receipts={receipts} unlinked={unlinked} />;
+
+    // Hydrate saved AI suggestions with full transaction data
+    const savedTxIds = [
+        ...new Set(
+            unlinked.flatMap((r: any) =>
+                (r.ai_suggestions ?? []).map((s: any) => s.transaction_id).filter(Boolean)
+            )
+        ),
+    ] as string[];
+
+    let txMap: Record<string, any> = {};
+    if (savedTxIds.length > 0) {
+        const { data: txs } = await supabase
+            .from('pankonauten_transactions')
+            .select('id, date, description, counterparty, amount, category')
+            .in('id', savedTxIds);
+        for (const tx of txs ?? []) txMap[tx.id] = tx;
+    }
+
+    const unlinkedWithSuggestions = unlinked.map((r: any) => ({
+        ...r,
+        ai_suggestions: (r.ai_suggestions ?? [])
+            .map((s: any) => {
+                const tx = txMap[s.transaction_id];
+                if (!tx) return null;
+                return { ...s, transaction: tx };
+            })
+            .filter(Boolean),
+    }));
+
+    return <VerwaltungBelegeClient receipts={receipts} unlinked={unlinkedWithSuggestions} initialTab={tab} />;
 }
 
 function BelegeSkeleton() {
@@ -27,7 +58,7 @@ function BelegeSkeleton() {
     );
 }
 
-export default async function VerwaltungBelegePage() {
+export default async function VerwaltungBelegePage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
     const headersList = await headers();
     const userId = headersList.get('x-user-id');
     const role = headersList.get('x-user-role') as string | null;
@@ -36,6 +67,9 @@ export default async function VerwaltungBelegePage() {
 
     if (!userId || !role) redirect('/login');
     if (role !== 'admin') redirect('/dashboard');
+
+    const { tab } = await searchParams;
+    const activeTab = tab === 'linked' || tab === 'ki' || tab === 'ki-workflow' ? tab : 'unlinked';
 
     return (
         <div className="app-layout">
@@ -49,7 +83,7 @@ export default async function VerwaltungBelegePage() {
                 </div>
                 <div className="page-body">
                     <Suspense fallback={<BelegeSkeleton />}>
-                        <BelegeSection />
+                        <BelegeSection tab={activeTab} />
                     </Suspense>
                 </div>
             </main>
