@@ -794,7 +794,7 @@ export async function getAllTransactionReceipts(): Promise<TransactionReceipt[]>
             transaction_amount: tx ? Number(tx.amount) : 0,
             transaction_category: tx?.category ?? '',
         };
-    });
+    }).sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
 }
 
 export async function getUnlinkedReceipts(): Promise<Omit<TransactionReceipt, 'transaction_date' | 'transaction_description' | 'transaction_counterparty' | 'transaction_amount' | 'transaction_category'>[]> {
