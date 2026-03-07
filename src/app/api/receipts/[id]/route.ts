@@ -19,7 +19,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 // Link receipt to a transaction
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const { transaction_id } = await req.json();
+    const { transaction_id, method } = await req.json();
+    const linkedBy = req.headers.get('x-user-name') || req.headers.get('x-user-email') || 'Unbekannt';
+    const linkedAt = new Date().toISOString();
+    const linkedMethod = method === 'ki' ? 'ki' : 'manual';
 
     const { data: receipt } = await supabase
         .from('pankonauten_transaction_receipts')
@@ -29,20 +32,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     if (!receipt) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
 
+    const linkFields = { transaction_id, linked_method: linkedMethod, linked_at: linkedAt, linked_by: linkedBy };
+
     // Move file from unlinked/ to transaction folder if needed
     if (receipt.file_path.startsWith('unlinked/')) {
         const fileName = receipt.file_path.split('/').pop();
         const newPath = `${transaction_id}/${fileName}`;
         const { error: moveError } = await supabase.storage.from(BUCKET).move(receipt.file_path, newPath);
         if (!moveError) {
-            await supabase.from('pankonauten_transaction_receipts').update({ file_path: newPath, transaction_id }).eq('id', id);
+            await supabase.from('pankonauten_transaction_receipts').update({ file_path: newPath, ...linkFields }).eq('id', id);
             return NextResponse.json({ ok: true });
         }
     }
 
     const { error } = await supabase
         .from('pankonauten_transaction_receipts')
-        .update({ transaction_id })
+        .update(linkFields)
         .eq('id', id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

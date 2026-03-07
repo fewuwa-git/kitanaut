@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import { getAllTransactionReceipts, getUnlinkedReceipts } from '@/lib/data';
+import { getAllTransactionReceipts, getUnlinkedReceipts, getCategories } from '@/lib/data';
 import { supabase } from '@/lib/db';
 import Sidebar from '@/components/Sidebar';
 import VerwaltungBelegeClient from '@/components/VerwaltungBelegeClient';
@@ -11,9 +11,10 @@ export const metadata: Metadata = { title: 'Buchungsbelege' };
 export const dynamic = 'force-dynamic';
 
 async function BelegeSection({ tab }: { tab: string }) {
-    const [receipts, unlinked] = await Promise.all([
+    const [receipts, unlinked, categories] = await Promise.all([
         getAllTransactionReceipts(),
         getUnlinkedReceipts(),
+        getCategories(),
     ]);
 
     // Hydrate saved AI suggestions with full transaction data
@@ -45,7 +46,7 @@ async function BelegeSection({ tab }: { tab: string }) {
             .filter(Boolean),
     }));
 
-    return <VerwaltungBelegeClient receipts={receipts} unlinked={unlinkedWithSuggestions} initialTab={tab} />;
+    return <VerwaltungBelegeClient receipts={receipts} unlinked={unlinkedWithSuggestions} initialTab={tab} categories={categories} />;
 }
 
 function BelegeSkeleton() {

@@ -8,6 +8,9 @@ export const CHANGELOG: ChangelogEntry[] = [
         date: '07.03.2026',
         changes: [
             '— Buchungsbelege —',
+            'Zugeordnete Belege: Neues ℹ-Symbol zeigt Zuordnungsinfo – ob manuell oder per KI zugeordnet, wann, von wem und mit welchen KI-Daten.',
+            'Kategorie-Badges auf der Belege-Seite werden jetzt farbig dargestellt – identisch zur Darstellung im Kontoauszug.',
+            'Regelprotokoll: Schriftgröße, Beträge und Kategorie-Badges jetzt einheitlich mit den anderen Seiten.',
             'Die Belege-Seite hat jetzt eine Unternavigation mit drei Tabs: „Zugeordnete Belege", „Unzugeordnete Belege" und „KI-Belegfunktion" – jeder Tab hat eine eigene URL.',
             'Neuer Tab „KI Workflow": Visualisiert den gesamten Ablauf der KI-Beleganalyse – Prompts, Modelle, Datenbankfelder und Confidence-Logik auf einen Blick.',
             'KI-Log-Button auf der Workflow-Seite: Öffnet ein Panel mit dem Änderungsprotokoll des KI-Workflows.',

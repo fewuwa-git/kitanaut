@@ -190,40 +190,27 @@ export default function KategorienRegelLogClient({ entries, categories }: Props)
 
                                     return (
                                         <tr key={entry.id} style={{ background: rowBg }}>
-                                            <td style={{ fontSize: 12, whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>
+                                            <td style={{ fontSize: 13, whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>
                                                 {dateStr}
                                             </td>
-                                            <td style={{ fontSize: 12, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                            <td style={{ fontSize: 13, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                                                 title={entry.description}>
                                                 {entry.description || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>–</span>}
                                             </td>
-                                            <td style={{ fontSize: 12, color: 'var(--text-muted)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                            <td style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                                                 title={entry.counterparty}>
                                                 {entry.counterparty || '–'}
                                             </td>
-                                            <td style={{
-                                                textAlign: 'right', fontSize: 12, whiteSpace: 'nowrap', fontWeight: 500,
-                                                color: entry.amount >= 0 ? '#16a34a' : '#dc2626',
-                                            }}>
+                                            <td style={{ textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 500 }}
+                                                className={`tx-amount ${entry.amount >= 0 ? 'positive' : 'negative'}`}>
                                                 {entry.amount >= 0 ? '+' : ''}{entry.amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
                                             </td>
-                                            <td style={{ fontSize: 12 }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                    {entry.category !== 'Nicht kategorisiert' && (
-                                                        <span style={{
-                                                            width: 8, height: 8, borderRadius: '50%',
-                                                            background: catColor(entry.category), flexShrink: 0,
-                                                        }} />
-                                                    )}
-                                                    <span style={{
-                                                        color: entry.category === 'Nicht kategorisiert' ? 'var(--text-muted)' : 'var(--text)',
-                                                        fontStyle: entry.category === 'Nicht kategorisiert' ? 'italic' : 'normal',
-                                                    }}>
-                                                        {entry.category}
-                                                    </span>
-                                                </div>
+                                            <td style={{ fontSize: 13 }}>
+                                                <span className="category-badge" style={{ fontSize: 11, background: `${catColor(entry.category)}18`, color: catColor(entry.category) }}>
+                                                    {entry.category}
+                                                </span>
                                             </td>
-                                            <td style={{ fontSize: 12 }}>
+                                            <td style={{ fontSize: 13 }}>
                                                 {entry.rule === null ? (
                                                     <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Keine Regel</span>
                                                 ) : entry.conflict ? (

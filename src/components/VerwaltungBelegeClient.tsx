@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useRef, useState, useMemo } from 'react';
-import type { TransactionReceipt } from '@/lib/data';
+import type { TransactionReceipt, Category } from '@/lib/data';
+import { CATEGORY_COLORS } from '@/lib/constants';
 import LinkReceiptModal from './LinkReceiptModal';
 import BelegeKiWorkflow from './BelegeKiWorkflow';
 
@@ -44,15 +45,19 @@ interface Props {
     receipts: TransactionReceipt[];
     unlinked: UnlinkedReceipt[];
     initialTab: string;
+    categories: Category[];
 }
 
-export default function VerwaltungBelegeClient({ receipts: initialReceipts, unlinked: initialUnlinked, initialTab }: Props) {
+export default function VerwaltungBelegeClient({ receipts: initialReceipts, unlinked: initialUnlinked, initialTab, categories }: Props) {
     const tab = initialTab as 'linked' | 'unlinked' | 'ki' | 'ki-workflow';
+    const categoryColorMap: Record<string, string> = { ...CATEGORY_COLORS };
+    for (const cat of categories) categoryColorMap[cat.name] = cat.color;
     const [receipts, setReceipts] = useState(initialReceipts);
     const [unlinked, setUnlinked] = useState(initialUnlinked);
     const [search, setSearch] = useState('');
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [loadingUrl, setLoadingUrl] = useState<string | null>(null);
+    const [infoReceipt, setInfoReceipt] = useState<TransactionReceipt | null>(null);
     const [uploading, setUploading] = useState(false);
     const [linkModal, setLinkModal] = useState<{ id: string; fileName: string } | null>(null);
     const [suggestingId, setSuggestingId] = useState<string | null>(null);
@@ -129,7 +134,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
         await fetch(`/api/receipts/${receiptId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transaction_id: tx.id }),
+            body: JSON.stringify({ transaction_id: tx.id, method: 'ki' }),
         });
         handleLinked(receiptId, tx);
         setSuggestionResults(prev => { const next = { ...prev }; delete next[receiptId]; return next; });
@@ -223,16 +228,16 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                     <div className="stat-card-value" style={{ fontSize: 20 }}>{receipts.length + unlinked.length}</div>
                     <div className="stat-card-sub">Hochgeladene Dateien</div>
                 </div>
-                <div className="stat-card" style={{ padding: '12px 16px' }}>
+                <a href="/verwaltung/belege?tab=linked" className="stat-card" style={{ padding: '12px 16px', textDecoration: 'none', color: 'inherit', display: 'block' }}>
                     <div className="stat-card-label">🔗 Zugeordnet</div>
                     <div className="stat-card-value" style={{ fontSize: 20 }}>{receipts.length}</div>
                     <div className="stat-card-sub">Mit Buchung verknüpft</div>
-                </div>
-                <div className="stat-card" style={{ padding: '12px 16px' }}>
+                </a>
+                <a href="/verwaltung/belege?tab=unlinked" className="stat-card" style={{ padding: '12px 16px', textDecoration: 'none', color: 'inherit', display: 'block' }}>
                     <div className="stat-card-label" style={{ color: unlinked.length > 0 ? 'var(--red)' : 'var(--text-muted)' }}>⚠️ Nicht zugeordnet</div>
                     <div className="stat-card-value" style={{ fontSize: 20, color: unlinked.length > 0 ? 'var(--red)' : 'var(--text)' }}>{unlinked.length}</div>
                     <div className="stat-card-sub">Noch keine Buchung</div>
-                </div>
+                </a>
                 <div className="stat-card" style={{ padding: '12px 16px' }}>
                     <div className="stat-card-label">💾 Gesamtgröße</div>
                     <div className="stat-card-value" style={{ fontSize: 20 }}>
@@ -310,7 +315,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                         <td style={{ textAlign: 'right', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                                             {formatSize(r.file_size)}
                                         </td>
-                                        <td style={{ whiteSpace: 'nowrap', fontSize: 12, color: 'var(--text-muted)' }}>
+                                        <td style={{ whiteSpace: 'nowrap', fontSize: 13, color: 'var(--text-muted)' }}>
                                             {new Date(r.uploaded_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                         </td>
                                         <td>
@@ -392,7 +397,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                             <td style={{ textAlign: 'right', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                                                 {formatSize(r.file_size)}
                                             </td>
-                                            <td style={{ whiteSpace: 'nowrap', fontSize: 12, color: 'var(--text-muted)' }}>
+                                            <td style={{ whiteSpace: 'nowrap', fontSize: 13, color: 'var(--text-muted)' }}>
                                                 {new Date(r.uploaded_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </td>
                                         </tr>
@@ -513,7 +518,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                         {r.transaction_counterparty || '–'}
                                     </td>
                                     <td style={{ fontSize: 13 }}>
-                                        <span className="category-badge" style={{ fontSize: 11 }}>{r.transaction_category || '–'}</span>
+                                        <span className="category-badge" style={{ fontSize: 11, background: `${categoryColorMap[r.transaction_category] || '#6b7280'}18`, color: categoryColorMap[r.transaction_category] || '#6b7280' }}>{r.transaction_category || '–'}</span>
                                     </td>
                                     <td className={`tx-amount ${r.transaction_amount >= 0 ? 'positive' : 'negative'}`} style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                                         {(r.transaction_amount >= 0 ? '+' : '') + formatCurrency(r.transaction_amount)}
@@ -527,17 +532,26 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                     <td style={{ textAlign: 'right', fontSize: 13, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                                         {formatSize(r.file_size)}
                                     </td>
-                                    <td style={{ whiteSpace: 'nowrap', fontSize: 12, color: 'var(--text-muted)' }}>
+                                    <td style={{ whiteSpace: 'nowrap', fontSize: 13, color: 'var(--text-muted)' }}>
                                         {new Date(r.uploaded_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                     </td>
                                     <td style={{ whiteSpace: 'nowrap' }}>
-                                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                            <button
+                                                onClick={() => setInfoReceipt(r)}
+                                                title="Zuordnungsinfo"
+                                                className="btn"
+                                                style={{ fontSize: 11, padding: '4px 8px' }}
+                                            >
+                                                ℹ Info
+                                            </button>
                                             <button
                                                 onClick={() => handleOpenLinked(r)}
                                                 disabled={loadingUrl === r.id}
-                                                style={{ fontSize: 12, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', opacity: loadingUrl === r.id ? 0.5 : 1, whiteSpace: 'nowrap' }}
+                                                className="btn"
+                                                style={{ fontSize: 11, padding: '4px 8px', opacity: loadingUrl === r.id ? 0.5 : 1 }}
                                             >
-                                                Öffnen ↗
+                                                {loadingUrl === r.id ? 'Laden…' : 'Öffnen ↗'}
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteLinked(r)}
@@ -555,6 +569,75 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                     </table>
                 </div>
             </div>
+            )}
+
+            {infoReceipt && (
+                <div onClick={() => setInfoReceipt(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div onClick={e => e.stopPropagation()} className="card" style={{ width: 440, padding: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+                            <span style={{ fontWeight: 700, fontSize: 14 }}>Zuordnungsinfo</span>
+                            <button onClick={() => setInfoReceipt(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--text-muted)', lineHeight: 1 }}>✕</button>
+                        </div>
+                        <div style={{ padding: '20px' }}>
+                            {/* Datei */}
+                            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+                                {infoReceipt.file_name.toLowerCase().endsWith('.pdf') ? '📄' : '🖼️'} {infoReceipt.file_name}
+                            </div>
+
+                            {/* Methode */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                                <span style={{
+                                    padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                                    background: infoReceipt.linked_method === 'ki' ? '#ede9fe' : '#dbeafe',
+                                    color: infoReceipt.linked_method === 'ki' ? '#6d28d9' : '#1d4ed8',
+                                }}>
+                                    {infoReceipt.linked_method === 'ki' ? '✨ KI-Zuordnung' : infoReceipt.linked_method === 'manual' ? '🔗 Manuell' : '–'}
+                                </span>
+                                {infoReceipt.linked_at && (
+                                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                                        {new Date(infoReceipt.linked_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} Uhr
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Von wem */}
+                            {infoReceipt.linked_by && (
+                                <div style={{ fontSize: 13, marginBottom: 16 }}>
+                                    <span style={{ color: 'var(--text-muted)' }}>Zugeordnet von: </span>
+                                    <strong>{infoReceipt.linked_by}</strong>
+                                </div>
+                            )}
+
+                            {/* KI-Daten wenn vorhanden */}
+                            {infoReceipt.linked_method === 'ki' && (
+                                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 10 }}>KI-EXTRAHIERTE BELEGDATEN</div>
+                                    {infoReceipt.ai_vendor || infoReceipt.ai_amount != null || infoReceipt.ai_date || infoReceipt.ai_description ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                            {infoReceipt.ai_vendor && <div style={{ fontSize: 13 }}><span style={{ color: 'var(--text-muted)', minWidth: 100, display: 'inline-block' }}>Aussteller</span><strong>{infoReceipt.ai_vendor}</strong></div>}
+                                            {infoReceipt.ai_amount != null && <div style={{ fontSize: 13 }}><span style={{ color: 'var(--text-muted)', minWidth: 100, display: 'inline-block' }}>Betrag</span><strong>{new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(infoReceipt.ai_amount)}</strong></div>}
+                                            {infoReceipt.ai_date && <div style={{ fontSize: 13 }}><span style={{ color: 'var(--text-muted)', minWidth: 100, display: 'inline-block' }}>Datum</span><strong>{new Date(infoReceipt.ai_date).toLocaleDateString('de-DE')}</strong></div>}
+                                            {infoReceipt.ai_description && <div style={{ fontSize: 13 }}><span style={{ color: 'var(--text-muted)', minWidth: 100, display: 'inline-block' }}>Zweck</span><strong>{infoReceipt.ai_description}</strong></div>}
+                                            {infoReceipt.ai_invoice_number && <div style={{ fontSize: 13 }}><span style={{ color: 'var(--text-muted)', minWidth: 100, display: 'inline-block' }}>Rechnungs-Nr.</span><strong>{infoReceipt.ai_invoice_number}</strong></div>}
+                                        </div>
+                                    ) : (
+                                        <div style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                            Beleginhalt nicht lesbar – Zuordnung über Nummer aus Dateiname
+                                            {(() => { const nums = infoReceipt.file_name.match(/\d{4,}/g); return nums ? ` (${nums.join(', ')})` : ''; })()}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Kein Linking-Info vorhanden */}
+                            {!infoReceipt.linked_method && !infoReceipt.linked_at && (
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                    Keine Zuordnungsinfo verfügbar (vor Einführung dieser Funktion zugeordnet).
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
 
             {linkModal && (

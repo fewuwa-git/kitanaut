@@ -56,7 +56,7 @@ export default function LinkReceiptModal({ receiptId, fileName, onLinked, onClos
         await fetch(`/api/receipts/${receiptId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transaction_id: tx.id }),
+            body: JSON.stringify({ transaction_id: tx.id, method: 'manual' }),
         });
         onLinked(receiptId, tx);
     }

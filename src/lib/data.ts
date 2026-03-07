@@ -752,6 +752,14 @@ export interface TransactionReceipt {
     file_name: string;
     file_size: number | null;
     uploaded_at: string;
+    linked_method: 'manual' | 'ki' | null;
+    linked_at: string | null;
+    linked_by: string | null;
+    ai_vendor: string | null;
+    ai_amount: number | null;
+    ai_date: string | null;
+    ai_description: string | null;
+    ai_invoice_number: string | null;
     transaction_date: string;
     transaction_description: string;
     transaction_counterparty: string;
