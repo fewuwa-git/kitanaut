@@ -7,6 +7,23 @@ Relevante Dateien:
 
 ---
 
+## 07.03.2026 – Fix: thinkingBudget=0 für Extraktion + maxOutputTokens 256→512
+
+**Problem:** Bei mehreren PDFs wurde „Beleginhalt nicht lesbar" angezeigt – alle extrahierten Felder (vendor, amount, date, description) kamen als null zurück.
+
+**Ursache:** `gemini-2.5-flash` hat standardmäßig Thinking aktiviert. Mit `maxOutputTokens: 256` blieb nach dem internen Reasoning kaum Platz für die eigentliche JSON-Ausgabe – die Antwort wurde abgeschnitten und das JSON-Parsing schlug still fehl.
+
+**Änderungen:**
+- Extraktionsmodell: `thinkingBudget: 0` gesetzt (war vorher nicht explizit gesetzt → Thinking aktiv)
+- Extraktionsmodell: `maxOutputTokens: 256 → 512` erhöht
+- Server-Logging hinzugefügt: `[suggest] extract raw response:` für Debugging
+
+**Betroffene Dateien:**
+- `src/app/api/receipts/[id]/suggest/route.ts` – Modell-Konfiguration für Extraktion
+- `src/components/BelegeKiWorkflow.tsx` – Workflow-Visualisierung synchronisiert
+
+---
+
 ## 07.03.2026 – Initiale Dokumentation
 
 **Was:** KI-Workflow-Seite erstellt (`/verwaltung/belege?tab=ki-workflow`)
@@ -14,13 +31,13 @@ Relevante Dateien:
 **Aktueller Stand:**
 
 ### Modelle
-- Extraktion: `gemini-2.5-flash` (Fallback: `gemini-2.0-flash` bei 503/429)
+- Extraktion: `gemini-2.5-flash` mit `thinkingBudget: 0` (Fallback: `gemini-2.0-flash` bei 503/429)
 - Matching: `gemini-2.5-flash` mit `thinkingBudget: 0`
 - Beide mit `temperature: 0.1`
 
 ### Schritt 1 – Extraktion
 - Prompt extrahiert: `vendor`, `amount`, `date`, `description`, `invoice_number`
-- Max. Output-Tokens: 256
+- Max. Output-Tokens: 512
 - Gespeicherte DB-Felder: `ai_vendor`, `ai_amount`, `ai_date`, `ai_description`, `ai_invoice_number`
 
 ### Schritt 2 – Buchungsfilterung

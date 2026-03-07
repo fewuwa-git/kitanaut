@@ -167,6 +167,7 @@ export default function BelegeKiWorkflow() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <span style={TAG_STYLE('#1d4ed8', '#dbeafe')}>Extraktion</span>
                             <span style={{ fontSize: 12, fontFamily: 'monospace' }}>gemini-2.5-flash</span>
+                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>thinkingBudget=0</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <span style={TAG_STYLE('#6d28d9', '#ede9fe')}>Matching</span>
@@ -210,7 +211,9 @@ export default function BelegeKiWorkflow() {
                 <Step number={2} color="#8b5cf6" title="Schritt 1: KI-Extraktion"
                     subtitle="Gemini liest den Beleg und extrahiert strukturierte Daten">
                     <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                        Das Belegbild/PDF wird direkt an die KI übergeben (multimodal). Der folgende Prompt wird verwendet:
+                        Das Belegbild/PDF wird direkt an die KI übergeben (multimodal). <strong>thinkingBudget=0</strong> ist gesetzt,
+                        damit alle 512 Output-Tokens für die JSON-Ausgabe verfügbar sind und nicht für internes Reasoning verbraucht werden.
+                        Der folgende Prompt wird verwendet:
                     </div>
                     <div style={CODE_STYLE}>{`Extrahiere aus diesem Beleg: Aussteller/Firma, Betrag (Zahl),
 Datum (YYYY-MM-DD), kurze Beschreibung, Rechnungsnummer oder
