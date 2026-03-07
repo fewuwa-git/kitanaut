@@ -7,6 +7,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     {
         date: '07.03.2026',
         changes: [
+            '— Abrechnungen —',
+            'Wenn eine Abrechnung als „Bezahlt" markiert wird, wird das Abrechnungs-PDF automatisch in die Belegverwaltung hochgeladen und erscheint dort unter den unzugeordneten Belegen.',
             '— Sicherheit —',
             'Alle Beleg- und Upload-Endpunkte sind jetzt gegen unauthentifizierte Zugriffe geschützt (Login erforderlich).',
             'Der „Verlinkt von"-Eintrag bei Belegen wird jetzt aus dem verifizierten Login-Token gelesen statt aus einem fälschbaren HTTP-Header.',

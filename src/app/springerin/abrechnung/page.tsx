@@ -182,6 +182,16 @@ async function AbrechnungTable({
                                                                     id={ab.id}
                                                                     label={`${ab.pankonauten_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
                                                                     targetStatus="bezahlt"
+                                                                    pdfProps={ab.pankonauten_users ? {
+                                                                        user: ab.pankonauten_users,
+                                                                        monthLabel: `${ab.jahr} – ${getMonthName(ab.monat)}`,
+                                                                        tage: ab.pankonauten_abrechnung_tage || [],
+                                                                        totalStunden: ab.totalStunden,
+                                                                        totalBetrag: ab.totalBetrag,
+                                                                        abrechnungId: ab.id,
+                                                                        jahr: ab.jahr,
+                                                                        monat: ab.monat,
+                                                                    } : undefined}
                                                                 />
                                                             )}
                                                             {role === 'admin' && (
