@@ -30,6 +30,9 @@ export const CHANGELOG: ChangelogEntry[] = [
             'Buchungszuordnung: Die neuesten Buchungen erscheinen jetzt zuerst. Buchungen, die bereits einen Beleg haben, sind ausgegraut und als „belegt" markiert.',
             '— KI-Belegfunktion —',
             'Neue Massenanalyse: Belege per Checkbox auswählen und mit einem Klick auf „X analysieren" alle auf einmal von der KI prüfen lassen – mit Fortschrittsanzeige. Dateien öffnen sich jetzt inline statt in einem neuen Fenster.',
+            '— Buchungsbelege —',
+            'Duplikat-Erkennung beim Upload: Wird dieselbe Datei ein zweites Mal hochgeladen, wird sie automatisch erkannt und blockiert – unabhängig vom Dateinamen. Im Upload-Tab erscheint „⚠ Bereits vorhanden", im Kontoauszug ein Hinweis mit dem Namen der vorhandenen Datei.',
+            'Zugeordnete Belege: Neue Funktion „Zuordnung trennen" – die Verknüpfung zwischen Beleg und Buchung lässt sich aufheben, ohne die Datei zu löschen. Der Beleg wandert zurück zu den unzugeordneten Belegen.',
         ],
     },
     {
