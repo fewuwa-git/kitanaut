@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { TransactionReceipt, Category } from '@/lib/data';
 import { CATEGORY_COLORS } from '@/lib/constants';
 import { fmtDate, fmtDateTime } from '@/lib/formatDate';
 import LinkReceiptModal from './LinkReceiptModal';
 import BelegeKiWorkflow from './BelegeKiWorkflow';
 import BelegeUpload from './BelegeUpload';
+import ConfirmModal from './ConfirmModal';
 
 function formatSize(bytes: number | null | undefined): string {
     if (!bytes) return '–';
@@ -58,20 +59,26 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
     const [unlinked, setUnlinked] = useState(initialUnlinked);
     const [search, setSearch] = useState('');
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'linked'; receipt: TransactionReceipt } | { type: 'unlinked'; receipt: UnlinkedReceipt } | null>(null);
     const [loadingUrl, setLoadingUrl] = useState<string | null>(null);
     const [infoReceipt, setInfoReceipt] = useState<TransactionReceipt | null>(null);
     const [linkModal, setLinkModal] = useState<{ id: string; fileName: string } | null>(null);
     const [suggestingId, setSuggestingId] = useState<string | null>(null);
     const [autoLinkedId, setAutoLinkedId] = useState<string | null>(null);
     const [showKiSettings, setShowKiSettings] = useState(false);
-    const [kiSettings, setKiSettings] = useState<{ autoAssign: boolean; threshold: number }>(() => {
+    const [kiSettings, setKiSettings] = useState<{ autoAssign: boolean; threshold: number }>({ autoAssign: false, threshold: 99 });
+    const [kiSettingsDraft, setKiSettingsDraft] = useState(kiSettings);
+
+    useEffect(() => {
         try {
             const stored = localStorage.getItem('ki_settings');
-            if (stored) return JSON.parse(stored);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                setKiSettings(parsed);
+                setKiSettingsDraft(parsed);
+            }
         } catch {}
-        return { autoAssign: false, threshold: 99 };
-    });
-    const [kiSettingsDraft, setKiSettingsDraft] = useState(kiSettings);
+    }, []);
     const [suggestionResults, setSuggestionResults] = useState<Record<string, SuggestResult>>(() => {
         const initial: Record<string, SuggestResult> = {};
         for (const r of initialUnlinked) {
@@ -160,19 +167,27 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
     }
 
     async function handleDeleteLinked(r: TransactionReceipt) {
-        if (!confirm(`Beleg „${r.file_name}" wirklich löschen?`)) return;
-        setDeletingId(r.id);
-        await fetch(`/api/transactions/${r.transaction_id}/receipts/${r.id}`, { method: 'DELETE' });
-        setReceipts(prev => prev.filter(x => x.id !== r.id));
-        setDeletingId(null);
+        setDeleteConfirm({ type: 'linked', receipt: r });
     }
 
     async function handleDeleteUnlinked(r: UnlinkedReceipt) {
-        if (!confirm(`Beleg „${r.file_name}" wirklich löschen?`)) return;
+        setDeleteConfirm({ type: 'unlinked', receipt: r });
+    }
+
+    async function confirmDelete() {
+        if (!deleteConfirm) return;
+        const r = deleteConfirm.receipt;
         setDeletingId(r.id);
-        await fetch(`/api/receipts/${r.id}`, { method: 'DELETE' });
-        setUnlinked(prev => prev.filter(x => x.id !== r.id));
-        setSuggestionResults(prev => { const next = { ...prev }; delete next[r.id]; return next; });
+        setDeleteConfirm(null);
+        if (deleteConfirm.type === 'linked') {
+            const linked = deleteConfirm.receipt as TransactionReceipt;
+            await fetch(`/api/transactions/${linked.transaction_id}/receipts/${linked.id}`, { method: 'DELETE' });
+            setReceipts(prev => prev.filter(x => x.id !== linked.id));
+        } else {
+            await fetch(`/api/receipts/${r.id}`, { method: 'DELETE' });
+            setUnlinked(prev => prev.filter(x => x.id !== r.id));
+            setSuggestionResults(prev => { const next = { ...prev }; delete next[r.id]; return next; });
+        }
         setDeletingId(null);
     }
 
@@ -729,10 +744,22 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                 </div>
             )}
 
+            <ConfirmModal
+                isOpen={!!deleteConfirm}
+                title="Beleg löschen"
+                message={deleteConfirm ? `„${deleteConfirm.receipt.file_name}" wird unwiderruflich gelöscht.` : ''}
+                confirmLabel="Löschen"
+                confirmClass="btn-danger"
+                isLoading={!!deletingId}
+                onConfirm={confirmDelete}
+                onCancel={() => setDeleteConfirm(null)}
+            />
+
             {linkModal && (
                 <LinkReceiptModal
                     receiptId={linkModal.id}
                     fileName={linkModal.fileName}
+                    linkedTransactionIds={new Set(receipts.map(r => r.transaction_id).filter(Boolean) as string[])}
                     onLinked={handleLinked}
                     onClose={() => setLinkModal(null)}
                 />
