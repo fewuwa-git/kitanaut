@@ -7,6 +7,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     {
         date: '07.03.2026',
         changes: [
+            '— Chat —',
+            'Neue Chat-Seite: KI-Assistent beantwortet Fragen ausschließlich auf Basis der Dashboard-Daten (Buchungen, Kategorien, Belege) – kein Internetzugriff. Unterstützt Gemini, Claude und OpenAI als Anbieter.',
             '— Buchungsbelege —',
             'Neue Seite „KI-Einstellungen" in der Belegverwaltung: Gemini API Key, Modellauswahl (Extraktion, Matching, Fallback), Zeitfenster, max. Buchungen und Auto-Zuordnung lassen sich jetzt direkt in der Oberfläche konfigurieren.',
             'KI-Beleganalyse: Neben Google Gemini kann jetzt auch Anthropic Claude oder OpenAI ChatGPT als KI-Anbieter gewählt werden – umschaltbar in den KI-Einstellungen.',

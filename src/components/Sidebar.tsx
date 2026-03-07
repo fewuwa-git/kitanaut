@@ -13,6 +13,12 @@ type NavGroup = { section: string; items: NavItem[] };
 
 const NAV_ITEMS: NavGroup[] = [
     {
+        section: 'CHAT',
+        items: [
+            { href: '/chat', icon: '💬', label: 'Chat', roles: ['admin', 'member', 'eltern', 'springerin'] },
+        ],
+    },
+    {
         section: 'ÜBERSICHT',
         items: [
             { href: '/dashboard', icon: '📊', label: 'Kontostand', roles: ['admin', 'member'] },

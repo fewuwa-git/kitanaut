@@ -17,6 +17,8 @@ const ROLE_LABELS: Record<Role, string> = {
 type NavItem = { href: string; label: string; section: string; roles: Role[] };
 
 const ALL_PAGES: NavItem[] = [
+    // Chat
+    { href: '/chat', label: 'Chat', section: 'Chat', roles: ['admin', 'member', 'eltern', 'springerin'] },
     // Übersicht
     { href: '/dashboard', label: 'Kontostand', section: 'Übersicht', roles: ['admin', 'member'] },
     { href: '/kontoauszug', label: 'Kontoauszug', section: 'Übersicht', roles: ['admin', 'member'] },
