@@ -1,12 +1,19 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface Message {
     role: 'user' | 'assistant';
     content: string;
     meta?: { txCount: number; dateFrom: string; dateTo: string; provider: string; model: string };
     error?: boolean;
+}
+
+interface Session {
+    id: string;
+    title: string;
+    created_at: string;
+    updated_at: string;
 }
 
 function renderMarkdown(text: string) {
@@ -90,6 +97,17 @@ function formatInline(text: string): React.ReactNode {
     });
 }
 
+function formatRelativeDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'Heute';
+    if (diffDays === 1) return 'Gestern';
+    if (diffDays < 7) return `Vor ${diffDays} Tagen`;
+    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+
 const PROVIDER_LABEL: Record<string, string> = { gemini: 'Gemini', claude: 'Claude', openai: 'GPT' };
 
 const SUGGESTIONS = [
@@ -103,15 +121,75 @@ export default function ChatClient() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
+    const [sessions, setSessions] = useState<Session[]>([]);
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const hasMessages = messages.length > 0 || loading;
+
+    // Load sessions on mount
+    useEffect(() => {
+        fetch('/api/chat/sessions')
+            .then(r => r.json())
+            .then(data => { if (Array.isArray(data)) setSessions(data); })
+            .catch(() => {});
+    }, []);
 
     useEffect(() => { inputRef.current?.focus(); }, []);
 
     useEffect(() => {
         if (hasMessages) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, loading, hasMessages]);
+
+    function startNewChat() {
+        setMessages([]);
+        setInput('');
+        setCurrentSessionId(null);
+        setTimeout(() => inputRef.current?.focus(), 50);
+    }
+
+    async function loadSession(session: Session) {
+        const res = await fetch(`/api/chat/sessions/${session.id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setMessages(data.messages ?? []);
+        setCurrentSessionId(session.id);
+    }
+
+    async function deleteSession(id: string, e: React.MouseEvent) {
+        e.stopPropagation();
+        setDeletingId(id);
+        await fetch(`/api/chat/sessions/${id}`, { method: 'DELETE' });
+        setSessions(prev => prev.filter(s => s.id !== id));
+        if (currentSessionId === id) startNewChat();
+        setDeletingId(null);
+    }
+
+    const saveSession = useCallback(async (msgs: Message[], sessionId: string | null): Promise<string> => {
+        if (sessionId) {
+            await fetch(`/api/chat/sessions/${sessionId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: msgs }),
+            });
+            setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, updated_at: new Date().toISOString() } : s));
+            return sessionId;
+        } else {
+            const firstUserMsg = msgs.find(m => m.role === 'user')?.content ?? 'Neuer Chat';
+            const title = firstUserMsg.length > 55 ? firstUserMsg.slice(0, 55) + '…' : firstUserMsg;
+            const res = await fetch('/api/chat/sessions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, messages: msgs }),
+            });
+            const data = await res.json();
+            const newId = data.id;
+            setSessions(prev => [{ id: newId, title, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }, ...prev]);
+            setCurrentSessionId(newId);
+            return newId;
+        }
+    }, []);
 
     async function send(text?: string) {
         const msg = (text ?? input).trim();
@@ -123,7 +201,6 @@ export default function ChatClient() {
         setInput('');
         setLoading(true);
 
-        // Reset textarea height
         if (inputRef.current) inputRef.current.style.height = 'auto';
 
         try {
@@ -136,7 +213,10 @@ export default function ChatClient() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Fehler');
-            setMessages(prev => [...prev, { role: 'assistant', content: data.reply, meta: data.meta }]);
+            const assistantMsg: Message = { role: 'assistant', content: data.reply, meta: data.meta };
+            const updatedMessages = [...history, assistantMsg];
+            setMessages(updatedMessages);
+            await saveSession(updatedMessages, currentSessionId);
         } catch (err: any) {
             setMessages(prev => [...prev, { role: 'assistant', content: `Fehler: ${err.message}`, error: true }]);
         } finally {
@@ -177,121 +257,211 @@ export default function ChatClient() {
     );
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: '100%' }}>
+        <div style={{ display: 'flex', flex: 1, minHeight: 0, height: '100%', gap: 0 }}>
 
-            {/* ── Empty state: centered ── */}
-            {!hasMessages && (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ width: '100%', maxWidth: 680 }}>
-                        {/* Title */}
-                        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-                            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto 14px' }}>✦</div>
-                            <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 6, color: 'var(--text)' }}>Finanz-Assistent</div>
-                            <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>Fragen zu den Kita-Finanzen – beantwortet aus Dashboard-Daten</div>
-                        </div>
-
-                        {/* Input */}
-                        {inputBar}
-
-                        {/* Suggestion chips */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 16 }}>
-                            {SUGGESTIONS.map(s => (
-                                <button key={s} onClick={() => send(s)} style={{
-                                    padding: '8px 16px', borderRadius: 20, border: '1.5px solid var(--border)',
-                                    background: 'var(--bg)', color: 'var(--text)', fontSize: 13, cursor: 'pointer',
-                                    transition: 'border-color 0.15s, background 0.15s',
-                                    fontFamily: 'inherit',
-                                }}
-                                    onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = 'var(--primary)'; (e.target as HTMLElement).style.background = 'var(--card)'; }}
-                                    onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = 'var(--border)'; (e.target as HTMLElement).style.background = 'var(--bg)'; }}
-                                >{s}</button>
-                            ))}
-                        </div>
-
-                        {/* Disclaimer at bottom */}
-                        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                            Hallo! Ich bin dein Finanz-Assistent für die Kita Pankonauten. Ich beantworte Fragen <strong>ausschließlich</strong> auf Basis der Daten in diesem Dashboard – keine externen Quellen.
-                        </div>
-                    </div>
+            {/* ── Sessions Sidebar ── */}
+            <div style={{
+                width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column',
+                borderRight: '1px solid var(--border)', paddingRight: 0, overflowY: 'auto',
+                background: 'var(--bg-secondary)',
+            }}>
+                {/* New Chat Button */}
+                <div style={{ padding: '16px 12px 12px' }}>
+                    <button
+                        onClick={startNewChat}
+                        style={{
+                            width: '100%', padding: '10px 14px', borderRadius: 10,
+                            border: '1.5px solid var(--border)',
+                            background: currentSessionId === null && !hasMessages ? 'var(--primary)' : 'var(--card)',
+                            color: currentSessionId === null && !hasMessages ? '#fff' : 'var(--text)',
+                            fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            transition: 'all 0.15s', fontFamily: 'inherit',
+                        }}
+                        onMouseEnter={e => {
+                            if (currentSessionId !== null || hasMessages) {
+                                (e.currentTarget as HTMLElement).style.borderColor = 'var(--primary)';
+                                (e.currentTarget as HTMLElement).style.color = 'var(--primary)';
+                            }
+                        }}
+                        onMouseLeave={e => {
+                            if (currentSessionId !== null || hasMessages) {
+                                (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+                                (e.currentTarget as HTMLElement).style.color = 'var(--text)';
+                            }
+                        }}
+                    >
+                        <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
+                        Neuer Chat
+                    </button>
                 </div>
-            )}
 
-            {/* ── Active state: messages + input ── */}
-            {hasMessages && (
-                <>
-                    <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 16 }}>
-                        <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {messages.map((msg, i) => (
-                                <div key={i} style={{
-                                    display: 'flex',
-                                    flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
-                                    alignItems: 'flex-start',
-                                    gap: 12,
-                                    padding: '6px 0',
-                                }}>
-                                    {/* Avatar */}
-                                    <div style={{
-                                        width: 32, height: 32, borderRadius: '50%', flexShrink: 0, marginTop: 2,
-                                        background: msg.role === 'user' ? 'var(--card)' : 'var(--primary)',
-                                        border: msg.role === 'user' ? '1.5px solid var(--primary)' : 'none',
-                                        color: msg.role === 'user' ? 'var(--primary)' : '#fff',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        fontSize: msg.role === 'user' ? 13 : 15, fontWeight: 700,
+                {/* Session list */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 16px' }}>
+                    {sessions.length === 0 && (
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginTop: 24, lineHeight: 1.6 }}>
+                            Noch keine gespeicherten Chats
+                        </div>
+                    )}
+                    {sessions.map(s => (
+                        <div
+                            key={s.id}
+                            onClick={() => loadSession(s)}
+                            style={{
+                                padding: '10px 12px', borderRadius: 8, marginBottom: 4,
+                                background: currentSessionId === s.id ? 'var(--card)' : 'transparent',
+                                border: currentSessionId === s.id ? '1px solid var(--border)' : '1px solid transparent',
+                                cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 3,
+                                transition: 'background 0.12s', position: 'relative',
+                            }}
+                            onMouseEnter={e => {
+                                if (currentSessionId !== s.id) (e.currentTarget as HTMLElement).style.background = 'var(--card)';
+                                const btn = e.currentTarget.querySelector('.del-btn') as HTMLElement;
+                                if (btn) btn.style.opacity = '1';
+                            }}
+                            onMouseLeave={e => {
+                                if (currentSessionId !== s.id) (e.currentTarget as HTMLElement).style.background = 'transparent';
+                                const btn = e.currentTarget.querySelector('.del-btn') as HTMLElement;
+                                if (btn) btn.style.opacity = '0';
+                            }}
+                        >
+                            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', paddingRight: 20 }}>
+                                {s.title}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                                {formatRelativeDate(s.updated_at)}
+                            </div>
+                            <button
+                                className="del-btn"
+                                onClick={e => deleteSession(s.id, e)}
+                                disabled={deletingId === s.id}
+                                style={{
+                                    position: 'absolute', top: 8, right: 8,
+                                    width: 22, height: 22, borderRadius: 6,
+                                    border: 'none', background: 'transparent',
+                                    color: 'var(--text-muted)', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: 14, opacity: 0, transition: 'opacity 0.1s, color 0.1s',
+                                    padding: 0,
+                                }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#ef4444'; }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'; }}
+                                title="Chat löschen"
+                            >
+                                ×
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* ── Chat Area ── */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0 }}>
+
+                {/* Empty state */}
+                {!hasMessages && (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+                        <div style={{ width: '100%', maxWidth: 680 }}>
+                            <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                                <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto 14px' }}>✦</div>
+                                <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 6, color: 'var(--text)' }}>Finanz-Assistent</div>
+                                <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>Fragen zu den Kita-Finanzen – beantwortet aus Dashboard-Daten</div>
+                            </div>
+                            {inputBar}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+                                {SUGGESTIONS.map(s => (
+                                    <button key={s} onClick={() => send(s)} style={{
+                                        padding: '8px 16px', borderRadius: 20, border: '1.5px solid var(--border)',
+                                        background: 'var(--bg)', color: 'var(--text)', fontSize: 13, cursor: 'pointer',
+                                        transition: 'border-color 0.15s, background 0.15s', fontFamily: 'inherit',
+                                    }}
+                                        onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = 'var(--primary)'; (e.target as HTMLElement).style.background = 'var(--card)'; }}
+                                        onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = 'var(--border)'; (e.target as HTMLElement).style.background = 'var(--bg)'; }}
+                                    >{s}</button>
+                                ))}
+                            </div>
+                            <div style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                                Hallo! Ich bin dein Finanz-Assistent für die Kita Pankonauten. Ich beantworte Fragen <strong>ausschließlich</strong> auf Basis der Daten in diesem Dashboard – keine externen Quellen.
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Active chat */}
+                {hasMessages && (
+                    <>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 16px' }}>
+                            <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                {messages.map((msg, i) => (
+                                    <div key={i} style={{
+                                        display: 'flex',
+                                        flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
+                                        alignItems: 'flex-start',
+                                        gap: 12,
+                                        padding: '6px 0',
                                     }}>
-                                        {msg.role === 'user' ? 'Du' : '✦'}
-                                    </div>
-
-                                    <div style={{ maxWidth: '80%' }}>
                                         <div style={{
-                                            padding: '12px 16px',
-                                            borderRadius: msg.role === 'user' ? '18px 4px 18px 18px' : '4px 18px 18px 18px',
-                                            background: msg.role === 'user'
-                                                ? 'var(--card)'
-                                                : msg.error ? '#fef2f2' : 'var(--card)',
-                                            color: msg.error ? '#dc2626' : 'var(--text)',
-                                            border: msg.role === 'user'
-                                                ? '1.5px solid var(--primary)'
-                                                : `1.5px solid ${msg.error ? '#fecaca' : 'var(--border)'}`,
-                                            boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                                            width: 32, height: 32, borderRadius: '50%', flexShrink: 0, marginTop: 2,
+                                            background: msg.role === 'user' ? 'var(--card)' : 'var(--primary)',
+                                            border: msg.role === 'user' ? '1.5px solid var(--primary)' : 'none',
+                                            color: msg.role === 'user' ? 'var(--primary)' : '#fff',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: msg.role === 'user' ? 13 : 15, fontWeight: 700,
                                         }}>
-                                            {msg.role === 'user'
-                                                ? <div style={{ fontSize: 14, lineHeight: 1.65, whiteSpace: 'pre-wrap', fontWeight: 500 }}>{msg.content}</div>
-                                                : <div>{renderMarkdown(msg.content)}</div>
-                                            }
+                                            {msg.role === 'user' ? 'Du' : '✦'}
                                         </div>
-                                        {msg.meta && (
-                                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, paddingLeft: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                                <span>📊 {msg.meta.txCount} Buchungen · {msg.meta.dateFrom} – {msg.meta.dateTo}</span>
-                                                <span style={{ opacity: 0.65 }}>{PROVIDER_LABEL[msg.meta.provider] ?? msg.meta.provider} · {msg.meta.model}</span>
+                                        <div style={{ maxWidth: '80%' }}>
+                                            <div style={{
+                                                padding: '12px 16px',
+                                                borderRadius: msg.role === 'user' ? '18px 4px 18px 18px' : '4px 18px 18px 18px',
+                                                background: msg.role === 'user' ? 'var(--card)' : msg.error ? '#fef2f2' : 'var(--card)',
+                                                color: msg.error ? '#dc2626' : 'var(--text)',
+                                                border: msg.role === 'user'
+                                                    ? '1.5px solid var(--primary)'
+                                                    : `1.5px solid ${msg.error ? '#fecaca' : 'var(--border)'}`,
+                                                boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                                            }}>
+                                                {msg.role === 'user'
+                                                    ? <div style={{ fontSize: 14, lineHeight: 1.65, whiteSpace: 'pre-wrap', fontWeight: 500 }}>{msg.content}</div>
+                                                    : <div>{renderMarkdown(msg.content)}</div>
+                                                }
                                             </div>
-                                        )}
+                                            {msg.meta && (
+                                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, paddingLeft: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                                                    <span>📊 {msg.meta.txCount} Buchungen · {msg.meta.dateFrom} – {msg.meta.dateTo}</span>
+                                                    <span style={{ opacity: 0.65 }}>{PROVIDER_LABEL[msg.meta.provider] ?? msg.meta.provider} · {msg.meta.model}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
 
-                            {loading && (
-                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '6px 0' }}>
-                                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, marginTop: 2 }}>✦</div>
-                                    <div style={{ padding: '14px 18px', borderRadius: '4px 18px 18px 18px', background: 'var(--card)', border: '1.5px solid var(--border)', display: 'flex', gap: 6, alignItems: 'center' }}>
-                                        {[0, 1, 2].map(j => (
-                                            <div key={j} style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text-muted)', animation: 'chatPulse 1.2s ease-in-out infinite', animationDelay: `${j * 0.2}s` }} />
-                                        ))}
+                                {loading && (
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '6px 0' }}>
+                                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0, marginTop: 2 }}>✦</div>
+                                        <div style={{ padding: '14px 18px', borderRadius: '4px 18px 18px 18px', background: 'var(--card)', border: '1.5px solid var(--border)', display: 'flex', gap: 6, alignItems: 'center' }}>
+                                            {[0, 1, 2].map(j => (
+                                                <div key={j} style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text-muted)', animation: 'chatPulse 1.2s ease-in-out infinite', animationDelay: `${j * 0.2}s` }} />
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                            <div ref={bottomRef} />
+                                )}
+                                <div ref={bottomRef} />
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Input pinned to bottom */}
-                    <div style={{ maxWidth: 720, margin: '0 auto', width: '100%', paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-                        {inputBar}
-                        <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, color: 'var(--text-muted)' }}>
-                            Antworten basieren ausschließlich auf Dashboard-Daten
+                        {/* Input pinned to bottom */}
+                        <div style={{ padding: '12px 24px 0', borderTop: '1px solid var(--border)' }}>
+                            <div style={{ maxWidth: 720, margin: '0 auto' }}>
+                                {inputBar}
+                                <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, color: 'var(--text-muted)' }}>
+                                    Antworten basieren ausschließlich auf Dashboard-Daten
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </>
-            )}
+                    </>
+                )}
+            </div>
 
             <style>{`
                 @keyframes chatPulse {

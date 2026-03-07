@@ -10,6 +10,7 @@ export const CHANGELOG: ChangelogEntry[] = [
             '— Dashboard —',
             'Der aktuelle Kontostand zeigt jetzt in Klammern das Datum der letzten Buchung an.',
             '— Chat —',
+            'Chat-Verlauf: Alle Gespräche mit dem Finanz-Assistenten werden automatisch gespeichert und können jederzeit in der neuen Sidebar links wieder aufgerufen werden. Per Klick auf „Neuer Chat" startet man eine neue Unterhaltung.',
             'Neue Chat-Seite: KI-Assistent beantwortet Fragen ausschließlich auf Basis der Dashboard-Daten (Buchungen, Kategorien, Belege) – kein Internetzugriff. Unterstützt Gemini, Claude und OpenAI als Anbieter.',
             '— Buchungsbelege —',
             'Neue Seite „KI-Einstellungen" in der Belegverwaltung: Gemini API Key, Modellauswahl (Extraktion, Matching, Fallback), Zeitfenster, max. Buchungen und Auto-Zuordnung lassen sich jetzt direkt in der Oberfläche konfigurieren.',
