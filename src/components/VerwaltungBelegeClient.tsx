@@ -75,19 +75,9 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
     const [suggestingId, setSuggestingId] = useState<string | null>(null);
     const [autoLinkedId, setAutoLinkedId] = useState<string | null>(null);
     const [showKiSettings, setShowKiSettings] = useState(false);
-    const [kiSettings, setKiSettings] = useState<{ autoAssign: boolean; threshold: number }>({ autoAssign: false, threshold: 99 });
-    const [kiSettingsDraft, setKiSettingsDraft] = useState(kiSettings);
-
-    useEffect(() => {
-        try {
-            const stored = localStorage.getItem('ki_settings');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                setKiSettings(parsed);
-                setKiSettingsDraft(parsed);
-            }
-        } catch {}
-    }, []);
+    const dbKiSettings = { autoAssign: kiSettingsInitial?.autoAssign ?? false, threshold: kiSettingsInitial?.autoAssignThreshold ?? 99 };
+    const [kiSettings, setKiSettings] = useState<{ autoAssign: boolean; threshold: number }>(dbKiSettings);
+    const [kiSettingsDraft, setKiSettingsDraft] = useState(dbKiSettings);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [bulkAnalyzing, setBulkAnalyzing] = useState(false);
     const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
@@ -125,7 +115,6 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
 
     function saveKiSettings(settings: { autoAssign: boolean; threshold: number }) {
         setKiSettings(settings);
-        try { localStorage.setItem('ki_settings', JSON.stringify(settings)); } catch {}
         setShowKiSettings(false);
     }
 
