@@ -74,21 +74,6 @@ export default function KontoauszugClient({ transactions: initialTransactions, c
     const [isLoading, setIsLoading] = useState<string | null>(null);
     const [receiptTx, setReceiptTx] = useState<{ id: string; label: string } | null>(null);
     const [txsWithReceipts, setTxsWithReceipts] = useState<Set<string>>(new Set(initialTxIdsWithReceipts));
-    const [openingPdfId, setOpeningPdfId] = useState<string | null>(null);
-
-    async function handleOpenReceipt(txId: string) {
-        setOpeningPdfId(txId);
-        const win = window.open('', '_blank');
-        try {
-            const res = await fetch(`/api/transactions/${txId}/receipts`);
-            const data = await res.json();
-            const first = Array.isArray(data) ? data[0] : null;
-            if (first?.url && win) win.location.href = first.url;
-            else if (win) win.close();
-        } finally {
-            setOpeningPdfId(null);
-        }
-    }
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Close dropdown when clicking outside
@@ -405,13 +390,12 @@ export default function KontoauszugClient({ transactions: initialTransactions, c
                                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                                             {txsWithReceipts.has(tx.id) ? (
                                                 <button
-                                                    title="Beleg öffnen"
-                                                    onClick={() => handleOpenReceipt(tx.id)}
-                                                    disabled={openingPdfId === tx.id}
+                                                    title="Belege anzeigen"
+                                                    onClick={() => setReceiptTx({ id: tx.id, label: tx.description || tx.counterparty })}
                                                     className="btn btn-sm"
-                                                    style={{ padding: '4px 10px', backgroundColor: 'var(--navy)', color: 'white', opacity: openingPdfId === tx.id ? 0.5 : 1 }}
+                                                    style={{ padding: '4px 10px', backgroundColor: 'var(--navy)', color: 'white' }}
                                                 >
-                                                    {openingPdfId === tx.id ? '…' : '📄 PDF'}
+                                                    📄 PDF
                                                 </button>
                                             ) : (
                                                 <button

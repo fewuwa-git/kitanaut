@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { fmtDateTime } from '@/lib/formatDate';
+import ConfirmModal from './ConfirmModal';
 
 function formatSize(bytes: number | null | undefined): string {
     if (!bytes) return '';
@@ -30,6 +31,7 @@ export default function ReceiptModal({ transactionId, transactionLabel, onReceip
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; fileName: string } | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
 
     async function load() {
@@ -62,10 +64,11 @@ export default function ReceiptModal({ transactionId, transactionLabel, onReceip
         if (fileRef.current) fileRef.current.value = '';
     }
 
-    async function handleDelete(receiptId: string, fileName: string) {
-        if (!confirm(`Beleg „${fileName}“ wirklich löschen?`)) return;
-        setDeletingId(receiptId);
-        await fetch(`/api/transactions/${transactionId}/receipts/${receiptId}`, { method: 'DELETE' });
+    async function confirmDelete() {
+        if (!deleteConfirm) return;
+        setDeletingId(deleteConfirm.id);
+        setDeleteConfirm(null);
+        await fetch(`/api/transactions/${transactionId}/receipts/${deleteConfirm.id}`, { method: 'DELETE' });
         await load();
         setDeletingId(null);
     }
@@ -132,13 +135,14 @@ export default function ReceiptModal({ transactionId, transactionLabel, onReceip
                                             href={r.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            style={{ fontSize: 12, color: 'var(--primary)', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                                            className="btn btn-sm"
+                                            style={{ padding: '4px 10px', backgroundColor: 'var(--navy)', color: 'white', textDecoration: 'none', whiteSpace: 'nowrap' }}
                                         >
-                                            Öffnen ↗
+                                            📄 PDF
                                         </a>
                                     )}
                                     <button
-                                        onClick={() => handleDelete(r.id, r.file_name)}
+                                        onClick={() => setDeleteConfirm({ id: r.id, fileName: r.file_name })}
                                         disabled={deletingId === r.id}
                                         style={{
                                             background: 'none', border: 'none', cursor: 'pointer',
@@ -177,6 +181,17 @@ export default function ReceiptModal({ transactionId, transactionLabel, onReceip
                     </label>
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={!!deleteConfirm}
+                title="Beleg löschen"
+                message={deleteConfirm ? `„${deleteConfirm.fileName}" wird unwiderruflich gelöscht.` : ''}
+                confirmLabel="Löschen"
+                confirmClass="btn-danger"
+                isLoading={!!deletingId}
+                onConfirm={confirmDelete}
+                onCancel={() => setDeleteConfirm(null)}
+            />
         </div>
     );
 }

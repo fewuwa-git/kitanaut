@@ -61,6 +61,13 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'linked'; receipt: TransactionReceipt } | { type: 'unlinked'; receipt: UnlinkedReceipt } | null>(null);
     const [loadingUrl, setLoadingUrl] = useState<string | null>(null);
+    const [preview, setPreview] = useState<{ url: string; fileName: string } | null>(null);
+
+    useEffect(() => {
+        function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setPreview(null); }
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, []);
     const [infoReceipt, setInfoReceipt] = useState<TransactionReceipt | null>(null);
     const [linkModal, setLinkModal] = useState<{ id: string; fileName: string } | null>(null);
     const [suggestingId, setSuggestingId] = useState<string | null>(null);
@@ -159,10 +166,9 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
 
     async function handleOpenLinked(r: TransactionReceipt) {
         setLoadingUrl(r.id);
-        const res = await fetch(`/api/transactions/${r.transaction_id}/receipts`);
+        const res = await fetch(`/api/receipts/${r.id}`);
         const data = await res.json();
-        const found = Array.isArray(data) ? data.find((x: any) => x.id === r.id) : null;
-        if (found?.url) window.open(found.url, '_blank');
+        if (data.url) setPreview({ url: data.url, fileName: r.file_name });
         setLoadingUrl(null);
     }
 
@@ -315,13 +321,13 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                                 onClick={async () => {
                                                     const res = await fetch(`/api/receipts/${r.id}`);
                                                     const data = await res.json();
-                                                    if (data.url) window.open(data.url, '_blank');
+                                                    if (data.url) setPreview({ url: data.url, fileName: r.file_name });
                                                 }}
                                                 style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 13, color: 'inherit' }}
                                                 title="Öffnen"
                                             >
                                                 <span>{r.file_name.toLowerCase().endsWith('.pdf') ? '📄' : '🖼️'}</span>
-                                                <span style={{ textDecoration: 'underline' }}>{r.file_name}</span>
+                                                <span style={{ fontSize: 13 }}>{r.file_name}</span>
                                             </button>
                                         </td>
                                         <td>
@@ -414,7 +420,7 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                                     title="Öffnen"
                                                 >
                                                     <span>{r.file_name.toLowerCase().endsWith('.pdf') ? '📄' : '🖼️'}</span>
-                                                    <span style={{ textDecoration: 'underline' }}>{r.file_name}</span>
+                                                    <span style={{ fontSize: 13 }}>{r.file_name}</span>
                                                 </button>
                                             </td>
                                             <td>
@@ -740,6 +746,30 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                             <button className="btn" onClick={() => setShowKiSettings(false)} style={{ fontSize: 13 }}>Abbrechen</button>
                             <button className="btn btn-primary" onClick={() => saveKiSettings(kiSettingsDraft)} style={{ fontSize: 13 }}>Speichern</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {preview && (
+                <div
+                    onClick={() => setPreview(null)}
+                    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+                >
+                    <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 900, height: '85vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid var(--border)', gap: 12 }}>
+                            <span style={{ fontSize: 13, fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview.fileName}</span>
+                            <a href={preview.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm" style={{ padding: '4px 10px', backgroundColor: 'var(--navy)', color: 'white', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                                Extern öffnen ↗
+                            </a>
+                            <button onClick={() => setPreview(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--text-muted)', lineHeight: 1 }}>✕</button>
+                        </div>
+                        {preview.fileName.toLowerCase().endsWith('.pdf') ? (
+                            <iframe src={preview.url} style={{ flex: 1, border: 'none', width: '100%' }} title={preview.fileName} />
+                        ) : (
+                            <div style={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+                                <img src={preview.url} alt={preview.fileName} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

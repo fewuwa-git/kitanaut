@@ -77,7 +77,7 @@ export default function LinkReceiptModal({ receiptId, fileName, linkedTransactio
             onClick={handleBackdrop}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-            <div className="card" style={{ width: 600, maxWidth: '95vw', maxHeight: '80vh', display: 'flex', flexDirection: 'column', padding: 0 }}>
+            <div className="card" style={{ width: 750, maxWidth: '95vw', maxHeight: '80vh', display: 'flex', flexDirection: 'column', padding: 0 }}>
                 {/* Header */}
                 <div className="card-header" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
                     <div>
