@@ -667,14 +667,14 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                         {fmtDateTime(r.uploaded_at)}
                                     </td>
                                     <td style={{ whiteSpace: 'nowrap' }}>
-                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                                             <button
                                                 onClick={() => setInfoReceipt(r)}
                                                 title="Zuordnungsinfo"
                                                 className="btn"
-                                                style={{ fontSize: 11, padding: '4px 8px' }}
+                                                style={{ fontSize: 13, padding: '4px 7px' }}
                                             >
-                                                ℹ Info
+                                                ℹ
                                             </button>
                                             <button
                                                 onClick={() => handleOpenLinked(r)}
@@ -688,10 +688,9 @@ export default function VerwaltungBelegeClient({ receipts: initialReceipts, unli
                                                 onClick={() => setUnlinkConfirm(r)}
                                                 disabled={unlinkingId === r.id}
                                                 title="Zuordnung trennen (Beleg bleibt erhalten)"
-                                                className="btn"
-                                                style={{ fontSize: 11, padding: '4px 8px', opacity: unlinkingId === r.id ? 0.5 : 1 }}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, padding: '2px 4px', opacity: unlinkingId === r.id ? 0.5 : 1, color: 'var(--text-muted)' }}
                                             >
-                                                🔗 Trennen
+                                                🔗
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteLinked(r)}
