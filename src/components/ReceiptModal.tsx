@@ -58,8 +58,14 @@ export default function ReceiptModal({ transactionId, transactionLabel, onReceip
         setUploading(true);
         const fd = new FormData();
         fd.append('file', file);
-        await fetch(`/api/transactions/${transactionId}/receipts`, { method: 'POST', body: fd });
-        await load();
+        const res = await fetch(`/api/transactions/${transactionId}/receipts`, { method: 'POST', body: fd });
+        if (res.status === 409) {
+            const data = await res.json();
+            const name = data.existing?.file_name ?? 'unbekannte Datei';
+            alert(`Diese Datei wurde bereits hochgeladen (als „${name}"). Bitte prüfe die vorhandenen Belege.`);
+        } else {
+            await load();
+        }
         setUploading(false);
         if (fileRef.current) fileRef.current.value = '';
     }

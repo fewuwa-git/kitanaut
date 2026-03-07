@@ -5,8 +5,9 @@ import { useRef, useState, useCallback } from 'react';
 interface UploadItem {
     localId: string;
     file: File;
-    status: 'pending' | 'uploading' | 'done' | 'error';
+    status: 'pending' | 'uploading' | 'done' | 'error' | 'duplicate';
     error?: string;
+    duplicateInfo?: { file_name: string; uploaded_at: string };
 }
 
 function formatSize(bytes: number): string {
@@ -47,7 +48,9 @@ export default function BelegeUpload({ onUploaded }: Props) {
             fd.append('file', item.file);
             const res = await fetch('/api/receipts', { method: 'POST', body: fd });
             const data = await res.json();
-            if (data.id) {
+            if (res.status === 409 && data.duplicate) {
+                setQueue(prev => prev.map(q => q.localId === item.localId ? { ...q, status: 'duplicate', duplicateInfo: data.existing } : q));
+            } else if (data.id) {
                 setQueue(prev => prev.map(q => q.localId === item.localId ? { ...q, status: 'done' } : q));
                 onUploaded({ ...data, ai_vendor: null, ai_amount: null, ai_date: null, ai_description: null, ai_suggestions: null });
             } else {
@@ -80,7 +83,7 @@ export default function BelegeUpload({ onUploaded }: Props) {
     }
 
     function clearDone() {
-        setQueue(prev => prev.filter(q => q.status !== 'done'));
+        setQueue(prev => prev.filter(q => q.status !== 'done' && q.status !== 'duplicate'));
     }
 
     const counts = {
@@ -88,6 +91,7 @@ export default function BelegeUpload({ onUploaded }: Props) {
         done: queue.filter(q => q.status === 'done').length,
         uploading: queue.filter(q => q.status === 'uploading').length,
         error: queue.filter(q => q.status === 'error').length,
+        duplicate: queue.filter(q => q.status === 'duplicate').length,
         pending: queue.filter(q => q.status === 'pending').length,
     };
 
@@ -141,10 +145,11 @@ export default function BelegeUpload({ onUploaded }: Props) {
                             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                                 {counts.done}/{counts.total} fertig
                                 {counts.uploading > 0 && ` · ${counts.uploading} läuft`}
+                                {counts.duplicate > 0 && <span style={{ color: '#b45309' }}> · {counts.duplicate} Duplikat{counts.duplicate > 1 ? 'e' : ''}</span>}
                                 {counts.error > 0 && <span style={{ color: 'var(--red)' }}> · {counts.error} Fehler</span>}
                             </span>
                         </div>
-                        {counts.done > 0 && (
+                        {(counts.done > 0 || counts.duplicate > 0) && (
                             <button
                                 onClick={clearDone}
                                 className="btn"
@@ -160,8 +165,8 @@ export default function BelegeUpload({ onUploaded }: Props) {
                         <div style={{ height: 3, background: 'var(--border)', margin: '0 0 1px' }}>
                             <div style={{
                                 height: '100%',
-                                width: `${(counts.done / counts.total) * 100}%`,
-                                background: counts.error > 0 ? 'var(--red)' : 'var(--primary)',
+                                width: `${((counts.done + counts.duplicate + counts.error) / counts.total) * 100}%`,
+                                background: counts.error > 0 ? 'var(--red)' : counts.duplicate > 0 ? '#f59e0b' : 'var(--primary)',
                                 transition: 'width 0.3s',
                                 borderRadius: 2,
                             }} />
@@ -198,6 +203,11 @@ export default function BelegeUpload({ onUploaded }: Props) {
                                             </span>
                                         )}
                                         {item.status === 'done' && <span style={{ color: 'var(--green)', fontWeight: 500 }}>✓ Fertig</span>}
+                                        {item.status === 'duplicate' && (
+                                            <span style={{ color: '#b45309', fontWeight: 500 }} title={item.duplicateInfo ? `Bereits hochgeladen als „${item.duplicateInfo.file_name}"` : 'Bereits vorhanden'}>
+                                                ⚠ Bereits vorhanden
+                                            </span>
+                                        )}
                                         {item.status === 'error' && (
                                             <span style={{ color: 'var(--red)' }} title={item.error}>✗ Fehler</span>
                                         )}
@@ -218,7 +228,7 @@ export default function BelegeUpload({ onUploaded }: Props) {
                         </tbody>
                     </table>
 
-                    {counts.done === counts.total && counts.total > 0 && counts.error === 0 && (
+                    {counts.done + counts.duplicate + counts.error === counts.total && counts.total > 0 && counts.error === 0 && counts.done > 0 && (
                         <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <span style={{ fontSize: 13, color: 'var(--green)', fontWeight: 500 }}>
                                 Alle {counts.total} {counts.total === 1 ? 'Datei' : 'Dateien'} erfolgreich hochgeladen.

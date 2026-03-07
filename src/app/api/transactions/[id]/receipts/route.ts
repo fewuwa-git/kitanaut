@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 import { supabase } from '@/lib/db';
 import { compressIfImage } from '@/lib/compressImage';
 import { verifyToken } from '@/lib/auth';
@@ -43,6 +44,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!file) return NextResponse.json({ error: 'Keine Datei' }, { status: 400 });
 
     const bytes = await file.arrayBuffer();
+    const fileHash = createHash('sha256').update(Buffer.from(bytes)).digest('hex');
+
+    // Duplicate check
+    const { data: existing } = await supabase
+        .from('pankonauten_transaction_receipts')
+        .select('id, file_name, uploaded_at, transaction_id')
+        .eq('file_hash', fileHash)
+        .maybeSingle();
+    if (existing) {
+        return NextResponse.json({ duplicate: true, existing }, { status: 409 });
+    }
+
     const { data: fileData, contentType, compressed } = await compressIfImage(bytes, file.type);
 
     const uuid = crypto.randomUUID();
@@ -58,7 +71,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const { data, error } = await supabase
         .from('pankonauten_transaction_receipts')
-        .insert({ transaction_id: id, file_path: filePath, file_name: fileName, file_size: fileData.length })
+        .insert({ transaction_id: id, file_path: filePath, file_name: fileName, file_size: fileData.length, file_hash: fileHash })
         .select()
         .single();
 
