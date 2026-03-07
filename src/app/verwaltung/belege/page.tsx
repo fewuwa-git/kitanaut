@@ -48,12 +48,13 @@ async function BelegeSection({ tab }: { tab: string }) {
             .filter(Boolean),
     }));
 
+    const mask = (k: string | undefined) => k ? `${'•'.repeat(Math.max(0, k.length - 4))}${k.slice(-4)}` : '';
     const kiSettingsForClient = {
         ...kiSettings,
-        apiKey: kiSettings.apiKey
-            ? `${'•'.repeat(Math.max(0, kiSettings.apiKey.length - 4))}${kiSettings.apiKey.slice(-4)}`
-            : '',
-        apiKeySet: !!kiSettings.apiKey,
+        geminiApiKey: mask(kiSettings.geminiApiKey),
+        geminiApiKeySet: !!kiSettings.geminiApiKey,
+        claudeApiKey: mask(kiSettings.claudeApiKey),
+        claudeApiKeySet: !!kiSettings.claudeApiKey,
     };
     return <VerwaltungBelegeClient receipts={receipts} unlinked={unlinkedWithSuggestions} initialTab={tab} categories={categories} kiSettingsInitial={kiSettingsForClient} />;
 }

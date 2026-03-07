@@ -9,6 +9,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         changes: [
             '— Buchungsbelege —',
             'Neue Seite „KI-Einstellungen" in der Belegverwaltung: Gemini API Key, Modellauswahl (Extraktion, Matching, Fallback), Zeitfenster, max. Buchungen und Auto-Zuordnung lassen sich jetzt direkt in der Oberfläche konfigurieren.',
+            'KI-Beleganalyse: Neben Google Gemini kann jetzt auch Anthropic Claude als KI-Anbieter gewählt werden – umschaltbar in den KI-Einstellungen.',
             '— Abrechnungen & Belege —',
             'Wenn eine Abrechnung oder ein Eltern-Beleg als „Bezahlt" markiert wird, wird das PDF automatisch in die Belegverwaltung hochgeladen und erscheint dort unter den unzugeordneten Belegen.',
             '— Sicherheit —',

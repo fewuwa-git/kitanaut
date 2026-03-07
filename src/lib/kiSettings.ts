@@ -1,7 +1,11 @@
 import { supabase } from '@/lib/db';
 
+export type KiProvider = 'gemini' | 'claude';
+
 export interface KiSettings {
-    apiKey?: string;
+    provider: KiProvider;
+    geminiApiKey?: string;
+    claudeApiKey?: string;
     extractModel: string;
     matchModel: string;
     fallbackModel: string;
@@ -11,18 +15,22 @@ export interface KiSettings {
     autoAssignThreshold: number;
 }
 
-const DEFAULTS: KiSettings = {
+export const GEMINI_DEFAULTS = {
     extractModel: 'gemini-2.5-flash',
     matchModel: 'gemini-2.5-flash',
     fallbackModel: 'gemini-2.0-flash',
-    timeWindowDays: 60,
-    maxTransactions: 300,
-    autoAssign: false,
-    autoAssignThreshold: 99,
+};
+
+export const CLAUDE_DEFAULTS = {
+    extractModel: 'claude-sonnet-4-6',
+    matchModel: 'claude-sonnet-4-6',
+    fallbackModel: 'claude-haiku-4-5-20251001',
 };
 
 const KI_KEYS = [
+    'ki_provider',
     'ki_api_key',
+    'ki_claude_api_key',
     'ki_extract_model',
     'ki_match_model',
     'ki_fallback_model',
@@ -41,14 +49,19 @@ export async function getKiSettings(): Promise<KiSettings> {
     const map: Record<string, string> = {};
     for (const row of data ?? []) map[row.key] = row.value;
 
+    const provider: KiProvider = (map['ki_provider'] as KiProvider) || 'gemini';
+    const defaults = provider === 'claude' ? CLAUDE_DEFAULTS : GEMINI_DEFAULTS;
+
     return {
-        apiKey: map['ki_api_key'] || undefined,
-        extractModel: map['ki_extract_model'] || DEFAULTS.extractModel,
-        matchModel: map['ki_match_model'] || DEFAULTS.matchModel,
-        fallbackModel: map['ki_fallback_model'] || DEFAULTS.fallbackModel,
-        timeWindowDays: map['ki_time_window_days'] ? parseInt(map['ki_time_window_days']) : DEFAULTS.timeWindowDays,
-        maxTransactions: map['ki_max_transactions'] ? parseInt(map['ki_max_transactions']) : DEFAULTS.maxTransactions,
+        provider,
+        geminiApiKey: map['ki_api_key'] || undefined,
+        claudeApiKey: map['ki_claude_api_key'] || undefined,
+        extractModel: map['ki_extract_model'] || defaults.extractModel,
+        matchModel: map['ki_match_model'] || defaults.matchModel,
+        fallbackModel: map['ki_fallback_model'] || defaults.fallbackModel,
+        timeWindowDays: map['ki_time_window_days'] ? parseInt(map['ki_time_window_days']) : 60,
+        maxTransactions: map['ki_max_transactions'] ? parseInt(map['ki_max_transactions']) : 300,
         autoAssign: map['ki_auto_assign'] === 'true',
-        autoAssignThreshold: map['ki_auto_assign_threshold'] ? parseInt(map['ki_auto_assign_threshold']) : DEFAULTS.autoAssignThreshold,
+        autoAssignThreshold: map['ki_auto_assign_threshold'] ? parseInt(map['ki_auto_assign_threshold']) : 99,
     };
 }

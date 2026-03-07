@@ -3,6 +3,11 @@ import { verifyToken } from '@/lib/auth';
 import { supabase } from '@/lib/db';
 import { getKiSettings } from '@/lib/kiSettings';
 
+function maskKey(key: string | undefined): string {
+    if (!key) return '';
+    return `${'•'.repeat(Math.max(0, key.length - 4))}${key.slice(-4)}`;
+}
+
 export async function GET(req: NextRequest) {
     const token = req.cookies.get('token')?.value;
     const payload = token ? await verifyToken(token) : null;
@@ -12,12 +17,13 @@ export async function GET(req: NextRequest) {
 
     const settings = await getKiSettings();
 
-    // Mask the API key – only return whether it's set and last 4 chars
-    const maskedKey = settings.apiKey
-        ? `${'•'.repeat(Math.max(0, settings.apiKey.length - 4))}${settings.apiKey.slice(-4)}`
-        : '';
-
-    return NextResponse.json({ ...settings, apiKey: maskedKey, apiKeySet: !!settings.apiKey });
+    return NextResponse.json({
+        ...settings,
+        geminiApiKey: maskKey(settings.geminiApiKey),
+        geminiApiKeySet: !!settings.geminiApiKey,
+        claudeApiKey: maskKey(settings.claudeApiKey),
+        claudeApiKeySet: !!settings.claudeApiKey,
+    });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -28,19 +34,27 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-
     const upserts: { key: string; value: string }[] = [];
 
-    if (body.apiKey !== undefined && body.apiKey !== '' && !body.apiKey.startsWith('•')) {
-        upserts.push({ key: 'ki_api_key', value: body.apiKey });
+    const push = (key: string, val: any) => {
+        if (val !== undefined) upserts.push({ key, value: String(val) });
+    };
+
+    if (body.provider) push('ki_provider', body.provider);
+    // Only save API keys if they're new values (not masked placeholders)
+    if (body.geminiApiKey !== undefined && body.geminiApiKey !== '' && !body.geminiApiKey.startsWith('•')) {
+        push('ki_api_key', body.geminiApiKey);
     }
-    if (body.extractModel !== undefined) upserts.push({ key: 'ki_extract_model', value: body.extractModel });
-    if (body.matchModel !== undefined) upserts.push({ key: 'ki_match_model', value: body.matchModel });
-    if (body.fallbackModel !== undefined) upserts.push({ key: 'ki_fallback_model', value: body.fallbackModel });
-    if (body.timeWindowDays !== undefined) upserts.push({ key: 'ki_time_window_days', value: String(body.timeWindowDays) });
-    if (body.maxTransactions !== undefined) upserts.push({ key: 'ki_max_transactions', value: String(body.maxTransactions) });
-    if (body.autoAssign !== undefined) upserts.push({ key: 'ki_auto_assign', value: String(body.autoAssign) });
-    if (body.autoAssignThreshold !== undefined) upserts.push({ key: 'ki_auto_assign_threshold', value: String(body.autoAssignThreshold) });
+    if (body.claudeApiKey !== undefined && body.claudeApiKey !== '' && !body.claudeApiKey.startsWith('•')) {
+        push('ki_claude_api_key', body.claudeApiKey);
+    }
+    push('ki_extract_model', body.extractModel);
+    push('ki_match_model', body.matchModel);
+    push('ki_fallback_model', body.fallbackModel);
+    push('ki_time_window_days', body.timeWindowDays);
+    push('ki_max_transactions', body.maxTransactions);
+    push('ki_auto_assign', body.autoAssign);
+    push('ki_auto_assign_threshold', body.autoAssignThreshold);
 
     if (upserts.length > 0) {
         const { error } = await supabase

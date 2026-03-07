@@ -7,6 +7,21 @@ Relevante Dateien:
 
 ---
 
+## 07.03.2026 – Claude als zweiter KI-Anbieter
+
+**Änderung:** Neben Gemini kann jetzt auch Anthropic Claude als KI-Anbieter gewählt werden. Umschaltung in KI-Einstellungen unter „KI-Anbieter".
+
+**Claude-spezifisch:**
+- PDFs werden als `document`-Block übergeben (native PDF-Unterstützung)
+- Bilder als `image`-Block (Base64, image/webp)
+- Kein `thinkingBudget`-Parameter – Claude verwendet eigene Reasoning-Logik
+- Modelle: `claude-sonnet-4-6` (Standard), `claude-opus-4-6`, `claude-haiku-4-5-20251001`
+- Fallback bei Überlast (`overloaded`-Fehler): Fallback-Modell + 3s Wartezeit
+
+**Technisch:** `suggest/route.ts` verzweigt nach `kiSettings.provider` ('gemini' | 'claude'). Extraktion und Matching laufen jeweils mit dem konfigurierten SDK. Prompts, Buchungsfilterung und Confidence-Korrektur sind provider-unabhängig.
+
+---
+
 ## 07.03.2026 – KI-Einstellungen über Datenbank konfigurierbar
 
 **Änderung:** Neue Seite „KI-Einstellungen" in der Belegverwaltung. Alle zentralen Parameter sind jetzt über die UI konfigurierbar und werden in der Tabelle `pankonauten_settings` gespeichert.
