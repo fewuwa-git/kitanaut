@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import { getTransactionsByCounterparty, getUsers } from '@/lib/data';
+import { getTransactionsByCounterparty, getUsers, getCategories } from '@/lib/data';
 import Sidebar from '@/components/Sidebar';
 
 export const metadata: Metadata = { title: 'Meine Buchungen' };
@@ -10,7 +10,10 @@ import KontoauszugClient from '@/components/KontoauszugClient';
 import ElternUserSelector from '@/components/ElternUserSelector';
 
 async function MeineBuchungenSection({ name }: { name: string }) {
-    const transactions = await getTransactionsByCounterparty(name);
+    const [transactions, categories] = await Promise.all([
+        getTransactionsByCounterparty(name),
+        getCategories(),
+    ]);
     return (
         <>
             {transactions.length === 0 ? (
@@ -19,7 +22,7 @@ async function MeineBuchungenSection({ name }: { name: string }) {
                     Keine Buchungen für „{name}" gefunden.
                 </div>
             ) : (
-                <KontoauszugClient transactions={transactions} elternView={true} />
+                <KontoauszugClient transactions={transactions} categories={categories} elternView={true} />
             )}
         </>
     );

@@ -44,6 +44,7 @@
 html,
 body {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -57,7 +58,8 @@ body {
 /* Layout */
 .app-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Sidebar */
@@ -214,9 +216,8 @@ body {
 .main-content {
   margin-left: var(--sidebar-width);
   flex: 1;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
 }
 
 .page-header {

@@ -69,6 +69,7 @@ export default function KontoauszugClient({ transactions: initialTransactions, c
     const { period, setPeriod, customStart, setCustomStart, customEnd, setCustomEnd } = useFilterState(elternView ? 'all' : '30d');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
+    const [filterOpen, setFilterOpen] = useState(false);
     const [transactions, setTransactions] = useState(initialTransactions);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<string | null>(null);
@@ -174,35 +175,43 @@ export default function KontoauszugClient({ transactions: initialTransactions, c
         <div>
             {/* Filter Card */}
             <div className="card mb-6">
-                <div className="card-header" style={{ flexWrap: 'wrap', gap: '12px', paddingBottom: period === 'custom' ? 0 : '16px' }}>
-                    <div className="card-title">📅 Filter</div>
-                    <div className="period-selector">
-                        {([['30d', '30 Tage'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['all', 'Alle'], ['custom', 'Freie Wahl']] as [PeriodKey, string][]).map(([key, label]) => (
-                            <button
-                                key={key}
-                                className={`period-btn ${period === key ? 'active' : ''}`}
-                                onClick={() => handlePeriodChange(key)}
-                            >
-                                {label}
-                            </button>
-                        ))}
+                <div className="card-header filter-card-header" onClick={() => setFilterOpen(o => !o)} style={{ paddingBottom: period === 'custom' ? 0 : '16px' }}>
+                    <div className="card-title">
+                        📅 Filter
+                        <span className="filter-toggle-hint">{filterOpen ? '▲' : '▼'}</span>
+                    </div>
+                    {/* Desktop: inline */}
+                    <div className="filter-inline-controls">
+                        <div className="period-selector">
+                            {([['30d', '30 Tage'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['all', 'Alle'], ['custom', 'Freie Wahl']] as [PeriodKey, string][]).map(([key, label]) => (
+                                <button key={key} className={`period-btn ${period === key ? 'active' : ''}`} onClick={e => { e.stopPropagation(); handlePeriodChange(key); }}>{label}</button>
+                            ))}
+                        </div>
                     </div>
                 </div>
+
+                {/* Mobile: aufklappbarer Body */}
+                {filterOpen && (
+                    <div className="filter-mobile-body">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '0 16px 16px' }}>
+                            <div>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Zeitraum</div>
+                                <div className="period-selector">
+                                    {([['30d', '30 Tage'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['all', 'Alle'], ['custom', 'Freie Wahl']] as [PeriodKey, string][]).map(([key, label]) => (
+                                        <button key={key} className={`period-btn ${period === key ? 'active' : ''}`} onClick={() => handlePeriodChange(key)}>{label}</button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {period === 'custom' && (
                     <div className="card-body" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
                         <div className="date-range-inputs">
-                            <input
-                                type="date"
-                                value={customStart}
-                                onChange={(e) => setCustomStart(e.target.value)}
-                            />
+                            <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
                             <span style={{ color: 'var(--text-muted)' }}>bis</span>
-                            <input
-                                type="date"
-                                value={customEnd}
-                                onChange={(e) => setCustomEnd(e.target.value)}
-                            />
+                            <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
                         </div>
                     </div>
                 )}
@@ -248,16 +257,16 @@ export default function KontoauszugClient({ transactions: initialTransactions, c
 
             {/* Transactions Table */}
             <div className="card">
-                <div className="card-header" style={{ flexWrap: 'wrap', gap: '16px', paddingBottom: '16px', justifyContent: 'space-between' }}>
+                <div className="card-header" style={{ flexWrap: 'wrap', gap: '12px', paddingBottom: '16px', justifyContent: 'space-between' }}>
                     <div className="card-title">📖 Alle Buchungen</div>
                     <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
                         <input
                             type="text"
-                            placeholder="Suchen (Beschreibung, Gegenüber)..."
+                            placeholder="Suchen..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="form-input"
-                            style={{ padding: '8px 12px', width: 260 }}
+                            style={{ padding: '8px 12px', width: 220 }}
                         />
                         <select
                             value={selectedCategory}
