@@ -88,13 +88,13 @@ export default async function VerwaltungBelegePage({ searchParams }: { searchPar
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1>Buchungsbelege</h1>
-                        <p>Belege hochladen, Buchungen zuordnen und verwalten</p>
-                    </div>
-                </div>
                 <div className="page-body">
+                    <div className="card" style={{ padding: '16px 24px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="page-header-left">
+                            <h1>Buchungsbelege</h1>
+                            <p>Belege hochladen, Buchungen zuordnen und verwalten</p>
+                        </div>
+                    </div>
                     <Suspense fallback={<BelegeSkeleton />}>
                         <BelegeSection tab={activeTab} />
                     </Suspense>

@@ -34,13 +34,13 @@ export default async function BelegBearbeitenPage({
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1>Beleg bearbeiten</h1>
-                        <p>{beleg.belegnummer || beleg.id}</p>
-                    </div>
-                </div>
                 <div className="page-body">
+                    <div className="card" style={{ padding: '16px 24px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="page-header-left">
+                            <h1>Beleg bearbeiten</h1>
+                            <p>{beleg.belegnummer || beleg.id}</p>
+                        </div>
+                    </div>
                     <BelegForm userId={beleg.user_id} beleg={beleg} />
                 </div>
             </main>

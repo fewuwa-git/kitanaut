@@ -41,18 +41,18 @@ export default async function NeueAbrechnungPage({
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1>Neue Abrechnung</h1>
-                        <p>Neue Abrechnung für Springer*innen erfassen</p>
-                    </div>
-                    <div className="page-header-actions">
-                        <Link href="/springerin/abrechnung" className="btn btn-secondary">
-                            Zurück
-                        </Link>
-                    </div>
-                </div>
                 <div className="page-body">
+                    <div className="card" style={{ padding: '16px 24px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="page-header-left">
+                            <h1>Neue Abrechnung</h1>
+                            <p>Neue Abrechnung für Springer*innen erfassen</p>
+                        </div>
+                        <div className="page-header-actions">
+                            <Link href="/springerin/abrechnung" className="btn btn-secondary">
+                                Zurück
+                            </Link>
+                        </div>
+                    </div>
                     <div className="card">
                         <div className="card-header">
                             <h2 className="card-title">Abrechnungsformular</h2>

@@ -161,19 +161,18 @@ export default function AdminClient({ currentUser }: AdminClientProps) {
         <div className="app-layout">
             <Sidebar user={currentUser} />
             <main className="main-content">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1>{currentUser.role === 'admin' ? 'Benutzer' : 'Benutzer - Verwalte hier deine Angaben'}</h1>
-                        <p>{currentUser.role === 'admin' ? 'Verwalte hier alle Benutzer' : 'Verwalte hier deine persönlichen Daten'}</p>
-                    </div>
-                    {currentUser.role === 'admin' && (
-                        <button className="btn btn-primary btn-sm" onClick={() => setShowCreateModal(true)}>
-                            + Neuen Benutzer anlegen
-                        </button>
-                    )}
-                </div>
-
                 <div className="page-body" style={{ paddingBottom: 0 }}>
+                    <div className="card" style={{ padding: '16px 24px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="page-header-left">
+                            <h1>{currentUser.role === 'admin' ? 'Benutzer' : 'Benutzer - Verwalte hier deine Angaben'}</h1>
+                            <p>{currentUser.role === 'admin' ? 'Verwalte hier alle Benutzer' : 'Verwalte hier deine persönlichen Daten'}</p>
+                        </div>
+                        {currentUser.role === 'admin' && (
+                            <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+                                + Neuen Benutzer anlegen
+                            </button>
+                        )}
+                    </div>
                 {currentUser.role === 'admin' && (() => {
                     const pending = users.filter(u => u.status === 'pending');
                     if (pending.length === 0) return null;

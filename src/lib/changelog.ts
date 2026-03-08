@@ -9,6 +9,10 @@ export const CHANGELOG: ChangelogEntry[] = [
         changes: [
             '— Zugriffsrechte —',
             'Vorstandsmitglieder sehen unter „Belege" jetzt nur noch ihre eigenen Belege – nicht mehr alle Belege aller Nutzer.',
+            '— Belege —',
+            'In der Belegeübersicht gibt es jetzt eine Suchfunktion und einen Statusfilter direkt in der Tabelle. Die Datumsspalte steht ganz links.',
+            '— Buchungen (Eltern) —',
+            'Kategoriefarben werden jetzt auch in der Eltern-Buchungsansicht angezeigt.',
         ],
     },
     {

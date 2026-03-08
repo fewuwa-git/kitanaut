@@ -409,10 +409,10 @@ export default function KategorienVerwaltungClient({ initialCategories }: Props)
                 <div className="card-header" style={{ paddingBottom: showNewForm ? 0 : 20 }}>
                     <div className="card-title">➕ Neue Kategorie</div>
                     <button
-                        className={`btn btn-sm ${showNewForm ? 'btn-secondary' : 'btn-primary'}`}
+                        className={`btn ${showNewForm ? 'btn-secondary' : 'btn-primary'}`}
                         onClick={() => setShowNewForm(s => !s)}
                     >
-                        {showNewForm ? 'Abbrechen' : '+ Anlegen'}
+                        {showNewForm ? 'Abbrechen' : 'Kategorie anlegen'}
                     </button>
                 </div>
 

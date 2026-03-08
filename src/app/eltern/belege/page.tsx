@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import Link from 'next/link';
 import { getBelege, getUsers } from '@/lib/data';
 
 export const metadata: Metadata = { title: 'Meine Belege' };
@@ -86,18 +85,13 @@ export default async function BelegePage({
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1>Meine Belege</h1>
-                        <p>Übersicht aller eingereichten Belege</p>
-                    </div>
-                    <div className="page-header-actions">
-                        <Link href="/eltern/belege/neu" className="btn btn-primary">
-                            ➕ Beleg erstellen
-                        </Link>
-                    </div>
-                </div>
                 <div className="page-body">
+                    <div className="card" style={{ padding: '16px 24px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="page-header-left">
+                            <h1>Meine Belege</h1>
+                            <p>Übersicht aller eingereichten Belege</p>
+                        </div>
+                    </div>
                     <Suspense fallback={<BuelegeSkeleton />}>
                         <BelegeSection
                             role={role}

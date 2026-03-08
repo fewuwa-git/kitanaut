@@ -19,13 +19,13 @@ export default async function ChangelogPage() {
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1>Changelog</h1>
-                        <p>Was wurde verbessert und wann</p>
-                    </div>
-                </div>
                 <div className="page-body">
+                    <div className="card" style={{ padding: '16px 24px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="page-header-left">
+                            <h1>Changelog</h1>
+                            <p>Was wurde verbessert und wann</p>
+                        </div>
+                    </div>
                     <div style={{ maxWidth: '80%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {CHANGELOG.map((entry, i) => (
                             <div key={i} className="card">

@@ -25,13 +25,13 @@ export default async function EmailTemplateEditPage({ params }: { params: Promis
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1>{template.name}</h1>
-                        <p>E-Mail-Template bearbeiten</p>
-                    </div>
-                </div>
                 <div className="page-body">
+                    <div className="card" style={{ padding: '16px 24px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="page-header-left">
+                            <h1>{template.name}</h1>
+                            <p>E-Mail-Template bearbeiten</p>
+                        </div>
+                    </div>
                     <EmailTemplateEditClient template={template} />
                 </div>
             </main>

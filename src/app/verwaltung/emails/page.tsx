@@ -29,13 +29,13 @@ export default async function EmailTemplatesPage() {
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1>E-Mail-Templates</h1>
-                        <p>Bearbeite die Texte der automatisch versendeten E-Mails</p>
-                    </div>
-                </div>
                 <div className="page-body">
+                    <div className="card" style={{ padding: '16px 24px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="page-header-left">
+                            <h1>E-Mail-Templates</h1>
+                            <p>Bearbeite die Texte der automatisch versendeten E-Mails</p>
+                        </div>
+                    </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                     {/* Template-Liste */}

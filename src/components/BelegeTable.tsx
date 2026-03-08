@@ -105,6 +105,9 @@ export default function BelegeTable({
                                 <option key={val} value={val}>{label}</option>
                             ))}
                         </select>
+                        <Link href="/eltern/belege/neu" className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
+                            ➕ Beleg erstellen
+                        </Link>
                     </div>
                 </div>
                 <div style={{ overflowX: 'auto' }}>

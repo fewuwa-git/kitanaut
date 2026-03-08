@@ -77,6 +77,7 @@ async function AbrechnungTable({
                 springerinnen={springerinnen}
                 availableJahre={availableJahre}
                 isAdmin={role === 'admin'}
+                newButtonHref="/springerin/abrechnung/neu"
             />
             <div className="card">
                 <div className="card-header">
@@ -251,18 +252,13 @@ export default async function AbrechnungPage({
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1>Abrechnung</h1>
-                        <p>Deine monatlichen Abrechnungen in der Übersicht</p>
-                    </div>
-                    <div className="page-header-actions">
-                        <Link href="/springerin/abrechnung/neu" className="btn btn-primary">
-                            ➕ Neue Abrechnung
-                        </Link>
-                    </div>
-                </div>
                 <div className="page-body">
+                    <div className="card" style={{ padding: '16px 24px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="page-header-left">
+                            <h1>Abrechnung</h1>
+                            <p>Deine monatlichen Abrechnungen in der Übersicht</p>
+                        </div>
+                    </div>
                     <Suspense fallback={<AbrechnungSkeleton />}>
                         <AbrechnungTable
                             role={role}

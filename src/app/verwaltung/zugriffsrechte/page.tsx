@@ -64,13 +64,13 @@ export default async function ZugriffsrechtePage() {
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1>Zugriffsrechte</h1>
-                        <p>Übersicht, welche Rollen auf welche Seiten zugreifen dürfen</p>
-                    </div>
-                </div>
                 <div className="page-body">
+                    <div className="card" style={{ padding: '16px 24px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="page-header-left">
+                            <h1>Zugriffsrechte</h1>
+                            <p>Übersicht, welche Rollen auf welche Seiten zugreifen dürfen</p>
+                        </div>
+                    </div>
                     <div className="card" style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                             <thead>
@@ -100,9 +100,17 @@ export default async function ZugriffsrechtePage() {
                                         {ROLES.map(r => (
                                             <td key={r} style={{ textAlign: 'center', padding: '10px 14px' }}>
                                                 {page.roles.includes(r) ? (
-                                                    <span style={{ color: 'var(--success, #22c55e)', fontSize: '16px' }}>✓</span>
+                                                    <span style={{
+                                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                        width: 22, height: 22, borderRadius: '50%',
+                                                        background: '#16a34a', color: '#fff', fontSize: 13, fontWeight: 700,
+                                                    }}>✓</span>
                                                 ) : (
-                                                    <span style={{ color: 'var(--text-muted, #6b7280)', fontSize: '14px' }}>–</span>
+                                                    <span style={{
+                                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                        width: 22, height: 22, borderRadius: '50%',
+                                                        background: '#111827', color: '#fff', fontSize: 15, fontWeight: 700, lineHeight: 1,
+                                                    }}>–</span>
                                                 )}
                                             </td>
                                         ))}

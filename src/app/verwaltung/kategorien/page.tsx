@@ -37,13 +37,13 @@ export default async function KategorienVerwaltungPage() {
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
-                <div className="page-header">
-                    <div className="page-header-left">
-                        <h1>Kategorien verwalten</h1>
-                        <p>Kategorien für Buchungen anlegen, bearbeiten und löschen</p>
-                    </div>
-                </div>
                 <div className="page-body">
+                    <div className="card" style={{ padding: '16px 24px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className="page-header-left">
+                            <h1>Kategorien verwalten</h1>
+                            <p>Kategorien für Buchungen anlegen, bearbeiten und löschen</p>
+                        </div>
+                    </div>
                     <Suspense fallback={<KategorienSkeleton />}>
                         <KategorienSection />
                     </Suspense>
