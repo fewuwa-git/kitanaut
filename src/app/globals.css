@@ -254,6 +254,7 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
+  min-width: 0;
 }
 
 .card-header {
@@ -533,6 +534,8 @@ body {
 .chart-container {
   width: 100%;
   padding: 8px 0;
+  overflow: hidden;
+  min-width: 0;
 }
 
 /* Category Filters */
@@ -1088,7 +1091,20 @@ body {
 /* Responsive */
 @media (max-width: 1024px) {
   .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-card-value {
+    font-size: 18px;
+  }
+
+  .stat-card-label {
+    font-size: 11px;
   }
 }
 
@@ -1125,7 +1141,7 @@ body {
   z-index: 90;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .mobile-header {
     display: flex;
   }
@@ -1200,7 +1216,7 @@ body {
   }
 
   .chart-container {
-    height: 240px !important;
+    height: 220px !important;
   }
 
   .data-table th,
@@ -1213,6 +1229,135 @@ body {
     padding: 2px 8px;
     font-size: 11px;
   }
+
+  .period-selector {
+    flex-wrap: wrap;
+    width: fit-content;
+  }
+
+  .period-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .gran-btn {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .hero-balance {
+    font-size: 28px;
+  }
+
+  .hero-balance span {
+    font-size: 18px;
+  }
+
+  .stats-grid .stat-card {
+    padding: 10px;
+  }
+
+  .stats-grid .stat-card-value {
+    font-size: 14px;
+  }
+
+  .stats-grid .stat-card-label {
+    font-size: 10px;
+  }
+
+  .stats-grid .stat-card-sub {
+    font-size: 10px;
+  }
+
+  .chart-container {
+    height: 190px !important;
+  }
+
+  .period-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .card-header {
+    padding: 12px 12px 0;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card-body {
+    padding: 12px;
+  }
+}
+
+/* Filter collapsible (mobile) */
+.filter-toggle-hint { display: none; }
+.filter-card-header { cursor: default; user-select: none; }
+.filter-mobile-body { display: none; }
+.filter-inline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+@media (max-width: 1024px) {
+  .filter-toggle-hint {
+    display: inline;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 8px;
+    font-weight: 400;
+  }
+  .filter-card-header {
+    cursor: pointer;
+    padding-bottom: 16px !important;
+  }
+  .filter-inline-controls { display: none; }
+  .filter-mobile-body { display: block; }
+}
+
+@media (max-width: 640px) {
+  .filter-toggle-hint {
+    display: inline;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 8px;
+    font-weight: 400;
+  }
+  .filter-card-header {
+    cursor: pointer;
+    padding-bottom: 16px !important;
+  }
+  .filter-inline-controls { display: none; }
+  .filter-mobile-body { display: block; }
+}
+
+@media (max-width: 640px) {
+  .hide-on-mobile { display: none; }
+}
+
+@media (max-width: 1024px) {
+  .hide-on-tablet { display: none; }
+}
+
+/* Mobile table columns */
+.col-mobile { display: none; }
+.col-mobile-row { cursor: default; }
+.tx-detail-row { display: none; }
+
+@media (max-width: 640px) {
+  .col-desktop { display: none; }
+  .col-mobile { display: table-cell; }
+  .col-mobile-row { cursor: pointer; }
+  .tx-detail-row { display: table-row; }
+
+  .tx-desc-cell {
+    max-width: 0;
+    width: 100%;
+  }
 }
 
 /* Abrechnung Form */
@@ -1224,7 +1369,7 @@ body {
   display: contents;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .abrechnung-tage-table {
     display: none;
   }
@@ -1243,9 +1388,6 @@ body {
     gap: 12px;
   }
 
-  .stats-grid {
-    grid-template-columns: 1fr 1fr !important;
-  }
 }
 
 @keyframes fadeIn {
@@ -1264,4 +1406,26 @@ body {
 
 .date-info-icon:hover .date-info-tooltip {
   display: block !important;
+}
+
+/* Stats-Grid 3 Spalten auf Mobile – muss ganz am Ende stehen */
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px;
+  }
+  .stats-grid .stat-card {
+    padding: 12px 10px;
+  }
+  .stats-grid .stat-card-value {
+    font-size: 14px;
+    letter-spacing: -0.5px;
+  }
+  .stats-grid .stat-card-label {
+    font-size: 10px;
+    gap: 3px;
+  }
+  .stats-grid .stat-card-sub {
+    display: none;
+  }
 }

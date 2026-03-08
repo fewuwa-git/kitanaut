@@ -62,11 +62,6 @@ export default async function DashboardPage() {
                         <h1>Kontostand</h1>
                         <p>Finanzieller Überblick der Kita Pankonauten</p>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                            Willkommen, {name.split(' ')[0]} 👋
-                        </span>
-                    </div>
                 </div>
                 <div className="page-body">
                     <Suspense fallback={<TransactionsSkeleton />}>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { useFilterState, PeriodKey } from '@/hooks/useFilterState';
 import {
     LineChart,
@@ -233,6 +233,16 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
     const [granularity, setGranularity] = useState<Granularity>('month');
     const [compare, setCompare] = useState(false);
     const [chartType, setChartType] = useState<ChartType>('line');
+    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+    const [filterOpen, setFilterOpen] = useState(false);
+
+    function toggleRow(id: string) {
+        setExpandedRows(prev => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    }
 
     const { start, end } = useMemo(() => getDateRange(period, customStart, customEnd), [period, customStart, customEnd]);
     const compareRange = useMemo(() => getCompareDateRange(period), [period]);
@@ -320,73 +330,81 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
 
     return (
         <div>
-            {/* Filter Card */}
-            <div className="card mb-6">
-                <div className="card-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
-                    <div className="card-title">📅 Filter</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
-                        {/* Period Selector */}
-                        <div className="period-selector">
-                            {([['30d', '30 Tage'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['custom', 'Freie Wahl']] as [PeriodKey, string][]).map(([key, label]) => (
-                                <button
-                                    key={key}
-                                    className={`period-btn ${period === key ? 'active' : ''}`}
-                                    onClick={() => handlePeriodChange(key)}
-                                >
-                                    {label}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Granularity */}
-                        <div className="granularity-selector">
-                            {(['day', 'week', 'month'] as Granularity[]).map((g) => (
-                                <button
-                                    key={g}
-                                    className={`gran-btn ${granularity === g ? 'active' : ''}`}
-                                    onClick={() => setGranularity(g)}
-                                >
-                                    {g === 'day' ? 'Tag' : g === 'week' ? 'Woche' : 'Monat'}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Compare */}
-                        <div className="compare-toggle" onClick={() => setCompare(!compare)}>
-                            <div className={`toggle-switch ${compare ? 'on' : ''}`} />
-                            Vergleich
-                        </div>
-                    </div>
-                </div>
-
-                {period === 'custom' && (
-                    <div className="card-body" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
-                        <div className="date-range-inputs">
-                            <input
-                                type="date"
-                                value={customStart}
-                                onChange={(e) => setCustomStart(e.target.value)}
-                            />
-                            <span style={{ color: 'var(--text-muted)' }}>bis</span>
-                            <input
-                                type="date"
-                                value={customEnd}
-                                onChange={(e) => setCustomEnd(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                )}
-            </div>
-
             {/* Hero Balance */}
             <div className="hero-card">
                 <div className="hero-label">Aktueller Kontostand{stats.latestDate ? ` (${new Date(stats.latestDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })})` : ''}</div>
                 <div className="hero-balance">
                     <span>€</span> {stats.balance.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
-                <div className={`hero-trend ${stats.net >= 0 ? 'positive' : 'negative'}`}>
-                    {stats.net >= 0 ? '↑' : '↓'} {formatCurrency(Math.abs(stats.net))} im Zeitraum
+            </div>
+
+            {/* Filter Card */}
+            <div className="card mb-6">
+                <div className="card-header filter-card-header" onClick={() => setFilterOpen(o => !o)}>
+                    <div className="card-title">
+                        📅 Filter
+                        <span className="filter-toggle-hint">{filterOpen ? '▲' : '▼'}</span>
+                    </div>
+                    {/* Desktop: inline neben Titel */}
+                    <div className="filter-inline-controls">
+                        <div className="period-selector">
+                            {([['30d', '30 Tage'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['custom', 'Freie Wahl']] as [PeriodKey, string][]).map(([key, label]) => (
+                                <button key={key} className={`period-btn ${period === key ? 'active' : ''}`} onClick={e => { e.stopPropagation(); handlePeriodChange(key); }}>{label}</button>
+                            ))}
+                        </div>
+                        <div className="granularity-selector">
+                            {(['day', 'week', 'month'] as Granularity[]).map(g => (
+                                <button key={g} className={`gran-btn ${granularity === g ? 'active' : ''}`} onClick={e => { e.stopPropagation(); setGranularity(g); }}>
+                                    {g === 'day' ? 'Tag' : g === 'week' ? 'Woche' : 'Monat'}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="compare-toggle" onClick={e => { e.stopPropagation(); setCompare(!compare); }}>
+                            <div className={`toggle-switch ${compare ? 'on' : ''}`} />
+                            Vergleich
+                        </div>
+                    </div>
                 </div>
+
+                {/* Mobile: aufklappbarer Body */}
+                {filterOpen && (
+                    <div className="filter-mobile-body">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '0 16px 16px' }}>
+                            <div>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Zeitraum</div>
+                                <div className="period-selector">
+                                    {([['30d', '30 Tage'], ['6m', '6 Monate'], ['12m', '12 Monate'], ['custom', 'Freie Wahl']] as [PeriodKey, string][]).map(([key, label]) => (
+                                        <button key={key} className={`period-btn ${period === key ? 'active' : ''}`} onClick={() => handlePeriodChange(key)}>{label}</button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Granularität</div>
+                                <div className="granularity-selector">
+                                    {(['day', 'week', 'month'] as Granularity[]).map(g => (
+                                        <button key={g} className={`gran-btn ${granularity === g ? 'active' : ''}`} onClick={() => setGranularity(g)}>
+                                            {g === 'day' ? 'Tag' : g === 'week' ? 'Woche' : 'Monat'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="compare-toggle" onClick={() => setCompare(!compare)}>
+                                <div className={`toggle-switch ${compare ? 'on' : ''}`} />
+                                Vergleich aktivieren
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {period === 'custom' && (
+                    <div className="card-body" style={{ paddingTop: '16px', paddingBottom: '16px' }}>
+                        <div className="date-range-inputs">
+                            <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} />
+                            <span style={{ color: 'var(--text-muted)' }}>bis</span>
+                            <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} />
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Stats Cards */}
@@ -398,7 +416,6 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
                     <div className="stat-card-value" style={{ color: 'var(--green)' }}>
                         {formatCurrency(stats.income)}
                     </div>
-                    <div className="stat-card-sub">Im gewählten Zeitraum</div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-card-label">
@@ -407,16 +424,14 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
                     <div className="stat-card-value" style={{ color: 'var(--red)' }}>
                         {formatCurrency(stats.expense)}
                     </div>
-                    <div className="stat-card-sub">Im gewählten Zeitraum</div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-card-label">
-                        <span>⇆</span> Netto
+                        <span>⇆</span> Differenz
                     </div>
                     <div className="stat-card-value" style={{ color: stats.net >= 0 ? 'var(--green)' : 'var(--red)' }}>
                         {formatCurrency(stats.net)}
                     </div>
-                    <div className="stat-card-sub">Einnahmen minus Ausgaben</div>
                 </div>
             </div>
 
@@ -438,7 +453,7 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
 
                 <div className="card-body">
                     <div className="chart-container" style={{ height: 300 }}>
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="99%" height="100%">
                             {chartType === 'line' ? (
                                 <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -483,8 +498,8 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
             </div>
 
             {/* Recent Transactions */}
-            <div className="card">
-                <div className="card-header">
+            <div className="card hide-on-tablet">
+                <div className="card-header" style={{ paddingBottom: 20 }}>
                     <div className="card-title">🔄 Letzte Bewegungen</div>
                 </div>
                 <div style={{ overflowX: 'auto' }}>
@@ -493,37 +508,63 @@ export default function DashboardClient({ transactions }: DashboardClientProps) 
                             <tr>
                                 <th style={{ width: '1%', whiteSpace: 'nowrap' }}>Datum</th>
                                 <th>Beschreibung</th>
-                                <th>Gegenüber</th>
-                                <th style={{ width: 100, maxWidth: 100 }}>Kategorie</th>
+                                <th className="col-desktop">Gegenüber</th>
+                                <th className="col-desktop" style={{ width: 100, maxWidth: 100 }}>Kategorie</th>
                                 <th style={{ textAlign: 'right' }}>Betrag</th>
-                                <th style={{ textAlign: 'right' }}>Saldo</th>
+                                <th className="col-desktop" style={{ textAlign: 'right' }}>Saldo</th>
+                                <th className="col-mobile" style={{ width: 32 }} />
                             </tr>
                         </thead>
                         <tbody>
-                            {recentTx.map((tx) => (
-                                <tr key={tx.id}>
-                                    <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '13px' }}>
-                                        {fmtDate(tx.date)}
-                                    </td>
-                                    <td style={{ maxWidth: 500 }}>
-                                        <div title={tx.description} style={{ fontWeight: 500, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                            {tx.description}
-                                        </div>
-                                    </td>
-                                    <td style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {tx.counterparty}
-                                    </td>
-                                    <td style={{ fontSize: '13px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 100 }}>
-                                        {tx.category}
-                                    </td>
-                                    <td className={`tx-amount ${tx.amount >= 0 ? 'positive' : 'negative'}`} style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                                        {tx.amount >= 0 ? '+' : ''}{formatCurrency(tx.amount)}
-                                    </td>
-                                    <td style={{ textAlign: 'right', fontWeight: 500, whiteSpace: 'nowrap', fontSize: '13px' }}>
-                                        {formatCurrency(tx.balance)}
-                                    </td>
-                                </tr>
-                            ))}
+                            {recentTx.map((tx) => {
+                                const expanded = expandedRows.has(tx.id);
+                                return (
+                                    <React.Fragment key={tx.id}>
+                                        <tr
+                                            className="col-mobile-row"
+                                            onClick={() => toggleRow(tx.id)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '13px' }}>
+                                                {fmtDate(tx.date)}
+                                            </td>
+                                            <td className="tx-desc-cell" style={{ maxWidth: 500, width: '100%' }}>
+                                                <div title={tx.description} style={{ fontWeight: 500, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {tx.description}
+                                                </div>
+                                            </td>
+                                            <td className="col-desktop" style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {tx.counterparty}
+                                            </td>
+                                            <td className="col-desktop" style={{ fontSize: '13px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 100 }}>
+                                                {tx.category}
+                                            </td>
+                                            <td className={`tx-amount ${tx.amount >= 0 ? 'positive' : 'negative'}`} style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                                {tx.amount >= 0 ? '+' : ''}{formatCurrency(tx.amount)}
+                                            </td>
+                                            <td className="col-desktop" style={{ textAlign: 'right', fontWeight: 500, whiteSpace: 'nowrap', fontSize: '13px' }}>
+                                                {formatCurrency(tx.balance)}
+                                            </td>
+                                            <td className="col-mobile" style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
+                                                {expanded ? '▲' : '▼'}
+                                            </td>
+                                        </tr>
+                                        {expanded && (
+                                            <tr className="col-mobile tx-detail-row">
+                                                <td colSpan={4} style={{ padding: '8px 16px 12px', background: 'var(--bg)' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12 }}>
+                                                        {tx.counterparty && (
+                                                            <div><span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Gegenüber: </span>{tx.counterparty}</div>
+                                                        )}
+                                                        <div><span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Kategorie: </span>{tx.category}</div>
+                                                        <div><span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Saldo: </span><strong>{formatCurrency(tx.balance)}</strong></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
