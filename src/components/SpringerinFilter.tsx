@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { User } from '@/lib/data';
 
 const MONTH_NAMES = [
@@ -13,10 +12,9 @@ interface SpringerinFilterProps {
     springerinnen: User[];
     availableJahre: number[];
     isAdmin: boolean;
-    newButtonHref?: string;
 }
 
-export default function SpringerinFilter({ springerinnen, availableJahre, isAdmin, newButtonHref }: SpringerinFilterProps) {
+export default function SpringerinFilter({ springerinnen, availableJahre, isAdmin }: SpringerinFilterProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const currentSpringerId = searchParams.get('springerinId') || '';
@@ -80,11 +78,6 @@ export default function SpringerinFilter({ springerinnen, availableJahre, isAdmi
                         <option value="eingereicht">Eingereicht</option>
                         <option value="bezahlt">Bezahlt</option>
                     </select>
-                    {newButtonHref && (
-                        <Link href={newButtonHref} className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
-                            ➕ Neue Abrechnung
-                        </Link>
-                    )}
                 </div>
             </div>
         </div>

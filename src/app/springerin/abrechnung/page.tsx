@@ -77,11 +77,13 @@ async function AbrechnungTable({
                 springerinnen={springerinnen}
                 availableJahre={availableJahre}
                 isAdmin={role === 'admin'}
-                newButtonHref="/springerin/abrechnung/neu"
             />
             <div className="card">
                 <div className="card-header">
                     <h2 className="card-title">📋 Alle Abrechnungen</h2>
+                    <Link href="/springerin/abrechnung/neu" className="btn btn-primary" style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                        ➕ Neue Abrechnung
+                    </Link>
                 </div>
                 <div className="card-body" style={{ padding: 0, marginTop: '0.5rem' }}>
                     <div className="table-responsive">
