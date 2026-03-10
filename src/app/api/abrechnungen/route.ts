@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || (payload.role !== 'admin' && payload.role !== 'springerin')) {
+    if (!payload || (payload.role !== 'admin' && payload.role !== 'finanzvorstand' && payload.role !== 'springerin')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -35,14 +35,14 @@ export async function POST(request: NextRequest) {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || (payload.role !== 'admin' && payload.role !== 'springerin')) {
+    if (!payload || (payload.role !== 'admin' && payload.role !== 'finanzvorstand' && payload.role !== 'springerin')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     try {
         const body = await request.json();
         const { action, jahr, monat, tag, userId } = body;
-        const targetUserId = (payload.role === 'admin' && userId) || payload.userId;
+        const targetUserId = ((payload.role === 'admin' || payload.role === 'finanzvorstand') && userId) || payload.userId;
 
         if (action === 'save_tag') {
             if (!jahr || !monat || !tag) {
@@ -84,8 +84,8 @@ export async function POST(request: NextRequest) {
             if (payload.role === 'springerin' && status !== 'eingereicht') {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
             }
-            // Admin darf auf 'eingereicht' und 'bezahlt' setzen
-            if (payload.role === 'admin' && !['eingereicht', 'bezahlt'].includes(status)) {
+            // Admin/Finanzvorstand darf auf 'eingereicht' und 'bezahlt' setzen
+            if ((payload.role === 'admin' || payload.role === 'finanzvorstand') && !['eingereicht', 'bezahlt'].includes(status)) {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
             }
 
@@ -149,7 +149,7 @@ export async function DELETE(request: NextRequest) {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || (payload.role !== 'admin' && payload.role !== 'springerin')) {
+    if (!payload || (payload.role !== 'admin' && payload.role !== 'finanzvorstand' && payload.role !== 'springerin')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -163,7 +163,7 @@ export async function DELETE(request: NextRequest) {
 
     try {
         if (tagId) {
-            if (payload.role !== 'admin') {
+            if (payload.role !== 'admin' && payload.role !== 'finanzvorstand') {
                 const ownerUserId = await getAbrechnungTagOwner(tagId);
                 if (ownerUserId !== payload.userId) {
                     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -171,8 +171,8 @@ export async function DELETE(request: NextRequest) {
             }
             await deleteAbrechnungTag(tagId);
         } else if (id) {
-            // Only admin can delete whole abrechnung
-            if (payload.role !== 'admin') {
+            // Only admin/finanzvorstand can delete whole abrechnung
+            if (payload.role !== 'admin' && payload.role !== 'finanzvorstand') {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
             }
             await deleteAbrechnung(id);

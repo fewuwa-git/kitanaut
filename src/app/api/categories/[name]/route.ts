@@ -8,7 +8,7 @@ async function checkAdmin() {
     const token = cookieStore.get('token')?.value;
     if (!token) return null;
     const payload = await verifyToken(token);
-    if (!payload || payload.role !== 'admin') return null;
+    if (!payload || (payload.role !== 'admin' && payload.role !== 'finanzvorstand')) return null;
     return payload;
 }
 

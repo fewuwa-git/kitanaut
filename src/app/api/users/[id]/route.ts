@@ -42,16 +42,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Admin kann Name, Rolle, Status ändern
+    // Admin kann Name, Rolle, Status ändern – aber nicht die eigene Rolle
     const wasPending = user.status === 'pending';
     if (isAdmin) {
         if (body.name !== undefined) user.name = body.name;
-        if (body.role !== undefined) user.role = body.role;
+        if (body.role !== undefined && !isSelf) user.role = body.role;
         if (body.status !== undefined) user.status = body.status;
     }
 
     // Eltern und Vorstandsmitglieder können Adresse, IBAN und Unterschrift ändern
-    if (isAdmin || (isSelf && ['eltern', 'member', 'springerin'].includes(user.role))) {
+    if (isAdmin || (isSelf && ['eltern', 'member', 'springerin', 'finanzvorstand'].includes(user.role))) {
         if (body.strasse !== undefined) user.strasse = body.strasse;
         if (body.ort !== undefined) user.ort = body.ort;
         if (body.iban !== undefined) user.iban = body.iban;

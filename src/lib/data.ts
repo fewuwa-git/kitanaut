@@ -13,7 +13,7 @@ export interface User {
     name: string;
     email: string;
     password: string;
-    role: 'admin' | 'member' | 'eltern' | 'springerin';
+    role: 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin';
     status?: string;
     strasse?: string;
     ort?: string;

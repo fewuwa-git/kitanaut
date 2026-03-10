@@ -79,7 +79,7 @@ export default async function VerwaltungBelegePage({ searchParams }: { searchPar
     const email = headersList.get('x-user-email') || '';
 
     if (!userId || !role) redirect('/login');
-    if (role !== 'admin') redirect('/dashboard');
+    if (role !== 'admin' && role !== 'finanzvorstand') redirect('/dashboard');
 
     const { tab } = await searchParams;
     const activeTab = tab === 'linked' || tab === 'unlinked' || tab === 'ki' || tab === 'ki-workflow' || tab === 'ki-settings' ? tab : 'upload';

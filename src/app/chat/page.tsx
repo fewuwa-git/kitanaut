@@ -15,7 +15,7 @@ export default async function ChatPage() {
     const email = headersList.get('x-user-email') || '';
 
     if (!userId || !role) redirect('/login');
-    if (role !== 'admin' && role !== 'member') redirect('/dashboard');
+    if (role !== 'admin' && role !== 'finanzvorstand' && role !== 'member') redirect('/dashboard');
 
     return (
         <div className="app-layout">

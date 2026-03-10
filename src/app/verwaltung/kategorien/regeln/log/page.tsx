@@ -67,7 +67,7 @@ export default async function KategorienRegelLogPage() {
     const email = headersList.get('x-user-email') || '';
 
     if (!userId || !role) redirect('/login');
-    if (role !== 'admin') redirect('/dashboard');
+    if (role !== 'admin' && role !== 'finanzvorstand') redirect('/dashboard');
 
     return (
         <div className="app-layout">

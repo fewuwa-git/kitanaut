@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     const token = cookieStore.get('token')?.value;
     const payload = token ? await verifyToken(token) : null;
 
-    if (!payload || (payload.role !== 'admin' && payload.role !== 'member')) {
+    if (!payload || (payload.role !== 'admin' && payload.role !== 'finanzvorstand' && payload.role !== 'member')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const token = cookieStore.get('token')?.value;
     const payload = token ? await verifyToken(token) : null;
 
-    if (!payload || (payload.role !== 'admin' && payload.role !== 'member')) {
+    if (!payload || (payload.role !== 'admin' && payload.role !== 'finanzvorstand' && payload.role !== 'member')) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

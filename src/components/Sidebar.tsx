@@ -14,43 +14,43 @@ const NAV_ITEMS: NavGroup[] = [
     {
         section: 'CHAT',
         items: [
-            { href: '/chat', icon: '💬', label: 'Chat', roles: ['admin', 'member'] },
+            { href: '/chat', icon: '💬', label: 'Chat', roles: ['admin', 'finanzvorstand', 'member'] },
         ],
     },
     {
         section: 'ÜBERSICHT',
         items: [
-            { href: '/dashboard', icon: '📊', label: 'Kontostand', roles: ['admin', 'member'] },
-            { href: '/kontoauszug', icon: '📝', label: 'Kontoauszug', roles: ['admin', 'member'] },
-            { href: '/categories', icon: '📂', label: 'Kategorien', roles: ['admin', 'member'] },
-            { href: '/dashboard/springerin', icon: '👩‍🏫', label: 'Springerin', roles: ['admin', 'member'] },
+            { href: '/dashboard', icon: '📊', label: 'Kontostand', roles: ['admin', 'finanzvorstand', 'member'] },
+            { href: '/kontoauszug', icon: '📝', label: 'Kontoauszug', roles: ['admin', 'finanzvorstand', 'member'] },
+            { href: '/categories', icon: '📂', label: 'Kategorien', roles: ['admin', 'finanzvorstand', 'member'] },
+            { href: '/dashboard/springerin', icon: '👩‍🏫', label: 'Springerin', roles: ['admin', 'finanzvorstand', 'member'] },
         ],
     },
     {
         section: 'SPRINGERIN',
         items: [
-            { href: '/springerin/abrechnung', icon: '🧾', label: 'Abrechnung', roles: ['admin', 'springerin'] },
+            { href: '/springerin/abrechnung', icon: '🧾', label: 'Abrechnung', roles: ['admin', 'finanzvorstand', 'springerin'] },
         ],
     },
     {
         section: 'ELTERN',
         items: [
-            { href: '/eltern/belege', icon: '🧾', label: 'Meine Belege', roles: ['eltern', 'member', 'admin'] },
-            { href: '/eltern/buchungen', icon: '📒', label: 'Meine Buchungen', roles: ['eltern', 'member', 'admin'] },
+            { href: '/eltern/belege', icon: '🧾', label: 'Meine Belege', roles: ['eltern', 'finanzvorstand', 'member', 'admin'] },
+            { href: '/eltern/buchungen', icon: '📒', label: 'Meine Buchungen', roles: ['eltern', 'finanzvorstand', 'member', 'admin'] },
         ],
     },
     {
         section: 'UPLOAD',
         items: [
-            { href: '/upload', icon: '⬆️', label: 'Neuer Upload', roles: ['admin'] },
+            { href: '/upload', icon: '⬆️', label: 'Neuer Upload', roles: ['admin', 'finanzvorstand'] },
         ],
     },
     {
         section: 'VERWALTUNG',
         items: [
-            { href: '/user', icon: '👥', label: 'Benutzer', roles: ['admin', 'springerin', 'eltern', 'member'] },
-            { href: '/verwaltung/kategorien', icon: '🏷️', label: 'Kategorien', roles: ['admin'] },
-            { href: '/verwaltung/belege', icon: '📎', label: 'Buchungsbelege', roles: ['admin'] },
+            { href: '/user', icon: '👥', label: 'Benutzer', roles: ['admin', 'finanzvorstand', 'springerin', 'eltern', 'member'] },
+            { href: '/verwaltung/kategorien', icon: '🏷️', label: 'Kategorien', roles: ['admin', 'finanzvorstand'] },
+            { href: '/verwaltung/belege', icon: '📎', label: 'Buchungsbelege', roles: ['admin', 'finanzvorstand'] },
             { href: '/verwaltung/emails', icon: '✉️', label: 'E-Mails', roles: ['admin'] },
             { href: '/verwaltung/zugriffsrechte', icon: '🔐', label: 'Zugriffsrechte', roles: ['admin'] },
         ],
@@ -60,7 +60,8 @@ const NAV_ITEMS: NavGroup[] = [
 const COLLAPSIBLE_SECTIONS = ['VERWALTUNG'];
 
 const ROLE_LABELS: Record<string, string> = {
-    admin: 'Finanzvorstand',
+    admin: 'Admin',
+    finanzvorstand: 'Finanzvorstand',
     member: 'Vorstandsmitglied',
     springerin: 'Springer*in',
     eltern: 'Eltern',

@@ -33,7 +33,7 @@ export default async function UserEditPage({ params }: { params: Promise<{ id: s
             <main className="main-content">
                 <div className="page-body">
                     <div className="card" style={{ padding: '24px' }}>
-                        <UserEditClient user={userWithoutPassword} currentUserRole={role} />
+                        <UserEditClient user={userWithoutPassword} currentUserRole={role} isSelf={isSelf} />
                     </div>
                 </div>
             </main>

@@ -190,7 +190,8 @@ export default function AdminClient({ currentUser }: AdminClientProps) {
                                             onChange={(e) => setApproveRole({ ...approveRole, [u.id]: e.target.value })}
                                         >
                                             <option value="member">Vorstandsmitglied</option>
-                                            <option value="admin">Finanzvorstand</option>
+                                            <option value="admin">Admin</option>
+                                            <option value="finanzvorstand">Finanzvorstand</option>
                                             <option value="eltern">Eltern</option>
                                             <option value="springerin">Springerin</option>
                                         </select>
@@ -228,7 +229,8 @@ export default function AdminClient({ currentUser }: AdminClientProps) {
                                 onChange={(e) => setRoleFilter(e.target.value)}
                             >
                                 <option value="all">Alle Rollen</option>
-                                <option value="admin">Finanzvorstand</option>
+                                <option value="admin">Admin</option>
+                                <option value="finanzvorstand">Finanzvorstand</option>
                                 <option value="member">Vorstandsmitglied</option>
                                 <option value="eltern">Eltern</option>
                                 <option value="springerin">Springerin</option>
@@ -239,10 +241,11 @@ export default function AdminClient({ currentUser }: AdminClientProps) {
 
                     {(() => {
                         const ROLE_SECTIONS = [
-                            { role: 'admin',      label: 'Finanzvorstand',    icon: '⭐' },
-                            { role: 'member',     label: 'Vorstandsmitglieder', icon: '👤' },
-                            { role: 'eltern',     label: 'Eltern',            icon: '👪' },
-                            { role: 'springerin', label: 'Springerinnen',     icon: '🏃' },
+                            { role: 'admin',          label: 'Admin',               icon: '⭐' },
+                            { role: 'finanzvorstand', label: 'Finanzvorstand',       icon: '💰' },
+                            { role: 'member',         label: 'Vorstandsmitglieder',  icon: '👤' },
+                            { role: 'eltern',         label: 'Eltern',               icon: '👪' },
+                            { role: 'springerin',     label: 'Springerinnen',        icon: '🏃' },
                         ];
 
                         const visibleUsers = users
@@ -370,7 +373,8 @@ export default function AdminClient({ currentUser }: AdminClientProps) {
                                 <select className="form-select" value={createForm.role}
                                     onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}>
                                     <option value="member">Vorstandsmitglied</option>
-                                    <option value="admin">Finanzvorstand</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="finanzvorstand">Finanzvorstand</option>
                                     <option value="eltern">Eltern</option>
                                     <option value="springerin">Springerin</option>
                                 </select>

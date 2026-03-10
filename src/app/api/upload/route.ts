@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     try {
         const token = req.cookies.get('token')?.value;
         const payload = token ? await verifyToken(token) : null;
-        if (!payload || payload.role !== 'admin') {
+        if (!payload || (payload.role !== 'admin' && payload.role !== 'finanzvorstand')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
         const body = await req.json();

@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const existing = await getBelegById(id);
     if (!existing) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
 
-    const isAdmin = payload.role === 'admin' || payload.role === 'member';
+    const isAdmin = payload.role === 'admin' || payload.role === 'finanzvorstand' || payload.role === 'member';
     if (!isAdmin && existing.user_id !== payload.userId) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -49,7 +49,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const existing = await getBelegById(id);
     if (!existing) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
 
-    const isAdmin = payload.role === 'admin' || payload.role === 'member';
+    const isAdmin = payload.role === 'admin' || payload.role === 'finanzvorstand' || payload.role === 'member';
     if (!isAdmin && existing.user_id !== payload.userId) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

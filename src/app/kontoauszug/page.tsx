@@ -33,7 +33,7 @@ export default async function KontoauszugPage() {
 
     if (!userId || !role) redirect('/login');
     if (role === 'springerin') redirect('/springerin/abrechnung');
-    if (role !== 'admin' && role !== 'member') {
+    if (role !== 'admin' && role !== 'finanzvorstand' && role !== 'member') {
         return (
             <div className="app-layout">
                 <Sidebar user={{ name, email, role }} />

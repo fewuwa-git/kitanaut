@@ -4,7 +4,7 @@ export interface JWTPayload {
     userId: string;
     email: string;
     name: string;
-    role: 'admin' | 'member' | 'eltern' | 'springerin';
+    role: 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin';
 }
 
 function getSecret(): Uint8Array {

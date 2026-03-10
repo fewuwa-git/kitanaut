@@ -73,7 +73,7 @@ export default function AbrechnungForm({
     const availableMonths = useMemo(() => {
         const months: MonthOption[] = [];
         const date = new Date();
-        const limit = user.role === 'admin' ? 24 : 3;
+        const limit = (user.role === 'admin' || user.role === 'finanzvorstand') ? 24 : 3;
 
         for (let i = 0; i < limit; i++) {
             const jahr = date.getFullYear();

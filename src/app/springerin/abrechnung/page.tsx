@@ -235,12 +235,12 @@ export default async function AbrechnungPage({
 }) {
     const headersList = await headers();
     const userId = headersList.get('x-user-id');
-    const role = headersList.get('x-user-role') as 'admin' | 'member' | 'eltern' | 'springerin' | null;
+    const role = headersList.get('x-user-role') as 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
 
     if (!userId || !role) redirect('/login');
-    if (role !== 'admin' && role !== 'springerin') redirect('/dashboard');
+    if (role !== 'admin' && role !== 'finanzvorstand' && role !== 'springerin') redirect('/dashboard');
 
     const params = await searchParams;
     const selectedSpringerinId = params?.springerinId as string | undefined;

@@ -8,7 +8,7 @@ async function requireAdmin() {
     const token = cookieStore.get('token')?.value;
     if (!token) return null;
     const payload = await verifyToken(token);
-    return payload?.role === 'admin' ? payload : null;
+    return (payload?.role === 'admin' || payload?.role === 'finanzvorstand') ? payload : null;
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

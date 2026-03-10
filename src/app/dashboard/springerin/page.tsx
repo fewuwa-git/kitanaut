@@ -41,7 +41,7 @@ export default async function SpringerinDashboardPage() {
     const email = headersList.get('x-user-email') || '';
 
     if (!userId || !role) redirect('/login');
-    if (role !== 'admin' && role !== 'member') {
+    if (role !== 'admin' && role !== 'finanzvorstand' && role !== 'member') {
         return (
             <div className="app-layout">
                 <Sidebar user={{ name, email, role }} />
