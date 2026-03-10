@@ -5,6 +5,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
     {
+        date: '10.03.2026',
+        changes: [
+            '— Neue Rolle: Finanzvorstand —',
+            'Es gibt jetzt eine eigene Rolle „Finanzvorstand" mit Zugriff auf alle finanziellen Verwaltungsseiten (Buchungsbelege, Kategorien, Abrechnungen, Upload).',
+            '— Benutzerprofil bearbeiten —',
+            'Das Bearbeitungsformular ist jetzt übersichtlicher: Die Felder sind auf Tabs aufgeteilt (Konto, Kontakt, Abrechnung, Unterschrift). Beim Verlassen der Seite mit ungespeicherten Änderungen erscheint eine Warnung.',
+        ],
+    },
+    {
         date: '08.03.2026',
         changes: [
             '— Mobile-Optimierung —',
