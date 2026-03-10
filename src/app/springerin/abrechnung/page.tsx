@@ -92,7 +92,7 @@ async function AbrechnungTable({
                                 <tr>
                                     <th>Name</th>
                                     <th style={{ textAlign: 'right' }}>Stunden</th>
-                                    <th style={{ textAlign: 'right' }}>Betrag €</th>
+                                    <th style={{ textAlign: 'right' }}>Betrag</th>
                                     <th>Status</th>
                                     <th style={{ width: '220px' }}></th>
                                 </tr>
