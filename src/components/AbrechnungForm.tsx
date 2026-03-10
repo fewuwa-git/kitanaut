@@ -491,7 +491,7 @@ export default function AbrechnungForm({
 
             {selectedMonth && (
                 <>
-                    <div className="stats-grid" style={{ marginBottom: '2.5rem' }}>
+                    <div className="stats-grid stats-grid-4" style={{ marginBottom: '2.5rem' }}>
                         {user.role !== 'springerin' && (
                             <div className="stat-card">
                                 <div className="stat-card-label">
