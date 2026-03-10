@@ -492,17 +492,19 @@ export default function AbrechnungForm({
             {selectedMonth && (
                 <>
                     <div className="stats-grid" style={{ marginBottom: '2.5rem' }}>
-                        <div className="stat-card">
-                            <div className="stat-card-label">
-                                <span>👩‍💼</span> Ausgewählte Springer*in
-                            </div>
-                            <div className="stat-card-value" style={{ fontSize: '18px' }}>
-                                {selectedSpringer.name}
-                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal' }}>
-                                    {selectedSpringer.email}
+                        {user.role !== 'springerin' && (
+                            <div className="stat-card">
+                                <div className="stat-card-label">
+                                    <span>👩‍💼</span> Ausgewählte Springer*in
+                                </div>
+                                <div className="stat-card-value" style={{ fontSize: '18px' }}>
+                                    {selectedSpringer.name}
+                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal' }}>
+                                        {selectedSpringer.email}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                         <div className="stat-card">
                             <div className="stat-card-label">
                                 <span>📅</span> Ausgewählter Monat
