@@ -131,12 +131,12 @@ async function AbrechnungTable({
                                                     <td style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
                                                         {ab.pankonauten_users?.name || 'Unbekannt'}
                                                     </td>
-                                                    <td style={{ textAlign: 'right' }}>
+                                                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                                                         <span className="badge" style={{ background: 'var(--bg)', padding: '4px 10px', borderRadius: '4px', fontWeight: '500' }}>
                                                             {ab.totalStunden.toFixed(2)} h
                                                         </span>
                                                     </td>
-                                                    <td style={{ textAlign: 'right', fontWeight: '700', color: 'var(--navy)', fontSize: '15px' }}>
+                                                    <td style={{ textAlign: 'right', fontWeight: '700', color: 'var(--navy)', fontSize: '15px', whiteSpace: 'nowrap' }}>
                                                         {ab.totalBetrag.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
                                                     </td>
                                                     <td>
