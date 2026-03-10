@@ -40,7 +40,7 @@ const ALL_PAGES: NavItem[] = [
     // Verwaltung
     { href: '/user', label: 'Benutzer', section: 'Verwaltung', roles: ['admin', 'finanzvorstand', 'springerin', 'teammitglied', 'eltern', 'member'] },
     { href: '/user/[id]/edit', label: 'Profil bearbeiten', section: 'Verwaltung', roles: ['admin', 'finanzvorstand', 'springerin', 'teammitglied', 'eltern', 'member'] },
-    { href: '/verwaltung/belege', label: 'Buchungsbelege', section: 'Verwaltung', roles: ['admin', 'finanzvorstand'] },
+    { href: '/verwaltung/belege', label: 'Buchungsbelege', section: 'Buchhaltung', roles: ['admin', 'finanzvorstand'] },
     { href: '/verwaltung/kategorien', label: 'Kategorien verwalten', section: 'Verwaltung', roles: ['admin', 'finanzvorstand'] },
     { href: '/verwaltung/kategorien/regeln', label: 'Kategorieregeln', section: 'Verwaltung', roles: ['admin', 'finanzvorstand'] },
     { href: '/verwaltung/kategorien/regeln/log', label: 'Regelprotokoll (KI)', section: 'Verwaltung', roles: ['admin', 'finanzvorstand'] },

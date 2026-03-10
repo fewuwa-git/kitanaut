@@ -46,11 +46,16 @@ const NAV_ITEMS: NavGroup[] = [
         ],
     },
     {
+        section: 'BUCHHALTUNG',
+        items: [
+            { href: '/verwaltung/belege', icon: '📎', label: 'Buchungsbelege', roles: ['admin', 'finanzvorstand'] },
+        ],
+    },
+    {
         section: 'VERWALTUNG',
         items: [
             { href: '/user', icon: '👥', label: 'Benutzer', roles: ['admin', 'finanzvorstand', 'springerin', 'teammitglied', 'eltern', 'member'] },
             { href: '/verwaltung/kategorien', icon: '🏷️', label: 'Kategorien', roles: ['admin', 'finanzvorstand'] },
-            { href: '/verwaltung/belege', icon: '📎', label: 'Buchungsbelege', roles: ['admin', 'finanzvorstand'] },
             { href: '/verwaltung/emails', icon: '✉️', label: 'E-Mails', roles: ['admin'] },
             { href: '/verwaltung/zugriffsrechte', icon: '🔐', label: 'Zugriffsrechte', roles: ['admin'] },
         ],
