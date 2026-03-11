@@ -5,6 +5,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
     {
+        date: '12.03.2026',
+        changes: [
+            '— Mehrere Kitas —',
+            'Das System unterstützt jetzt mehrere Kitas gleichzeitig. Jede Kita hat eine eigene Subdomain (z. B. pankonauten.kitanaut.de) und eigene Daten – Buchungen, Kategorien, Belege und Nutzer sind vollständig voneinander getrennt.',
+        ],
+    },
+    {
         date: '10.03.2026',
         changes: [
             '— Neue Rolle: Finanzvorstand —',
