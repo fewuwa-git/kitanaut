@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const data = await getAbrechnung(targetUserId, jahr, monat);
+        const data = await getAbrechnung(targetUserId, jahr, monat, payload.orgId);
         return NextResponse.json(data);
     } catch {
         return NextResponse.json({ error: 'Server-Fehler' }, { status: 500 });
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
             }
 
             // Ensure the main Abrechnung exists
-            let { abrechnung } = await getAbrechnung(targetUserId, jahr, monat);
+            let { abrechnung } = await getAbrechnung(targetUserId, jahr, monat, payload.orgId);
 
             const isNew = !abrechnung;
             if (!abrechnung) {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
                     jahr,
                     monat,
                     status: 'entwurf',
-                });
+                }, payload.orgId);
                 if (isNew) {
                     await logAudit(payload.userId, payload.name, 'abrechnung_erstellt', { monat, jahr });
                 }
@@ -97,14 +97,14 @@ export async function POST(request: NextRequest) {
                 });
             } else if (status === 'bezahlt') {
                 await logAudit(payload.userId, payload.name, 'abrechnung_bezahlt', {
-                    monat: updated.monat, jahr: updated.jahr, user_name: (await getUserById(updated.user_id))?.name,
+                    monat: updated.monat, jahr: updated.jahr, user_name: (await getUserById(updated.user_id, payload.orgId))?.name,
                 });
             }
 
             if (status === 'bezahlt' && sendEmail !== false) {
                 try {
-                    const { tage } = await getAbrechnung(updated.user_id, updated.jahr, updated.monat);
-                    const user = await getUserById(updated.user_id);
+                    const { tage } = await getAbrechnung(updated.user_id, updated.jahr, updated.monat, payload.orgId);
+                    const user = await getUserById(updated.user_id, payload.orgId);
                     if (user && user.email) {
                         const gesamtbetrag = tage.reduce((sum, t) => sum + (t.betrag || 0), 0);
                         const monatsnamen = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -115,6 +115,7 @@ export async function POST(request: NextRequest) {
                             String(updated.jahr),
                             gesamtbetrag.toFixed(2).replace('.', ','),
                             user.iban || 'hinterlegtes Konto',
+                            payload.orgId,
                         );
                     }
                 } catch (mailErr) {
@@ -131,9 +132,9 @@ export async function POST(request: NextRequest) {
             }
 
             const { recalculateAbrechnungRates } = await import('@/lib/data');
-            await recalculateAbrechnungRates(targetUserId, jahr, monat);
+            await recalculateAbrechnungRates(targetUserId, jahr, monat, payload.orgId);
 
-            const data = await getAbrechnung(targetUserId, jahr, monat);
+            const data = await getAbrechnung(targetUserId, jahr, monat, payload.orgId);
             return NextResponse.json(data);
         }
 

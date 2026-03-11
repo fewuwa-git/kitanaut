@@ -5,6 +5,8 @@ export interface JWTPayload {
     email: string;
     name: string;
     role: 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin' | 'teammitglied';
+    orgId: string;
+    orgSlug: string;
 }
 
 function getSecret(): Uint8Array {

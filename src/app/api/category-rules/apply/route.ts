@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const overwrite = body.overwrite === true;
 
     try {
-        const result = await applyRulesToTransactions(overwrite);
+        const result = await applyRulesToTransactions(overwrite, payload.orgId);
         return NextResponse.json(result);
     } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Unknown error';

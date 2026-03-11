@@ -8,10 +8,10 @@ import Sidebar from '@/components/Sidebar';
 export const metadata: Metadata = { title: 'Springerin Dashboard' };
 import SpringerinDashboard from '@/components/SpringerinDashboard';
 
-async function SpringerinSection({ currentUserName }: { currentUserName: string }) {
+async function SpringerinSection({ currentUserName, orgId }: { currentUserName: string; orgId: string }) {
     const [abrechnungen, initialNotes] = await Promise.all([
-        getAllAbrechnungen(),
-        getSpringerinNotes(),
+        getAllAbrechnungen(orgId),
+        getSpringerinNotes(orgId),
     ]);
     return (
         <SpringerinDashboard
@@ -39,6 +39,7 @@ export default async function SpringerinDashboardPage() {
     const role = headersList.get('x-user-role') as 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin' | 'teammitglied' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role !== 'admin' && role !== 'finanzvorstand' && role !== 'member') {
@@ -65,7 +66,7 @@ export default async function SpringerinDashboardPage() {
             <main className="main-content">
                 <div className="page-body">
                     <Suspense fallback={<SpringerinSkeleton />}>
-                        <SpringerinSection currentUserName={name} />
+                        <SpringerinSection currentUserName={name} orgId={orgId} />
                     </Suspense>
                 </div>
             </main>

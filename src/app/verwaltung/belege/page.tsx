@@ -11,11 +11,11 @@ import VerwaltungBelegeClient from '@/components/VerwaltungBelegeClient';
 export const metadata: Metadata = { title: 'Buchungsbelege' };
 export const dynamic = 'force-dynamic';
 
-async function BelegeSection({ tab }: { tab: string }) {
+async function BelegeSection({ tab, orgId }: { tab: string; orgId: string }) {
     const [receipts, unlinked, categories, kiSettings] = await Promise.all([
-        getAllTransactionReceipts(),
-        getUnlinkedReceipts(),
-        getCategories(),
+        getAllTransactionReceipts(orgId),
+        getUnlinkedReceipts(orgId),
+        getCategories(orgId),
         getKiSettings(),
     ]);
 
@@ -33,6 +33,7 @@ async function BelegeSection({ tab }: { tab: string }) {
         const { data: txs } = await supabase
             .from('pankonauten_transactions')
             .select('id, date, description, counterparty, amount, category')
+            .eq('organization_id', orgId)
             .in('id', savedTxIds);
         for (const tx of txs ?? []) txMap[tx.id] = tx;
     }
@@ -78,6 +79,8 @@ export default async function VerwaltungBelegePage({ searchParams }: { searchPar
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
 
+    const orgId = headersList.get('x-org-id') || '';
+
     if (!userId || !role) redirect('/login');
     if (role !== 'admin' && role !== 'finanzvorstand') redirect('/dashboard');
 
@@ -90,7 +93,7 @@ export default async function VerwaltungBelegePage({ searchParams }: { searchPar
             <main className="main-content">
                 <div className="page-body">
                     <Suspense fallback={<BelegeSkeleton />}>
-                        <BelegeSection tab={activeTab} />
+                        <BelegeSection tab={activeTab} orgId={orgId} />
                     </Suspense>
                 </div>
             </main>

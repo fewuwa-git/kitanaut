@@ -27,7 +27,7 @@ export async function PUT(
         return NextResponse.json({ error: 'name, color und type sind erforderlich.' }, { status: 400 });
     }
     try {
-        await updateCategory(decodedOldName, { name, color, type });
+        await updateCategory(decodedOldName, { name, color, type }, admin.orgId);
         return NextResponse.json({ ok: true });
     } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Unknown error';
@@ -45,7 +45,7 @@ export async function DELETE(
     const { name } = await params;
     const decodedName = decodeURIComponent(name);
     try {
-        await deleteCategory(decodedName);
+        await deleteCategory(decodedName, admin.orgId);
         return NextResponse.json({ ok: true });
     } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Unknown error';

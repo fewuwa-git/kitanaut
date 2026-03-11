@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const jahr = searchParams.get('jahr');
     const monat = searchParams.get('monat');
 
-    let query = supabase.from('pankonauten_springerin_notes').select('*');
+    let query = supabase.from('pankonauten_springerin_notes').select('*').eq('organization_id', payload.orgId);
 
     if (jahr) query = query.eq('jahr', parseInt(jahr));
     if (monat) query = query.eq('monat', parseInt(monat));
@@ -53,8 +53,9 @@ export async function POST(request: Request) {
             monat,
             content,
             author_name: payload.name,
+            organization_id: payload.orgId,
             updated_at: new Date().toISOString()
-        }, { onConflict: 'jahr,monat' })
+        }, { onConflict: 'organization_id, jahr, monat' })
         .select()
         .single();
 

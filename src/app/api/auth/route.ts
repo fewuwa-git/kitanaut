@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { getUserByEmail, updateUserLastLogin } from '@/lib/data';
+import { getUserByEmail, updateUserLastLogin, getOrgBySlug } from '@/lib/data';
 import { signToken } from '@/lib/auth';
 import { rateLimit } from '@/lib/rateLimit';
+
+function extractSubdomain(host: string): string | null {
+    const hostname = host.split(':')[0];
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return process.env.DEV_ORG_SLUG || 'pankonauten';
+    }
+    const parts = hostname.split('.');
+    if (parts.length < 3) return null;
+    return parts[0];
+}
 
 export async function POST(req: NextRequest) {
     const limited = rateLimit(req, 'login', 10, 15 * 60 * 1000);
@@ -15,7 +25,19 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'E-Mail und Passwort erforderlich' }, { status: 400 });
         }
 
-        const user = await getUserByEmail(email);
+        // Org aus Subdomain ermitteln
+        const host = req.headers.get('host') || '';
+        const slug = extractSubdomain(host);
+        if (!slug) {
+            return NextResponse.json({ error: 'Unbekannte Organisation' }, { status: 400 });
+        }
+
+        const org = await getOrgBySlug(slug);
+        if (!org) {
+            return NextResponse.json({ error: 'Organisation nicht gefunden' }, { status: 404 });
+        }
+
+        const user = await getUserByEmail(email, org.id);
         if (!user) {
             return NextResponse.json({ error: 'Ungültige Anmeldedaten' }, { status: 401 });
         }
@@ -46,17 +68,17 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Ungültige Anmeldedaten' }, { status: 401 });
         }
 
-        // Update the user's last login timestamp without waiting to block the response
         updateUserLastLogin(user.id, new Date().toISOString()).catch(err => {
             console.error('Failed to update last_login_at:', err);
         });
-
 
         const token = await signToken({
             userId: user.id,
             email: user.email,
             name: user.name,
             role: user.role,
+            orgId: org.id,
+            orgSlug: org.slug,
         });
 
         const response = NextResponse.json({
@@ -66,7 +88,7 @@ export async function POST(req: NextRequest) {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 60 * 60 * 24, // 24 Stunden (Inactivity Timeout via Middleware)
+            maxAge: 60 * 60 * 24,
             path: '/',
         });
 

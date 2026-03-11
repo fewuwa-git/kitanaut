@@ -9,8 +9,8 @@ export const metadata: Metadata = { title: 'Kontoauszug' };
 export const dynamic = 'force-dynamic';
 import KontoauszugClient from '@/components/KontoauszugClient';
 
-async function KontoauszugSection({ role }: { role: 'admin' | 'member' }) {
-    const [transactions, categories, txIdsWithReceipts] = await Promise.all([getTransactions(), getCategories(), getTransactionIdsWithReceipts()]);
+async function KontoauszugSection({ role, orgId }: { role: 'admin' | 'member'; orgId: string }) {
+    const [transactions, categories, txIdsWithReceipts] = await Promise.all([getTransactions(orgId), getCategories(orgId), getTransactionIdsWithReceipts(orgId)]);
     return <KontoauszugClient transactions={transactions} categories={categories} userRole={role} initialTxIdsWithReceipts={txIdsWithReceipts} />;
 }
 
@@ -30,6 +30,7 @@ export default async function KontoauszugPage() {
     const role = headersList.get('x-user-role') as 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin' | 'teammitglied' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role === 'springerin') redirect('/springerin/abrechnung');
@@ -57,7 +58,7 @@ export default async function KontoauszugPage() {
             <main className="main-content">
                 <div className="page-body">
                     <Suspense fallback={<KontoauszugSkeleton />}>
-                        <KontoauszugSection role={role as 'admin' | 'member'} />
+                        <KontoauszugSection role={role as 'admin' | 'member'} orgId={orgId} />
                     </Suspense>
                 </div>
             </main>

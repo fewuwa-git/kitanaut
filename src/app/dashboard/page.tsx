@@ -8,8 +8,8 @@ import Sidebar from '@/components/Sidebar';
 export const metadata: Metadata = { title: 'Dashboard' };
 import DashboardClient from '@/components/DashboardClient';
 
-async function TransactionsSection() {
-    const transactions = await getTransactions();
+async function TransactionsSection({ orgId }: { orgId: string }) {
+    const transactions = await getTransactions(orgId);
     return <DashboardClient transactions={transactions} />;
 }
 
@@ -32,6 +32,7 @@ export default async function DashboardPage() {
     const role = headersList.get('x-user-role') as 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin' | 'teammitglied' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role === 'springerin') redirect('/springerin/abrechnung');
@@ -59,7 +60,7 @@ export default async function DashboardPage() {
             <main className="main-content">
                 <div className="page-body">
                     <Suspense fallback={<TransactionsSkeleton />}>
-                        <TransactionsSection />
+                        <TransactionsSection orgId={orgId} />
                     </Suspense>
                 </div>
             </main>

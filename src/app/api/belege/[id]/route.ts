@@ -11,7 +11,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params;
     const body = await req.json();
 
-    const existing = await getBelegById(id);
+    const existing = await getBelegById(id, payload.orgId);
     if (!existing) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
 
     const isAdmin = payload.role === 'admin' || payload.role === 'finanzvorstand' || payload.role === 'member';
@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     try {
-        const beleg = await saveBeleg({ ...existing, ...body });
+        const beleg = await saveBeleg({ ...existing, ...body }, payload.orgId);
         if (body.status === 'eingereicht' || body.status === 'bezahlt' || body.status === 'abgelehnt') {
             const actionMap: Record<string, 'beleg_eingereicht' | 'beleg_bezahlt' | 'beleg_abgelehnt'> = {
                 eingereicht: 'beleg_eingereicht',
@@ -46,7 +46,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     const { id } = await params;
 
-    const existing = await getBelegById(id);
+    const existing = await getBelegById(id, payload.orgId);
     if (!existing) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
 
     const isAdmin = payload.role === 'admin' || payload.role === 'finanzvorstand' || payload.role === 'member';

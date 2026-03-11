@@ -8,8 +8,8 @@ import Sidebar from '@/components/Sidebar';
 export const metadata: Metadata = { title: 'Kategorien' };
 import KategorienVerwaltungClient from '@/components/KategorienVerwaltungClient';
 
-async function KategorienSection() {
-    const categories = await getCategories();
+async function KategorienSection({ orgId }: { orgId: string }) {
+    const categories = await getCategories(orgId);
     return <KategorienVerwaltungClient initialCategories={categories} />;
 }
 
@@ -29,6 +29,7 @@ export default async function KategorienVerwaltungPage() {
     const role = headersList.get('x-user-role') as 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin' | 'teammitglied' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role !== 'admin' && role !== 'finanzvorstand') redirect('/dashboard');
@@ -39,7 +40,7 @@ export default async function KategorienVerwaltungPage() {
             <main className="main-content">
                 <div className="page-body">
                     <Suspense fallback={<KategorienSkeleton />}>
-                        <KategorienSection />
+                        <KategorienSection orgId={orgId} />
                     </Suspense>
                 </div>
             </main>

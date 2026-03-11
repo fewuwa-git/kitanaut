@@ -9,11 +9,11 @@ import KategorienRegelLogClient, { type LogEntry } from '@/components/Kategorien
 
 export const metadata: Metadata = { title: 'Regelprotokoll' };
 
-async function LogSection() {
+async function LogSection({ orgId }: { orgId: string }) {
     const [categories, rules, transactions] = await Promise.all([
-        getCategories(),
-        getCategoryRules(),
-        getTransactions(),
+        getCategories(orgId),
+        getCategoryRules(orgId),
+        getTransactions(orgId),
     ]);
 
     const entries: LogEntry[] = transactions
@@ -65,6 +65,7 @@ export default async function KategorienRegelLogPage() {
     const role = headersList.get('x-user-role') as 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin' | 'teammitglied' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role !== 'admin' && role !== 'finanzvorstand') redirect('/dashboard');
@@ -75,7 +76,7 @@ export default async function KategorienRegelLogPage() {
             <main className="main-content">
                 <div className="page-body">
                     <Suspense fallback={<LogSkeleton />}>
-                        <LogSection />
+                        <LogSection orgId={orgId} />
                     </Suspense>
                 </div>
             </main>

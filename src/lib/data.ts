@@ -2,6 +2,54 @@ import { supabase } from './db';
 import { type CategoryRule, applyRules } from './categoryMatcher';
 export type { CategoryRule };
 
+// ─── Organizations ─────────────────────────────────────────────────────────────
+
+export interface Organization {
+    id: string;
+    name: string;
+    slug: string;
+    created_at: string;
+}
+
+export async function getOrgBySlug(slug: string): Promise<Organization | null> {
+    const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+    if (error) return null;
+    return data;
+}
+
+export async function getOrgById(id: string): Promise<Organization | null> {
+    const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', id)
+        .single();
+    if (error) return null;
+    return data;
+}
+
+export async function createOrganization(name: string, slug: string): Promise<Organization> {
+    const { data, error } = await supabase
+        .from('organizations')
+        .insert({ name, slug })
+        .select()
+        .single();
+    if (error) throw new Error('Failed to create organization: ' + error.message);
+    return data;
+}
+
+export async function getAllOrganizations(): Promise<Organization[]> {
+    const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .order('name', { ascending: true });
+    if (error) return [];
+    return data || [];
+}
+
 export interface Category {
     name: string;
     color: string;
@@ -63,8 +111,11 @@ export interface AbrechnungTag {
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 
-export async function getUsers(): Promise<User[]> {
-    const { data, error } = await supabase.from('pankonauten_users').select('*');
+export async function getUsers(orgId: string): Promise<User[]> {
+    const { data, error } = await supabase
+        .from('pankonauten_users')
+        .select('*')
+        .eq('organization_id', orgId);
     if (error) {
         console.error('Error fetching users:', error);
         return [];
@@ -72,10 +123,11 @@ export async function getUsers(): Promise<User[]> {
     return data || [];
 }
 
-export async function getSpringerinUsers(): Promise<User[]> {
+export async function getSpringerinUsers(orgId: string): Promise<User[]> {
     const { data, error } = await supabase
         .from('pankonauten_users')
         .select('*')
+        .eq('organization_id', orgId)
         .eq('role', 'springerin')
         .order('name', { ascending: true });
     if (error) {
@@ -85,23 +137,25 @@ export async function getSpringerinUsers(): Promise<User[]> {
     return data || [];
 }
 
-export async function getUserById(id: string): Promise<User | undefined> {
+export async function getUserById(id: string, orgId: string): Promise<User | undefined> {
     const { data, error } = await supabase
         .from('pankonauten_users')
         .select('*')
         .eq('id', id)
+        .eq('organization_id', orgId)
         .single();
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+    if (error && error.code !== 'PGRST116') {
         console.error('Error fetching user by ID:', error);
     }
     return data || undefined;
 }
 
-export async function getUserByEmail(email: string): Promise<User | undefined> {
+export async function getUserByEmail(email: string, orgId: string): Promise<User | undefined> {
     const { data, error } = await supabase
         .from('pankonauten_users')
         .select('*')
         .ilike('email', email)
+        .eq('organization_id', orgId)
         .single();
     if (error && error.code !== 'PGRST116') {
         console.error('Error fetching user by email:', error);
@@ -109,12 +163,25 @@ export async function getUserByEmail(email: string): Promise<User | undefined> {
     return data || undefined;
 }
 
-export async function saveUser(user: User): Promise<void> {
+export async function getUserByInviteToken(token: string): Promise<User | undefined> {
+    const { data, error } = await supabase
+        .from('pankonauten_users')
+        .select('*')
+        .eq('invite_token', token)
+        .single();
+    if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching user by invite token:', error);
+    }
+    return data || undefined;
+}
+
+export async function saveUser(user: User & { organization_id: string }): Promise<void> {
     const { error } = await supabase
         .from('pankonauten_users')
         .upsert(
             {
                 id: user.id,
+                organization_id: user.organization_id,
                 name: user.name,
                 email: user.email,
                 password: user.password,
@@ -139,8 +206,12 @@ export async function saveUser(user: User): Promise<void> {
     }
 }
 
-export async function deleteUser(id: string): Promise<void> {
-    const { error } = await supabase.from('pankonauten_users').delete().eq('id', id);
+export async function deleteUser(id: string, orgId: string): Promise<void> {
+    const { error } = await supabase
+        .from('pankonauten_users')
+        .delete()
+        .eq('id', id)
+        .eq('organization_id', orgId);
     if (error) {
         throw new Error('Could not delete user: ' + error.message);
     }
@@ -158,7 +229,7 @@ export async function updateUserLastLogin(id: string, timestamp: string): Promis
 
 // ─── Transactions ─────────────────────────────────────────────────────────────
 
-export async function getTransactions(): Promise<Transaction[]> {
+export async function getTransactions(orgId: string): Promise<Transaction[]> {
     const all: Transaction[] = [];
     const batchSize = 1000;
     let from = 0;
@@ -167,6 +238,7 @@ export async function getTransactions(): Promise<Transaction[]> {
         const { data, error } = await supabase
             .from('pankonauten_transactions')
             .select('*')
+            .eq('organization_id', orgId)
             .order('date', { ascending: true })
             .range(from, from + batchSize - 1);
 
@@ -190,9 +262,12 @@ export async function getTransactions(): Promise<Transaction[]> {
     }));
 }
 
-export async function saveTransactions(transactions: Transaction[]): Promise<void> {
-    // Delete all
-    const { error: delErr } = await supabase.from('pankonauten_transactions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+export async function saveTransactions(transactions: Transaction[], orgId: string): Promise<void> {
+    // Delete all for this org
+    const { error: delErr } = await supabase
+        .from('pankonauten_transactions')
+        .delete()
+        .eq('organization_id', orgId);
     if (delErr) {
         throw new Error('Failed to clear transactions: ' + delErr.message);
     }
@@ -202,7 +277,7 @@ export async function saveTransactions(transactions: Transaction[]): Promise<voi
     // chunk inserts (Supabase has limits on insert sizes)
     const chunkSize = 1000;
     for (let i = 0; i < transactions.length; i += chunkSize) {
-        const chunk = transactions.slice(i, i + chunkSize);
+        const chunk = transactions.slice(i, i + chunkSize).map(t => ({ ...t, organization_id: orgId }));
         const { error: insErr } = await supabase.from('pankonauten_transactions').insert(chunk);
         if (insErr) {
             throw new Error('Failed to insert transactions: ' + insErr.message);
@@ -210,8 +285,8 @@ export async function saveTransactions(transactions: Transaction[]): Promise<voi
     }
 }
 
-export async function addTransactions(newTransactions: Transaction[]): Promise<number> {
-    const existing = await getTransactions();
+export async function addTransactions(newTransactions: Transaction[], orgId: string): Promise<number> {
+    const existing = await getTransactions(orgId);
 
     const sig = (tx: Transaction) => `${tx.date}_${tx.amount}_${tx.description}_${tx.counterparty}`;
 
@@ -248,14 +323,15 @@ export async function addTransactions(newTransactions: Transaction[]): Promise<n
         }
     }
 
-    await saveTransactions(all);
+    await saveTransactions(all, orgId);
 
     return uniqueNewTransactions.length;
 }
-export async function getTransactionsByCounterparty(name: string): Promise<Transaction[]> {
+export async function getTransactionsByCounterparty(name: string, orgId: string): Promise<Transaction[]> {
     const { data, error } = await supabase
         .from('pankonauten_transactions')
         .select('*')
+        .eq('organization_id', orgId)
         .order('date', { ascending: true });
 
     if (error) {
@@ -279,11 +355,12 @@ export async function getTransactionsByCounterparty(name: string): Promise<Trans
         }));
 }
 
-export async function updateTransactionCategory(id: string, category: string): Promise<void> {
+export async function updateTransactionCategory(id: string, category: string, orgId: string): Promise<void> {
     const { error } = await supabase
         .from('pankonauten_transactions')
         .update({ category })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('organization_id', orgId);
 
     if (error) {
         throw new Error('Failed to update transaction category: ' + error.message);
@@ -292,10 +369,11 @@ export async function updateTransactionCategory(id: string, category: string): P
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 
-export async function getCategories(): Promise<Category[]> {
+export async function getCategories(orgId: string): Promise<Category[]> {
     const { data, error } = await supabase
         .from('pankonauten_categories')
         .select('*')
+        .eq('organization_id', orgId)
         .order('type', { ascending: true })
         .order('name', { ascending: true });
     if (error) {
@@ -305,22 +383,23 @@ export async function getCategories(): Promise<Category[]> {
     return data || [];
 }
 
-export async function createCategory(category: Category): Promise<void> {
+export async function createCategory(category: Category, orgId: string): Promise<void> {
     const { error } = await supabase
         .from('pankonauten_categories')
-        .insert({ name: category.name, color: category.color, type: category.type });
+        .insert({ name: category.name, color: category.color, type: category.type, organization_id: orgId });
     if (error) {
         throw new Error('Failed to create category: ' + error.message);
     }
 }
 
-export async function updateCategory(oldName: string, category: Category): Promise<void> {
+export async function updateCategory(oldName: string, category: Category, orgId: string): Promise<void> {
     // If name changed, update all transactions first, then update category
     if (oldName !== category.name) {
         const { error: txErr } = await supabase
             .from('pankonauten_transactions')
             .update({ category: category.name })
-            .eq('category', oldName);
+            .eq('category', oldName)
+            .eq('organization_id', orgId);
         if (txErr) {
             throw new Error('Failed to rename category in transactions: ' + txErr.message);
         }
@@ -328,29 +407,32 @@ export async function updateCategory(oldName: string, category: Category): Promi
         const { error: delErr } = await supabase
             .from('pankonauten_categories')
             .delete()
-            .eq('name', oldName);
+            .eq('name', oldName)
+            .eq('organization_id', orgId);
         if (delErr) throw new Error('Failed to delete old category: ' + delErr.message);
         const { error: insErr } = await supabase
             .from('pankonauten_categories')
-            .insert({ name: category.name, color: category.color, type: category.type });
+            .insert({ name: category.name, color: category.color, type: category.type, organization_id: orgId });
         if (insErr) throw new Error('Failed to insert renamed category: ' + insErr.message);
     } else {
         const { error } = await supabase
             .from('pankonauten_categories')
             .update({ color: category.color, type: category.type })
-            .eq('name', oldName);
+            .eq('name', oldName)
+            .eq('organization_id', orgId);
         if (error) {
             throw new Error('Failed to update category: ' + error.message);
         }
     }
 }
 
-export async function deleteCategory(name: string): Promise<void> {
+export async function deleteCategory(name: string, orgId: string): Promise<void> {
     // Check if any transactions use this category
     const { count, error: countErr } = await supabase
         .from('pankonauten_transactions')
         .select('id', { count: 'exact', head: true })
-        .eq('category', name);
+        .eq('category', name)
+        .eq('organization_id', orgId);
     if (countErr) throw new Error('Failed to check transactions: ' + countErr.message);
     if (count && count > 0) {
         throw new Error(`Kategorie "${name}" wird von ${count} Buchung(en) verwendet und kann nicht gelöscht werden.`);
@@ -358,7 +440,8 @@ export async function deleteCategory(name: string): Promise<void> {
     const { error } = await supabase
         .from('pankonauten_categories')
         .delete()
-        .eq('name', name);
+        .eq('name', name)
+        .eq('organization_id', orgId);
     if (error) {
         throw new Error('Failed to delete category: ' + error.message);
     }
@@ -366,13 +449,14 @@ export async function deleteCategory(name: string): Promise<void> {
 
 // ─── Abrechnungen ────────────────────────────────────────────────────────────
 
-export async function getAbrechnung(userId: string, jahr: number, monat: number): Promise<{ abrechnung: Abrechnung | null, tage: AbrechnungTag[] }> {
+export async function getAbrechnung(userId: string, jahr: number, monat: number, orgId: string): Promise<{ abrechnung: Abrechnung | null, tage: AbrechnungTag[] }> {
     const { data: abrechnung, error: abErr } = await supabase
         .from('pankonauten_abrechnungen')
         .select('*')
         .eq('user_id', userId)
         .eq('jahr', jahr)
         .eq('monat', monat)
+        .eq('organization_id', orgId)
         .single();
 
     if (abErr && abErr.code !== 'PGRST116') {
@@ -395,11 +479,11 @@ export async function getAbrechnung(userId: string, jahr: number, monat: number)
     return { abrechnung, tage: tage || [] };
 }
 
-export async function saveAbrechnung(ab: Partial<Abrechnung>): Promise<Abrechnung> {
-    const payload = { ...ab, updated_at: new Date().toISOString() };
+export async function saveAbrechnung(ab: Partial<Abrechnung>, orgId: string): Promise<Abrechnung> {
+    const payload = { ...ab, organization_id: orgId, updated_at: new Date().toISOString() };
     const { data, error } = await supabase
         .from('pankonauten_abrechnungen')
-        .upsert(payload, { onConflict: 'user_id, jahr, monat' })
+        .upsert(payload, { onConflict: 'organization_id, user_id, jahr, monat' })
         .select()
         .single();
 
@@ -458,14 +542,15 @@ export async function deleteAbrechnung(id: string): Promise<void> {
     if (error) throw new Error('Failed to delete abrechnung: ' + error.message);
 }
 
-export async function getAllAbrechnungen(userId?: string): Promise<any[]> {
+export async function getAllAbrechnungen(orgId: string, userId?: string): Promise<any[]> {
     let query = supabase
         .from('pankonauten_abrechnungen')
         .select(`
             *,
             pankonauten_users (id, name, email, strasse, ort, iban, steuerid, unterschrift),
             pankonauten_abrechnung_tage (*)
-        `);
+        `)
+        .eq('organization_id', orgId);
 
     if (userId) {
         query = query.eq('user_id', userId);
@@ -493,13 +578,13 @@ export async function getAllAbrechnungen(userId?: string): Promise<any[]> {
     });
 }
 
-export async function recalculateAbrechnungRates(userId: string, jahr: number, monat: number): Promise<void> {
-    const user = await getUserById(userId);
+export async function recalculateAbrechnungRates(userId: string, jahr: number, monat: number, orgId: string): Promise<void> {
+    const user = await getUserById(userId, orgId);
     if (!user || user.stundensatz == null || user.stundensatz === 0) {
         throw new Error('Kein Stundensatz im Profil hinterlegt.');
     }
 
-    const { tage } = await getAbrechnung(userId, jahr, monat);
+    const { tage } = await getAbrechnung(userId, jahr, monat, orgId);
     if (!tage || tage.length === 0) return;
 
     for (const tag of tage) {
@@ -530,11 +615,12 @@ export interface Beleg {
     pankonauten_users?: { id: string; name: string; email: string; strasse?: string; ort?: string; unterschrift?: string };
 }
 
-export async function getNextBelegnummer(): Promise<string> {
+export async function getNextBelegnummer(orgId: string): Promise<string> {
     const year = new Date().getFullYear();
     const { data } = await supabase
         .from('pankonauten_belege')
         .select('belegnummer')
+        .eq('organization_id', orgId)
         .like('belegnummer', `BEL-${year}-%`);
     const max = (data || []).reduce((acc: number, b: any) => {
         const n = parseInt((b.belegnummer || '').split('-')[2] || '0');
@@ -543,20 +629,22 @@ export async function getNextBelegnummer(): Promise<string> {
     return `BEL-${year}-${String(max + 1).padStart(3, '0')}`;
 }
 
-export async function getBelegById(id: string): Promise<Beleg | null> {
+export async function getBelegById(id: string, orgId: string): Promise<Beleg | null> {
     const { data, error } = await supabase
         .from('pankonauten_belege')
         .select('*, pankonauten_users(id, name, email, strasse, ort, unterschrift)')
         .eq('id', id)
+        .eq('organization_id', orgId)
         .single();
     if (error || !data) return null;
     return { ...data, netto: Number(data.netto), betrag: Number(data.betrag) };
 }
 
-export async function getBelege(userId?: string): Promise<Beleg[]> {
+export async function getBelege(orgId: string, userId?: string): Promise<Beleg[]> {
     let query = supabase
         .from('pankonauten_belege')
         .select('*, pankonauten_users(id, name, email, strasse, ort, unterschrift)')
+        .eq('organization_id', orgId)
         .order('datum', { ascending: false });
     if (userId) query = query.eq('user_id', userId);
     const { data, error } = await query;
@@ -564,10 +652,10 @@ export async function getBelege(userId?: string): Promise<Beleg[]> {
     return (data || []).map((b: any) => ({ ...b, netto: Number(b.netto), betrag: Number(b.betrag) }));
 }
 
-export async function saveBeleg(beleg: Partial<Beleg>): Promise<Beleg> {
+export async function saveBeleg(beleg: Partial<Beleg>, orgId: string): Promise<Beleg> {
     // Strip the join field – it's not a column in the table
     const { pankonauten_users: _, ...rest } = beleg as any;
-    const payload = { ...rest, updated_at: new Date().toISOString() };
+    const payload = { ...rest, organization_id: orgId, updated_at: new Date().toISOString() };
     const { data, error } = await supabase
         .from('pankonauten_belege')
         .upsert(payload, { onConflict: 'id' })
@@ -593,8 +681,8 @@ export interface SpringerinNote {
     created_at?: string;
 }
 
-export async function getSpringerinNotes(jahr?: number, monat?: number): Promise<SpringerinNote[]> {
-    let query = supabase.from('pankonauten_springerin_notes').select('*');
+export async function getSpringerinNotes(orgId: string, jahr?: number, monat?: number): Promise<SpringerinNote[]> {
+    let query = supabase.from('pankonauten_springerin_notes').select('*').eq('organization_id', orgId);
     if (jahr) query = query.eq('jahr', jahr);
     if (monat) query = query.eq('monat', monat);
 
@@ -606,10 +694,10 @@ export async function getSpringerinNotes(jahr?: number, monat?: number): Promise
     return data || [];
 }
 
-export async function saveSpringerinNote(note: Omit<SpringerinNote, 'id' | 'created_at'>): Promise<SpringerinNote | null> {
+export async function saveSpringerinNote(note: Omit<SpringerinNote, 'id' | 'created_at'>, orgId: string): Promise<SpringerinNote | null> {
     const { data, error } = await supabase
         .from('pankonauten_springerin_notes')
-        .upsert(note, { onConflict: 'jahr,monat' })
+        .upsert({ ...note, organization_id: orgId }, { onConflict: 'organization_id, jahr, monat' })
         .select()
         .single();
 
@@ -630,51 +718,55 @@ export interface EmailTemplate {
     updated_at?: string;
 }
 
-export async function getEmailTemplates(): Promise<EmailTemplate[]> {
+export async function getEmailTemplates(orgId: string): Promise<EmailTemplate[]> {
     const { data, error } = await supabase
         .from('pankonauten_email_templates')
         .select('*')
+        .eq('organization_id', orgId)
         .order('id');
     if (error) { console.error('Error fetching email templates:', error); return []; }
     return data || [];
 }
 
-export async function getEmailTemplate(id: string): Promise<EmailTemplate | null> {
+export async function getEmailTemplate(id: string, orgId: string): Promise<EmailTemplate | null> {
     const { data, error } = await supabase
         .from('pankonauten_email_templates')
         .select('*')
         .eq('id', id)
+        .eq('organization_id', orgId)
         .single();
     if (error) { console.error('Error fetching email template:', error); return null; }
     return data;
 }
 
-export async function saveEmailTemplate(id: string, subject: string, body: string, name?: string): Promise<void> {
+export async function saveEmailTemplate(id: string, subject: string, body: string, orgId: string, name?: string): Promise<void> {
     const payload: Record<string, string> = { subject, body, updated_at: new Date().toISOString() };
     if (name) payload.name = name;
     const { error } = await supabase
         .from('pankonauten_email_templates')
         .update(payload)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('organization_id', orgId);
     if (error) throw new Error('Failed to save email template: ' + error.message);
 }
 
 // ─── Category Rules ───────────────────────────────────────────────────────────
 
-export async function getCategoryRules(): Promise<CategoryRule[]> {
+export async function getCategoryRules(orgId: string): Promise<CategoryRule[]> {
     const { data, error } = await supabase
         .from('pankonauten_category_rules')
         .select('*')
+        .eq('organization_id', orgId)
         .order('priority', { ascending: false })
         .order('created_at', { ascending: true });
     if (error) { console.error('Error fetching category rules:', error); return []; }
     return data || [];
 }
 
-export async function createCategoryRule(rule: Omit<CategoryRule, 'id' | 'created_at'>): Promise<CategoryRule> {
+export async function createCategoryRule(rule: Omit<CategoryRule, 'id' | 'created_at'>, orgId: string): Promise<CategoryRule> {
     const { data, error } = await supabase
         .from('pankonauten_category_rules')
-        .insert(rule)
+        .insert({ ...rule, organization_id: orgId })
         .select()
         .single();
     if (error) throw new Error('Failed to create category rule: ' + error.message);
@@ -697,8 +789,8 @@ export async function deleteCategoryRule(id: string): Promise<void> {
     if (error) throw new Error('Failed to delete category rule: ' + error.message);
 }
 
-export async function applyRulesToTransactions(overwrite: boolean): Promise<{ updated: number; skipped: number }> {
-    const [rules, transactions] = await Promise.all([getCategoryRules(), getTransactions()]);
+export async function applyRulesToTransactions(overwrite: boolean, orgId: string): Promise<{ updated: number; skipped: number }> {
+    const [rules, transactions] = await Promise.all([getCategoryRules(orgId), getTransactions(orgId)]);
 
     const updates: { id: string; category: string }[] = [];
     let skipped = 0;
@@ -727,7 +819,8 @@ export async function applyRulesToTransactions(overwrite: boolean): Promise<{ up
             const { error } = await supabase
                 .from('pankonauten_transactions')
                 .update({ category })
-                .in('id', ids);
+                .in('id', ids)
+                .eq('organization_id', orgId);
             if (error) throw new Error('Failed to batch update categories: ' + error.message);
         }
     }
@@ -737,10 +830,11 @@ export async function applyRulesToTransactions(overwrite: boolean): Promise<{ up
 
 // ─── Transaction Receipts ─────────────────────────────────────────────────────
 
-export async function getTransactionIdsWithReceipts(): Promise<string[]> {
+export async function getTransactionIdsWithReceipts(orgId: string): Promise<string[]> {
     const { data, error } = await supabase
         .from('pankonauten_transaction_receipts')
-        .select('transaction_id');
+        .select('transaction_id')
+        .eq('organization_id', orgId);
     if (error) { console.error('Error fetching receipt ids:', error); return []; }
     return [...new Set((data || []).map((r: { transaction_id: string }) => r.transaction_id))];
 }
@@ -767,10 +861,11 @@ export interface TransactionReceipt {
     transaction_category: string;
 }
 
-export async function getAllTransactionReceipts(): Promise<TransactionReceipt[]> {
+export async function getAllTransactionReceipts(orgId: string): Promise<TransactionReceipt[]> {
     const { data: receipts, error } = await supabase
         .from('pankonauten_transaction_receipts')
         .select('*')
+        .eq('organization_id', orgId)
         .not('transaction_id', 'is', null)
         .order('uploaded_at', { ascending: false });
     if (error) { console.error('Error fetching all receipts:', error); return []; }
@@ -780,6 +875,7 @@ export async function getAllTransactionReceipts(): Promise<TransactionReceipt[]>
     const { data: txs } = await supabase
         .from('pankonauten_transactions')
         .select('id, date, description, counterparty, amount, category')
+        .eq('organization_id', orgId)
         .in('id', txIds);
 
     const txMap = new Map((txs || []).map((t: any) => [t.id, t]));
@@ -797,10 +893,11 @@ export async function getAllTransactionReceipts(): Promise<TransactionReceipt[]>
     }).sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
 }
 
-export async function getUnlinkedReceipts(): Promise<Omit<TransactionReceipt, 'transaction_date' | 'transaction_description' | 'transaction_counterparty' | 'transaction_amount' | 'transaction_category'>[]> {
+export async function getUnlinkedReceipts(orgId: string): Promise<Omit<TransactionReceipt, 'transaction_date' | 'transaction_description' | 'transaction_counterparty' | 'transaction_amount' | 'transaction_category'>[]> {
     const { data, error } = await supabase
         .from('pankonauten_transaction_receipts')
         .select('*')
+        .eq('organization_id', orgId)
         .is('transaction_id', null)
         .order('uploaded_at', { ascending: false });
     if (error) { console.error('Error fetching unlinked receipts:', error); return []; }

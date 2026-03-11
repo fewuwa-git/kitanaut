@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     const { data, error } = await supabase
         .from('pankonauten_transaction_receipts')
-        .insert({ transaction_id: null, file_path: filePath, file_name: fileName, file_size: fileData.length, file_hash: fileHash })
+        .insert({ transaction_id: null, file_path: filePath, file_name: fileName, file_size: fileData.length, file_hash: fileHash, organization_id: payload.orgId })
         .select()
         .single();
 

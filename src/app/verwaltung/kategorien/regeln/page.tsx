@@ -8,8 +8,8 @@ import KategorienRegelnClient from '@/components/KategorienRegelnClient';
 
 export const metadata: Metadata = { title: 'Import-Regeln' };
 
-async function RegelnSection() {
-    const [categories, rules] = await Promise.all([getCategories(), getCategoryRules()]);
+async function RegelnSection({ orgId }: { orgId: string }) {
+    const [categories, rules] = await Promise.all([getCategories(orgId), getCategoryRules(orgId)]);
     return <KategorienRegelnClient initialRules={rules} categories={categories} />;
 }
 
@@ -29,6 +29,7 @@ export default async function KategorienRegelnPage() {
     const role = headersList.get('x-user-role') as 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin' | 'teammitglied' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role !== 'admin' && role !== 'finanzvorstand') redirect('/dashboard');
@@ -39,7 +40,7 @@ export default async function KategorienRegelnPage() {
             <main className="main-content">
                 <div className="page-body">
                     <Suspense fallback={<RegelnSkeleton />}>
-                        <RegelnSection />
+                        <RegelnSection orgId={orgId} />
                     </Suspense>
                 </div>
             </main>

@@ -14,10 +14,10 @@ export async function GET(req: NextRequest) {
 
     if (payload.role === 'admin') {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const users = (await getUsers()).map(({ password: _p, invite_token: _t, invite_expires_at: _e, unterschrift: _u, ...u }) => u);
+        const users = (await getUsers(payload.orgId)).map(({ password: _p, invite_token: _t, invite_expires_at: _e, unterschrift: _u, ...u }) => u);
         return NextResponse.json(users);
     } else {
-        const user = await getUserByEmail(payload.email);
+        const user = await getUserByEmail(payload.email, payload.orgId);
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password: _p, invite_token: _t, invite_expires_at: _e, unterschrift: _u, ...u } = user;
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         if (!name || !email) {
             return NextResponse.json({ error: 'Name und E-Mail erforderlich' }, { status: 400 });
         }
-        const existing = await getUserByEmail(email);
+        const existing = await getUserByEmail(email, payload.orgId);
         if (existing) {
             return NextResponse.json({ error: 'E-Mail bereits vergeben' }, { status: 409 });
         }
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
             invite_token: inviteToken,
             invite_expires_at: inviteExpiresAt,
             created_at: new Date().toISOString(),
+            organization_id: payload.orgId,
         };
         await saveUser(newUser);
 

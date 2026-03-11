@@ -13,12 +13,13 @@ export default async function EmailTemplateEditPage({ params }: { params: Promis
     const role = headersList.get('x-user-role') as 'admin' | 'member' | 'eltern' | 'springerin' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role !== 'admin') redirect('/dashboard');
 
     const { id } = await params;
-    const template = await getEmailTemplate(id);
+    const template = await getEmailTemplate(id, orgId);
     if (!template) notFound();
 
     return (

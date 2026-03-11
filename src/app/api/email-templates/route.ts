@@ -8,6 +8,6 @@ export async function GET(req: NextRequest) {
     if (!payload || payload.role !== 'admin') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
-    const templates = await getEmailTemplates();
+    const templates = await getEmailTemplates(payload.orgId);
     return NextResponse.json(templates);
 }

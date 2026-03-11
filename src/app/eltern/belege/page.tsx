@@ -18,24 +18,26 @@ const STATUS_LABELS: Record<string, string> = {
 async function BelegeSection({
     role,
     userId,
+    orgId,
     selectedUserId,
     selectedStatus,
 }: {
     role: string;
     userId: string;
+    orgId: string;
     selectedUserId?: string;
     selectedStatus?: string;
 }) {
     const isAdmin = role === 'admin';
     const filterUserId = isAdmin ? selectedUserId : userId;
-    const allBelege = await getBelege(filterUserId);
+    const allBelege = await getBelege(orgId, filterUserId);
 
     const belege = selectedStatus
         ? allBelege.filter(b => b.status === selectedStatus)
         : allBelege;
 
     const allUsers = isAdmin
-        ? (await getUsers()).filter(u => ['eltern', 'member', 'admin'].includes(u.role)).sort((a, b) => a.name.localeCompare(b.name))
+        ? (await getUsers(orgId)).filter(u => ['eltern', 'member', 'admin'].includes(u.role)).sort((a, b) => a.name.localeCompare(b.name))
         : [];
 
     return (
@@ -73,6 +75,7 @@ export default async function BelegePage({
     const role = headersList.get('x-user-role') as 'admin' | 'member' | 'eltern' | 'springerin' | 'teammitglied' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role !== 'eltern' && role !== 'teammitglied' && role !== 'member' && role !== 'admin') redirect('/dashboard');
@@ -90,6 +93,7 @@ export default async function BelegePage({
                         <BelegeSection
                             role={role}
                             userId={userId}
+                            orgId={orgId}
                             selectedUserId={selectedUserId}
                             selectedStatus={selectedStatus}
                         />

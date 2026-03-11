@@ -9,10 +9,10 @@ export const metadata: Metadata = { title: 'Meine Buchungen' };
 import KontoauszugClient from '@/components/KontoauszugClient';
 import ElternUserSelector from '@/components/ElternUserSelector';
 
-async function MeineBuchungenSection({ name }: { name: string }) {
+async function MeineBuchungenSection({ name, orgId }: { name: string; orgId: string }) {
     const [transactions, categories] = await Promise.all([
-        getTransactionsByCounterparty(name),
-        getCategories(),
+        getTransactionsByCounterparty(name, orgId),
+        getCategories(orgId),
     ]);
     return (
         <>
@@ -48,6 +48,7 @@ export default async function MeineBuchungenPage({
     const role = headersList.get('x-user-role') as 'admin' | 'member' | 'eltern' | 'springerin' | 'teammitglied' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role !== 'eltern' && role !== 'teammitglied' && role !== 'member' && role !== 'admin') redirect('/dashboard');
@@ -59,7 +60,7 @@ export default async function MeineBuchungenPage({
 
     // Admin: load all eltern users for the selector
     const elternUsers = isAdmin
-        ? (await getUsers()).filter(u => u.role === 'eltern' || u.role === 'member').sort((a, b) => a.name.localeCompare(b.name))
+        ? (await getUsers(orgId)).filter(u => u.role === 'eltern' || u.role === 'member').sort((a, b) => a.name.localeCompare(b.name))
         : [];
 
     // Determine whose transactions to show
@@ -91,7 +92,7 @@ export default async function MeineBuchungenPage({
                     )}
                     {displayName ? (
                         <Suspense key={displayName} fallback={<MeineBuchungenSkeleton />}>
-                            <MeineBuchungenSection name={displayName} />
+                            <MeineBuchungenSection name={displayName} orgId={orgId} />
                         </Suspense>
                     ) : isAdmin ? (
                         <div className="card" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>

@@ -13,11 +13,12 @@ export default async function UserEditPage({ params }: { params: Promise<{ id: s
     const role = headersList.get('x-user-role') as 'admin' | 'member' | 'eltern' | 'springerin' | 'teammitglied' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
 
     const { id } = await params;
-    const user = await getUserById(id);
+    const user = await getUserById(id, orgId);
     if (!user) notFound();
 
     // Nur Admin oder der User selbst darf bearbeiten

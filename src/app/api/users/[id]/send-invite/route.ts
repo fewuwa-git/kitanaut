@@ -33,7 +33,7 @@ export async function POST(
     const inviteUrl = `${baseUrl}/einladen/${user.invite_token}`;
 
     try {
-        await sendInviteEmail(user.email, user.name, inviteUrl);
+        await sendInviteEmail(user.email, user.name, inviteUrl, payload.orgId);
     } catch {
         return NextResponse.json({ error: 'E-Mail konnte nicht gesendet werden' }, { status: 500 });
     }

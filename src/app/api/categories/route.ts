@@ -4,7 +4,13 @@ import { verifyToken } from '@/lib/auth';
 import { getCategories, createCategory } from '@/lib/data';
 
 export async function GET() {
-    const categories = await getCategories();
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const payload = await verifyToken(token);
+    if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const categories = await getCategories(payload.orgId);
     return NextResponse.json(categories);
 }
 
@@ -22,7 +28,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'name, color und type sind erforderlich.' }, { status: 400 });
     }
     try {
-        await createCategory({ name, color, type });
+        await createCategory({ name, color, type }, payload.orgId);
         return NextResponse.json({ ok: true });
     } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Unknown error';

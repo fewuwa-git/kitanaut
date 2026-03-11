@@ -11,17 +11,45 @@ const COOKIE_OPTIONS = {
     path: '/',
 };
 
+function extractSubdomain(host: string): string | null {
+    // Entferne Port falls vorhanden
+    const hostname = host.split(':')[0];
+
+    // Localhost: kein Subdomain-Konzept → fallback auf 'pankonauten'
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return process.env.DEV_ORG_SLUG || 'pankonauten';
+    }
+
+    const parts = hostname.split('.');
+    // Mindestens 3 Teile: sub.domain.tld
+    if (parts.length < 3) return null;
+
+    // Ersten Teil als Subdomain zurückgeben
+    return parts[0];
+}
+
 export async function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl;
+    const host = req.headers.get('host') || '';
+    const subdomain = extractSubdomain(host);
 
     // Öffentliche Routen – kein Auth nötig
     if (
         pathname.startsWith('/login') ||
         pathname.startsWith('/api/auth') ||
         pathname.startsWith('/einladen') ||
-        pathname.startsWith('/api/invite')
+        pathname.startsWith('/api/invite') ||
+        pathname.startsWith('/registrieren') ||
+        pathname.startsWith('/api/register-org') ||
+        pathname.startsWith('/passwort-reset') ||
+        pathname.startsWith('/api/password-reset')
     ) {
         return NextResponse.next();
+    }
+
+    // Keine Subdomain → Landing Page oder Fehler
+    if (!subdomain) {
+        return NextResponse.redirect(new URL('/login', req.url));
     }
 
     const token = req.cookies.get('token')?.value;
@@ -36,9 +64,18 @@ export async function proxy(req: NextRequest) {
     const payload = await verifyToken(token);
 
     if (!payload) {
-        // Token abgelaufen oder ungültig → ausloggen
         if (pathname.startsWith('/api')) {
             return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+        }
+        const response = NextResponse.redirect(new URL('/login', req.url));
+        response.cookies.delete('token');
+        return response;
+    }
+
+    // Subdomain muss zur Org im JWT passen
+    if (payload.orgSlug !== subdomain) {
+        if (pathname.startsWith('/api')) {
+            return NextResponse.json({ error: 'Forbidden: wrong organization' }, { status: 403 });
         }
         const response = NextResponse.redirect(new URL('/login', req.url));
         response.cookies.delete('token');
@@ -51,6 +88,8 @@ export async function proxy(req: NextRequest) {
         email: payload.email,
         name: payload.name,
         role: payload.role,
+        orgId: payload.orgId,
+        orgSlug: payload.orgSlug,
     });
 
     // Impersonation: Wenn Admin und impersonate-Cookie gesetzt → Ansicht als anderer User
@@ -75,11 +114,12 @@ export async function proxy(req: NextRequest) {
         } catch { /* ungültiger Cookie → ignorieren */ }
     }
 
-    // Payload als Request-Header weitergeben → Pages müssen Token nicht nochmal verifizieren
     requestHeaders.set('x-user-id', effectiveUserId);
     requestHeaders.set('x-user-role', effectiveRole);
     requestHeaders.set('x-user-name', effectiveName);
     requestHeaders.set('x-user-email', effectiveEmail);
+    requestHeaders.set('x-org-id', payload.orgId);
+    requestHeaders.set('x-org-slug', payload.orgSlug);
     if (isImpersonating) {
         requestHeaders.set('x-real-admin-name', payload.name);
     } else {

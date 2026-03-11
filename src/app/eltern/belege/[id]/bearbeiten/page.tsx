@@ -17,12 +17,13 @@ export default async function BelegBearbeitenPage({
     const role = headersList.get('x-user-role') as 'admin' | 'member' | 'eltern' | 'springerin' | 'teammitglied' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role !== 'eltern' && role !== 'teammitglied' && role !== 'member' && role !== 'admin') redirect('/dashboard');
 
     const { id } = await params;
-    const beleg = await getBelegById(id);
+    const beleg = await getBelegById(id, orgId);
     if (!beleg) notFound();
 
     // Non-admins can only edit their own entwurf belege

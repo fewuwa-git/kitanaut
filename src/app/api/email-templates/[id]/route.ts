@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
     const { id } = await params;
-    const template = await getEmailTemplate(id);
+    const template = await getEmailTemplate(id, payload.orgId);
     if (!template) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
     return NextResponse.json(template);
 }
@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: 'Betreff und Inhalt erforderlich' }, { status: 400 });
     }
     try {
-        await saveEmailTemplate(id, subject, body, name);
+        await saveEmailTemplate(id, subject, body, payload.orgId, name);
         return NextResponse.json({ success: true });
     } catch (err: unknown) {
         return NextResponse.json({ error: err instanceof Error ? err.message : 'Server-Fehler' }, { status: 500 });

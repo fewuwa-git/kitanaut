@@ -31,6 +31,7 @@ const getMonthName = (monthNum: number) =>
 async function AbrechnungTable({
     role,
     userId,
+    orgId,
     selectedSpringerinId,
     selectedMonat,
     selectedJahr,
@@ -38,15 +39,16 @@ async function AbrechnungTable({
 }: {
     role: string;
     userId: string;
+    orgId: string;
     selectedSpringerinId?: string;
     selectedMonat?: number;
     selectedJahr?: number;
     selectedStatus?: string;
 }) {
     const [abrechnungenRaw, currentUser, springerinnen] = await Promise.all([
-        role === 'admin' ? getAllAbrechnungen(selectedSpringerinId) : getAllAbrechnungen(userId),
-        getUserById(userId),
-        role === 'admin' ? getSpringerinUsers() : Promise.resolve([]),
+        role === 'admin' ? getAllAbrechnungen(orgId, selectedSpringerinId) : getAllAbrechnungen(orgId, userId),
+        getUserById(userId, orgId),
+        role === 'admin' ? getSpringerinUsers(orgId) : Promise.resolve([]),
     ]);
 
     if (!currentUser) redirect('/login');
@@ -307,6 +309,7 @@ export default async function AbrechnungPage({
     const role = headersList.get('x-user-role') as 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role !== 'admin' && role !== 'finanzvorstand' && role !== 'springerin') redirect('/dashboard');
@@ -326,6 +329,7 @@ export default async function AbrechnungPage({
                         <AbrechnungTable
                             role={role}
                             userId={userId}
+                            orgId={orgId}
                             selectedSpringerinId={selectedSpringerinId}
                             selectedMonat={selectedMonat}
                             selectedJahr={selectedJahr}

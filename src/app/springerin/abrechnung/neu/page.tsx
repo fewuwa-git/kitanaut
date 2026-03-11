@@ -22,14 +22,15 @@ export default async function NeueAbrechnungPage({
     const role = headersList.get('x-user-role') as 'admin' | 'member' | 'eltern' | 'springerin' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role !== 'admin' && role !== 'springerin') redirect('/dashboard');
 
     const [currentUser, initialSpringer, allUsers] = await Promise.all([
-        getUserById(userId),
-        springerinId ? getUserById(springerinId) : Promise.resolve(undefined),
-        role === 'admin' ? getUsers() : Promise.resolve(undefined),
+        getUserById(userId, orgId),
+        springerinId ? getUserById(springerinId, orgId) : Promise.resolve(undefined),
+        role === 'admin' ? getUsers(orgId) : Promise.resolve(undefined),
     ]);
 
     if (!currentUser) redirect('/login');

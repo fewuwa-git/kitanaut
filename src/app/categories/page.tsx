@@ -5,8 +5,8 @@ import { getTransactions, getCategories } from '@/lib/data';
 import Sidebar from '@/components/Sidebar';
 import CategoryClient from '@/components/CategoryClient';
 
-async function CategoriesSection() {
-    const [transactions, categories] = await Promise.all([getTransactions(), getCategories()]);
+async function CategoriesSection({ orgId }: { orgId: string }) {
+    const [transactions, categories] = await Promise.all([getTransactions(orgId), getCategories(orgId)]);
     return <CategoryClient transactions={transactions} categories={categories} />;
 }
 
@@ -26,6 +26,7 @@ export default async function CategoriesPage() {
     const role = headersList.get('x-user-role') as 'admin' | 'finanzvorstand' | 'member' | 'eltern' | 'springerin' | 'teammitglied' | null;
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
+    const orgId = headersList.get('x-org-id') || '';
 
     if (!userId || !role) redirect('/login');
     if (role === 'springerin') redirect('/springerin/abrechnung');
@@ -53,7 +54,7 @@ export default async function CategoriesPage() {
             <main className="main-content">
                 <div className="page-body">
                     <Suspense fallback={<CategoriesSkeleton />}>
-                        <CategoriesSection />
+                        <CategoriesSection orgId={orgId} />
                     </Suspense>
                 </div>
             </main>

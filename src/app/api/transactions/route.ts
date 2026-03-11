@@ -7,6 +7,6 @@ export async function GET(req: NextRequest) {
     const payload = token ? await verifyToken(token) : null;
     if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const transactions = await getTransactions();
+    const transactions = await getTransactions(payload.orgId);
     return NextResponse.json(transactions);
 }

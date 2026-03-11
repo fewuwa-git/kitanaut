@@ -19,16 +19,18 @@ Antworte immer auf Deutsch. Sei präzise, freundlich und hilfreich.
 Nutze Markdown für Formatierungen (Listen, Tabellen, Fettschrift) wenn es die Antwort übersichtlicher macht.
 Rechne Summen und Statistiken selbst aus, wenn die Daten es erlauben.`;
 
-async function buildContext(): Promise<{ context: string; txCount: number; dateFrom: string; dateTo: string }> {
+async function buildContext(orgId: string): Promise<{ context: string; txCount: number; dateFrom: string; dateTo: string }> {
     const [{ data: transactions }, { data: receipts }] = await Promise.all([
         supabase
             .from('pankonauten_transactions')
             .select('date, description, counterparty, amount, category')
+            .eq('organization_id', orgId)
             .order('date', { ascending: false })
             .limit(600),
         supabase
             .from('pankonauten_transaction_receipts')
             .select('file_name, ai_vendor, ai_amount, ai_date, ai_description, linked_transaction_id')
+            .eq('organization_id', orgId)
             .order('created_at', { ascending: false })
             .limit(200),
     ]);
@@ -117,7 +119,7 @@ export async function POST(req: NextRequest) {
 
     const [kiSettings, { context, txCount, dateFrom, dateTo }] = await Promise.all([
         getKiSettings(),
-        buildContext(),
+        buildContext(payload.orgId),
     ]);
 
     const fullSystem = `${SYSTEM_PROMPT}\n\n${context}`;

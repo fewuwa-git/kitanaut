@@ -20,10 +20,12 @@ export default async function EmailTemplatesPage() {
     const name = headersList.get('x-user-name') || '';
     const email = headersList.get('x-user-email') || '';
 
+    const orgId = headersList.get('x-org-id') || '';
+
     if (!userId || !role) redirect('/login');
     if (role !== 'admin') redirect('/dashboard');
 
-    const templates = await getEmailTemplates();
+    const templates = await getEmailTemplates(orgId);
 
     return (
         <div className="app-layout">

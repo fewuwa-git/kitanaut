@@ -274,7 +274,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         }
 
         // Step 2: Filter transactions
-        const allTransactions = await getTransactions();
+        const allTransactions = await getTransactions(payload.orgId);
         const filenameNumbers = (receipt.file_name.match(/\d{4,}/g) || []);
         const invoiceNumbers = [extracted.invoice_number, ...filenameNumbers].filter(Boolean).map(n => String(n).trim());
 

@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const users = (await getUsers())
+    const users = (await getUsers(payload.orgId))
         .filter(u => u.status === 'active' && u.id !== payload.userId)
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .map(({ password: _p, invite_token: _t, invite_expires_at: _e, unterschrift: _u, ...u }) => u);
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Fehlende Felder' }, { status: 400 });
     }
 
-    const allUsers = await getUsers();
+    const allUsers = await getUsers(payload.orgId);
     const target = allUsers.find(u => u.id === userId && u.status === 'active');
     if (!target) {
         return NextResponse.json({ error: 'Benutzer nicht gefunden' }, { status: 404 });

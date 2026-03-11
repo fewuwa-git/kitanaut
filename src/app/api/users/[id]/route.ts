@@ -12,12 +12,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     const { id } = await params;
-    const user = await getUserById(id);
+    const user = await getUserById(id, payload.orgId);
     if (!user) {
         return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
     }
     user.status = 'inactive';
-    await saveUser(user);
+    await saveUser({ ...user, organization_id: payload.orgId });
     return NextResponse.json({ success: true, message: 'User deaktiviert' });
 }
 
@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const { id } = await params;
     const body = await req.json();
-    const user = await getUserById(id);
+    const user = await getUserById(id, payload.orgId);
     if (!user) {
         return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
     }
@@ -75,7 +75,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     // Alle (die Berechtigung haben = isSelf oder isAdmin) dürfen Email und Passwort ändern
     if (body.email && body.email !== user.email) {
-        const existing = await getUserByEmail(body.email);
+        const existing = await getUserByEmail(body.email, payload.orgId);
         if (existing) {
             return NextResponse.json({ error: 'E-Mail bereits vergeben' }, { status: 409 });
         }
@@ -86,13 +86,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         user.password = await bcrypt.hash(body.password, 10);
     }
 
-    await saveUser(user);
+    await saveUser({ ...user, organization_id: payload.orgId });
 
     // Bestätigungs-E-Mail bei Freischaltung eines pending-Accounts
     if (wasPending && user.status === 'active') {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://finanzen.pankonauten.de';
         try {
-            await sendApprovalEmail(user.email, user.name, `${baseUrl}/login`);
+            await sendApprovalEmail(user.email, user.name, `${baseUrl}/login`, payload.orgId);
         } catch (emailErr) {
             console.error('Approval email failed:', emailErr);
         }

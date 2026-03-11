@@ -11,8 +11,8 @@ function renderTemplate(body: string, vars: Record<string, string>): string {
     );
 }
 
-async function sendEmail(templateId: string, to: string, vars: Record<string, string>): Promise<void> {
-    const template = await getEmailTemplate(templateId);
+async function sendEmail(templateId: string, to: string, vars: Record<string, string>, orgId: string): Promise<void> {
+    const template = await getEmailTemplate(templateId, orgId);
     if (!template) throw new Error(`E-Mail-Template "${templateId}" nicht gefunden`);
 
     const subject = renderTemplate(template.subject, vars);
@@ -22,16 +22,16 @@ async function sendEmail(templateId: string, to: string, vars: Record<string, st
     if (error) throw new Error('E-Mail konnte nicht gesendet werden: ' + error.message);
 }
 
-export async function sendInviteEmail(to: string, name: string, inviteUrl: string): Promise<void> {
-    await sendEmail('invite', to, { name, url: inviteUrl });
+export async function sendInviteEmail(to: string, name: string, inviteUrl: string, orgId: string): Promise<void> {
+    await sendEmail('invite', to, { name, url: inviteUrl }, orgId);
 }
 
-export async function sendApprovalEmail(to: string, name: string, loginUrl: string): Promise<void> {
-    await sendEmail('approval', to, { name, url: loginUrl });
+export async function sendApprovalEmail(to: string, name: string, loginUrl: string, orgId: string): Promise<void> {
+    await sendEmail('approval', to, { name, url: loginUrl }, orgId);
 }
 
-export async function sendPasswordResetEmail(to: string, name: string, resetUrl: string): Promise<void> {
-    await sendEmail('password_reset', to, { name, url: resetUrl });
+export async function sendPasswordResetEmail(to: string, name: string, resetUrl: string, orgId: string): Promise<void> {
+    await sendEmail('password_reset', to, { name, url: resetUrl }, orgId);
 }
 
 export async function sendAbrechnungBezahltEmail(
@@ -41,6 +41,7 @@ export async function sendAbrechnungBezahltEmail(
     jahr: string,
     betrag: string,
     iban: string,
+    orgId: string,
 ): Promise<void> {
-    await sendEmail('abrechnung_bezahlt', to, { name, monat, jahr, betrag, iban });
+    await sendEmail('abrechnung_bezahlt', to, { name, monat, jahr, betrag, iban }, orgId);
 }

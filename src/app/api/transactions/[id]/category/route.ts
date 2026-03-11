@@ -23,7 +23,7 @@ export async function PATCH(
             return NextResponse.json({ error: 'Kategorie fehlt' }, { status: 400 });
         }
 
-        await updateTransactionCategory(id, category);
+        await updateTransactionCategory(id, category, payload.orgId);
 
         // Revalidate the pages
         revalidatePath('/dashboard');

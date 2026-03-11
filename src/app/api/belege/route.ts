@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
     const isAdmin = payload.role === 'admin';
     const userId = isAdmin ? undefined : payload.userId;
-    const belege = await getBelege(userId);
+    const belege = await getBelege(payload.orgId, userId);
     return NextResponse.json(belege);
 }
 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
     const body = await req.json();
-    const belegnummer = await getNextBelegnummer();
+    const belegnummer = await getNextBelegnummer(payload.orgId);
     const beleg = await saveBeleg({
         user_id: payload.userId,
         titel: body.titel,
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         belegnummer,
         datum: body.datum,
         status: 'entwurf',
-    });
+    }, payload.orgId);
     await logAudit(payload.userId, payload.name, 'beleg_erstellt', {
         titel: body.titel,
         betrag: Number(body.betrag),

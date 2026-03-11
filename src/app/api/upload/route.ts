@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
             balance: Number(t.balance) || 0,
         }));
 
-        const uniqueImportedCount = await addTransactions(mapped);
+        const uniqueImportedCount = await addTransactions(mapped, payload.orgId);
 
         await logAudit(payload.userId, payload.name, 'csv_import', { count: uniqueImportedCount });
 
