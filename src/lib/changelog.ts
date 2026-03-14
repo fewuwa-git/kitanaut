@@ -9,6 +9,8 @@ export const CHANGELOG: ChangelogEntry[] = [
         changes: [
             '— CRM Statistik —',
             'Neue Unterseite im CRM: Statistische Auswertung aller Kitas in der Datenbank – KPI-Kacheln (Gesamt, Ø Plätze, Kleinste/Größte Kita, ohne Angabe), Aufschlüsselung nach Quelle und Kontaktstatus, Plätze-Verteilung in 10er-Schritten, Top-Träger und Bezirke mit Balkendiagrammen.',
+            '— CRM Senatsliste —',
+            'Neue Importquelle: Offizielle Kitaliste der Berliner Senatsverwaltung (~2.900 Kitas als XLSX). Enthält behördlich genehmigte Platzzahlen, Einrichtungstyp und Einrichtungsnummern. Bestehende Einträge werden per PLZ+Straße gematcht und mit Senatsdaten angereichert.',
         ],
     },
     {

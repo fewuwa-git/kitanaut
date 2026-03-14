@@ -11,6 +11,15 @@ interface KnExtraSource {
     plaetze: number | null;
 }
 
+interface SenatsExtraSource {
+    source: 'senatsliste';
+    einrichtungsnummer: string;
+    typ: string;
+    plaetze: number | null;
+    telefon: string;
+    traeger: string;
+}
+
 interface Prospect {
     id: number;
     name: string;
@@ -27,7 +36,7 @@ interface Prospect {
     source_url: string;
     status: string;
     notizen: string;
-    extra_sources: KnExtraSource[];
+    extra_sources: (KnExtraSource | SenatsExtraSource)[];
     created_at: string;
     updated_at: string;
 }
@@ -169,7 +178,8 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
 
     const sc = STATUS_COLORS[prospect.status] ?? { bg: 'transparent', text: 'inherit' };
     const adresse = [prospect.strasse, [prospect.plz, prospect.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ');
-    const kn = prospect.extra_sources?.find(e => e.source === 'kita-navigator');
+    const kn = prospect.extra_sources?.find(e => e.source === 'kita-navigator') as KnExtraSource | undefined;
+    const senat = prospect.extra_sources?.find(e => e.source === 'senatsliste') as SenatsExtraSource | undefined;
 
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -211,7 +221,7 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                 <div style={{ padding: '14px 0 6px', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                     Kontakt
                 </div>
-                {prospect.telefon && (
+                {(prospect.telefon || kn?.telefon || senat?.telefon) && (
                     <Row label="Telefon">
                         <ContactField
                             primary={prospect.telefon}
@@ -219,6 +229,12 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                             renderPrimary={v => <a href={`tel:${v}`} style={{ color: 'var(--accent)', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
                             renderKn={v => <a href={`tel:${v}`} style={{ color: '#a855f7', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
                         />
+                        {senat?.telefon && senat.telefon !== prospect.telefon && senat.telefon !== kn?.telefon && (
+                            <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '10px', fontWeight: 600, color: '#16a34a', background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.25)', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap' }}>Senat</span>
+                                <a href={`tel:${senat.telefon}`} style={{ color: '#16a34a', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{senat.telefon}</a>
+                            </div>
+                        )}
                     </Row>
                 )}
                 {(prospect.email || kn?.email) && (
@@ -265,14 +281,14 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                 </Row>
                 {prospect.bezirk && <Row label="Bezirk">{prospect.bezirk}</Row>}
                 {prospect.traeger && <Row label="Träger">{prospect.traeger}</Row>}
-                {(prospect.plaetze != null || kn?.plaetze != null) && (
+                {(prospect.plaetze != null || kn?.plaetze != null || senat?.plaetze != null) && (
                     <Row label="Plätze">
                         <div>
                             {prospect.plaetze != null ? (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <span>{prospect.plaetze}</span>
                                     <span style={{ fontSize: '10px', fontWeight: 600, color: '#3b82f6', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '4px', padding: '1px 5px' }}>
-                                        {prospect.source === 'daks' ? 'DaKS' : prospect.source}
+                                        {prospect.source === 'daks' ? 'DaKS' : prospect.source === 'kita-navigator' ? 'Kita-Navigator' : prospect.source}
                                     </span>
                                 </div>
                             ) : (
@@ -286,31 +302,44 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                                     </span>
                                 </div>
                             )}
+                            {senat?.plaetze != null && senat.plaetze !== prospect.plaetze && senat.plaetze !== kn?.plaetze && (
+                                <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ color: '#16a34a' }}>{senat.plaetze}</span>
+                                    <span style={{ fontSize: '10px', fontWeight: 600, color: '#16a34a', background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.25)', borderRadius: '4px', padding: '1px 5px' }}>
+                                        Senat (genehmigt)
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </Row>
                 )}
                 <Row label="Quelle">
-                    <span style={{
-                        display: 'inline-block', padding: '2px 8px', borderRadius: '10px',
-                        fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em',
-                        background: prospect.source === 'daks' ? 'rgba(59,130,246,0.12)' : prospect.source === 'kita-navigator' ? 'rgba(168,85,247,0.12)' : 'rgba(148,163,184,0.12)',
-                        color: prospect.source === 'daks' ? '#3b82f6' : prospect.source === 'kita-navigator' ? '#a855f7' : '#94a3b8',
-                    }}>{prospect.source}</span>
-                    {prospect.source_url && (
-                        <a href={prospect.source_url} target="_blank" rel="noopener noreferrer"
-                            style={{ marginLeft: '10px', fontSize: '12px', color: 'var(--text-muted)', textDecoration: 'none' }}
-                            onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-                            onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-                        >Originalprofil ↗</a>
-                    )}
-                    {kn?.source_url && (
-                        <a href={kn.source_url} target="_blank" rel="noopener noreferrer"
-                            style={{ marginLeft: '10px', fontSize: '12px', color: '#a855f7', textDecoration: 'none' }}
-                            onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-                            onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-                        >Kita-Navigator ↗</a>
-                    )}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
+                        <span style={{
+                            display: 'inline-block', padding: '2px 8px', borderRadius: '10px',
+                            fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em',
+                            background: prospect.source === 'daks' ? 'rgba(59,130,246,0.12)' : prospect.source === 'kita-navigator' ? 'rgba(168,85,247,0.12)' : prospect.source === 'senatsliste' ? 'rgba(22,163,74,0.12)' : 'rgba(148,163,184,0.12)',
+                            color: prospect.source === 'daks' ? '#3b82f6' : prospect.source === 'kita-navigator' ? '#a855f7' : prospect.source === 'senatsliste' ? '#16a34a' : '#94a3b8',
+                        }}>{prospect.source === 'senatsliste' ? 'Senatsliste' : prospect.source}</span>
+                        {prospect.source_url && (
+                            <a href={prospect.source_url} target="_blank" rel="noopener noreferrer"
+                                style={{ fontSize: '12px', color: 'var(--text-muted)', textDecoration: 'none' }}
+                                onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                            >Originalprofil ↗</a>
+                        )}
+                        {kn?.source_url && (
+                            <a href={kn.source_url} target="_blank" rel="noopener noreferrer"
+                                style={{ fontSize: '12px', color: '#a855f7', textDecoration: 'none' }}
+                                onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                            >Kita-Navigator ↗</a>
+                        )}
+                    </div>
                 </Row>
+                {senat?.typ && senat.typ !== 'Reguläre Einrichtung' && (
+                    <Row label="Einrichtungstyp">{senat.typ}</Row>
+                )}
                 <Row label="Importiert">{formatDate(prospect.created_at)}</Row>
                 <Row label="Aktualisiert">{formatDate(prospect.updated_at)}</Row>
             </div>

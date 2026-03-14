@@ -51,6 +51,7 @@ const ALL_PAGES: NavItem[] = [
     { href: '/admin/crm', label: 'CRM – Kontakte', section: 'CRM', roles: ['admin'] },
     { href: '/admin/crm/[id]', label: 'CRM – Kita-Detail', section: 'CRM', roles: ['admin'] },
     { href: '/admin/crm/statistik', label: 'CRM – Statistik', section: 'CRM', roles: ['admin'] },
+    { href: '/admin/crm/senatsliste', label: 'CRM – Senatsliste Import', section: 'CRM', roles: ['admin'] },
     { href: '/admin/crm/scraper', label: 'CRM – Import', section: 'CRM', roles: ['admin'] },
 ];
 

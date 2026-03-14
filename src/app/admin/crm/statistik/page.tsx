@@ -33,6 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
 const SOURCE_COLORS: Record<string, string> = {
     daks: '#3b82f6',
     'kita-navigator': '#8b5cf6',
+    senatsliste: '#16a34a',
     unbekannt: '#94a3b8',
 };
 
@@ -117,7 +118,7 @@ export default function CrmStatistikPage() {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
                                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />
-                                            {src === 'daks' ? 'DaKS' : src === 'kita-navigator' ? 'Kita-Navigator' : src}
+                                            {src === 'daks' ? 'DaKS' : src === 'kita-navigator' ? 'Kita-Navigator' : src === 'senatsliste' ? 'Senatsliste' : src}
                                         </span>
                                         <span style={{ color: 'var(--text-muted)' }}>{count.toLocaleString('de-DE')} <span style={{ opacity: 0.6 }}>({pct}%)</span></span>
                                     </div>

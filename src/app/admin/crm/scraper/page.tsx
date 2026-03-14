@@ -15,7 +15,7 @@ function formatRelative(iso: string | null): string {
     return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-type Source = 'daks' | 'kita-navigator';
+type Source = 'daks' | 'kita-navigator' | 'senatsliste';
 type ModalPhase = 'idle' | 'running' | 'done' | 'error';
 
 interface ModalState {
@@ -46,6 +46,12 @@ const SOURCES: { id: Source; label: string; endpoint: string; description: strin
         label: 'Kita-Navigator Berlin',
         endpoint: '/api/admin/crm/kita-navigator',
         description: 'Importiert alle ~2.900 Kitas aus dem Berliner Kita-Navigator über die offizielle API.',
+    },
+    {
+        id: 'senatsliste',
+        label: 'Senatsliste Berlin',
+        endpoint: '/api/admin/crm/senatsliste',
+        description: 'Importiert ~2.900 Kitas aus der offiziellen Kitaliste der Berliner Senatsverwaltung (XLSX). Enthält behördlich genehmigte Platzzahlen, Bezirk und Einrichtungstyp.',
     },
 ];
 
