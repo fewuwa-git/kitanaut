@@ -169,6 +169,7 @@ export default function CrmPage() {
                 >
                     <option value="">Alle Quellen</option>
                     <option value="daks">DaKS</option>
+                    <option value="kita-navigator">Kita-Navigator</option>
                     <option value="manual">Manuell</option>
                 </select>
                 <select
@@ -222,17 +223,13 @@ export default function CrmPage() {
                                 {prospects.map(p => (
                                     <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                         <td style={{ padding: '9px 12px', fontWeight: 500, maxWidth: '200px' }}>
-                                            {p.source_url ? (
-                                                <a href={p.source_url} target="_blank" rel="noopener noreferrer"
-                                                    style={{ color: 'var(--accent)', textDecoration: 'none' }}
-                                                    onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-                                                    onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-                                                >
-                                                    {p.name || '–'}
-                                                </a>
-                                            ) : (
-                                                <span>{p.name || '–'}</span>
-                                            )}
+                                            <a href={`/admin/crm/${p.id}`}
+                                                style={{ color: 'var(--accent)', textDecoration: 'none' }}
+                                                onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                                                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                                            >
+                                                {p.name || '–'}
+                                            </a>
                                             {p.webseite && (
                                                 <a href={p.webseite} target="_blank" rel="noopener noreferrer"
                                                     style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', textDecoration: 'none', marginTop: '2px' }}
@@ -270,8 +267,8 @@ export default function CrmPage() {
                                                 borderRadius: '10px',
                                                 fontSize: '11px',
                                                 fontWeight: 600,
-                                                background: p.source === 'daks' ? 'rgba(59,130,246,0.12)' : 'rgba(148,163,184,0.12)',
-                                                color: p.source === 'daks' ? '#3b82f6' : '#94a3b8',
+                                                background: p.source === 'daks' ? 'rgba(59,130,246,0.12)' : p.source === 'kita-navigator' ? 'rgba(168,85,247,0.12)' : 'rgba(148,163,184,0.12)',
+                                                color: p.source === 'daks' ? '#3b82f6' : p.source === 'kita-navigator' ? '#a855f7' : '#94a3b8',
                                                 textTransform: 'uppercase',
                                                 letterSpacing: '0.04em',
                                             }}>

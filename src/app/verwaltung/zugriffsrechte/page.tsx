@@ -47,6 +47,10 @@ const ALL_PAGES: NavItem[] = [
     { href: '/verwaltung/emails/[id]', label: 'E-Mail-Vorlage bearbeiten', section: 'Verwaltung', roles: ['admin'] },
     { href: '/verwaltung/kita', label: 'Kita-Profil', section: 'Verwaltung', roles: ['admin'] },
     { href: '/verwaltung/zugriffsrechte', label: 'Zugriffsrechte', section: 'Verwaltung', roles: ['admin'] },
+    // CRM
+    { href: '/admin/crm', label: 'CRM – Kontakte', section: 'CRM', roles: ['admin'] },
+    { href: '/admin/crm/[id]', label: 'CRM – Kita-Detail', section: 'CRM', roles: ['admin'] },
+    { href: '/admin/crm/scraper', label: 'CRM – Import', section: 'CRM', roles: ['admin'] },
 ];
 
 const ROLES: Role[] = ['admin', 'finanzvorstand', 'member', 'springerin', 'teammitglied', 'eltern'];

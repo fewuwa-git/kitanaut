@@ -9,6 +9,23 @@ async function requireAdmin() {
     return token ? await verifySuperAdminToken(token) : null;
 }
 
+export async function GET(
+    _req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { id } = await params;
+    const { data, error } = await supabase
+        .from('crm_prospects')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error || !data) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
+    return NextResponse.json(data);
+}
+
 export async function PATCH(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }

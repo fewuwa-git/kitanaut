@@ -14,7 +14,7 @@ export const CHANGELOG: ChangelogEntry[] = [
             '— Super-Admin-Panel —',
             'Neues Admin-Panel unter admin.kitanaut.de: Übersicht aller registrierten Kitas, Anlegen neuer Kitas mit automatischem Onboarding (Kategorien, E-Mail-Templates, Admin-Einladung) und Passwort ändern.',
             '— CRM –',
-            'Neues Mini-CRM im Admin-Panel: Alle DaKS-Kitas (943 Einträge) als Kontakte importiert. Status pro Kontakt verwaltbar (Neu, Kontaktiert, Interessiert, Kunde, Abgelehnt), Notizen direkt in der Tabelle editierbar. Neuer DaKS-Import-Bereich zum Aktualisieren der Kita-Daten.',
+            'Neues Mini-CRM im Admin-Panel: Alle DaKS-Kitas (943 Einträge) als Kontakte importiert. Status pro Kontakt verwaltbar (Neu, Kontaktiert, Interessiert, Kunde, Abgelehnt), Notizen direkt in der Tabelle editierbar. Neuer DaKS-Import-Bereich zum Aktualisieren der Kita-Daten. Kita-Detail-Seite mit allen Kontaktinfos, Notizen und Status. Kita-Navigator Berlin als zweite Importquelle (~2.900 Kitas über offizielle API).',
             '— Admin-Login Weiterleitung —',
             'Nach dem Admin-Login wird automatisch zur ursprünglich aufgerufenen Seite weitergeleitet statt immer zur Startseite.',
             '— E-Mail-Absender pro Kita —',

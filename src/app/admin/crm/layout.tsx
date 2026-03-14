@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 
 const SUB_NAV = [
     { href: '/admin/crm', label: 'Alle Kontakte' },
-    { href: '/admin/crm/scraper', label: 'DaKS Import' },
+    { href: '/admin/crm/import/daks', label: 'DaKS Import' },
 ];
 
 export default function CrmLayout({ children }: { children: React.ReactNode }) {
