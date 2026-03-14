@@ -1,8 +1,8 @@
 import { Resend } from 'resend';
-import { getEmailTemplate } from './data';
+import { getEmailTemplate, getOrgById } from './data';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM_EMAIL || 'finanzen@pankonauten.de';
+const FALLBACK_FROM = process.env.RESEND_FROM_EMAIL || 'no-reply@kitanaut.de';
 
 function renderTemplate(body: string, vars: Record<string, string>): string {
     return Object.entries(vars).reduce(
@@ -12,13 +12,17 @@ function renderTemplate(body: string, vars: Record<string, string>): string {
 }
 
 async function sendEmail(templateId: string, to: string, vars: Record<string, string>, orgId: string): Promise<void> {
-    const template = await getEmailTemplate(templateId, orgId);
+    const [template, org] = await Promise.all([
+        getEmailTemplate(templateId, orgId),
+        getOrgById(orgId),
+    ]);
     if (!template) throw new Error(`E-Mail-Template "${templateId}" nicht gefunden`);
 
+    const from = org?.from_email || FALLBACK_FROM;
     const subject = renderTemplate(template.subject, vars);
     const html = renderTemplate(template.body, vars);
 
-    const { error } = await resend.emails.send({ from: FROM, to, subject, html });
+    const { error } = await resend.emails.send({ from, to, subject, html });
     if (error) throw new Error('E-Mail konnte nicht gesendet werden: ' + error.message);
 }
 

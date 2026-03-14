@@ -8,6 +8,7 @@ export interface Organization {
     id: string;
     name: string;
     slug: string;
+    from_email: string | null;
     created_at: string;
 }
 
