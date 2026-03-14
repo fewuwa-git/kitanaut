@@ -13,8 +13,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
     return (
         <div>
             <nav style={{
-                background: 'rgba(0,0,0,0.15)',
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--bg-secondary, #f8f9fa)',
+                borderBottom: '1px solid var(--border-color)',
                 display: 'flex',
                 gap: '4px',
                 padding: '0 1.5rem',
@@ -30,13 +30,13 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                                 padding: '10px 14px',
                                 fontSize: '13px',
                                 fontWeight: active ? 600 : 400,
-                                color: active ? '#fff' : 'rgba(255,255,255,0.55)',
+                                color: active ? 'var(--accent, #3b82f6)' : 'var(--text-muted)',
                                 textDecoration: 'none',
                                 borderBottom: active ? '2px solid var(--accent, #3b82f6)' : '2px solid transparent',
                                 transition: 'color 0.15s',
                             }}
-                            onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)'; }}
-                            onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.55)'; }}
+                            onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'var(--text-primary, #111)'; }}
+                            onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'; }}
                         >
                             {item.label}
                         </a>
