@@ -29,7 +29,11 @@ export async function POST(
         return NextResponse.json({ error: 'Kein Einladungstoken vorhanden' }, { status: 400 });
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://finanzen.pankonauten.de';
+    const host = req.headers.get('host') || '';
+    const hostname = host.split(':')[0];
+    const baseUrl = hostname === 'localhost' || hostname === '127.0.0.1'
+        ? `http://${host}`
+        : `https://${hostname}`;
     const inviteUrl = `${baseUrl}/einladen/${user.invite_token}`;
 
     try {

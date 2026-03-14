@@ -44,7 +44,11 @@ export async function POST(req: NextRequest) {
 
         const inviteToken = randomBytes(32).toString('hex');
         const inviteExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://finanzen.pankonauten.de';
+        const host = req.headers.get('host') || '';
+        const hostname = host.split(':')[0];
+        const baseUrl = hostname === 'localhost' || hostname === '127.0.0.1'
+            ? `http://${host}`
+            : `https://${hostname}`;
         const inviteUrl = `${baseUrl}/einladen/${inviteToken}`;
 
         // Use a random unusable password hash so the column is never empty

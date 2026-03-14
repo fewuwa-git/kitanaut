@@ -90,7 +90,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     // Bestätigungs-E-Mail bei Freischaltung eines pending-Accounts
     if (wasPending && user.status === 'active') {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://finanzen.pankonauten.de';
+        const host = req.headers.get('host') || '';
+        const hostname = host.split(':')[0];
+        const baseUrl = hostname === 'localhost' || hostname === '127.0.0.1'
+            ? `http://${host}`
+            : `https://${hostname}`;
         try {
             await sendApprovalEmail(user.email, user.name, `${baseUrl}/login`, payload.orgId);
         } catch (emailErr) {
