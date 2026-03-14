@@ -4,20 +4,23 @@ import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { supabase } from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
-import { getKiSettings } from '@/lib/kiSettings';
+import { getKiSettings, } from '@/lib/kiSettings';
+import { getOrgById } from '@/lib/data';
 
 export interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
 }
 
-const SYSTEM_PROMPT = `Du bist ein Finanz-Assistent für die Kita Pankonauten.
+function buildSystemPrompt(orgName: string): string {
+    return `Du bist ein Finanz-Assistent für die Kita ${orgName}.
 Beantworte Fragen AUSSCHLIESSLICH auf Basis der bereitgestellten Dashboard-Daten.
 Keine Informationen aus dem Internet, aus allgemeinem Wissen oder externen Quellen.
 Wenn eine Frage nicht aus den Daten beantwortet werden kann, sage das klar: "Diese Information ist in den Dashboard-Daten nicht verfügbar."
 Antworte immer auf Deutsch. Sei präzise, freundlich und hilfreich.
 Nutze Markdown für Formatierungen (Listen, Tabellen, Fettschrift) wenn es die Antwort übersichtlicher macht.
 Rechne Summen und Statistiken selbst aus, wenn die Daten es erlauben.`;
+}
 
 async function buildContext(orgId: string): Promise<{ context: string; txCount: number; dateFrom: string; dateTo: string }> {
     const [{ data: transactions }, { data: receipts }] = await Promise.all([
@@ -117,12 +120,13 @@ export async function POST(req: NextRequest) {
     const messages: ChatMessage[] = body.messages ?? [];
     if (!messages.length) return NextResponse.json({ error: 'Keine Nachricht' }, { status: 400 });
 
-    const [kiSettings, { context, txCount, dateFrom, dateTo }] = await Promise.all([
+    const [kiSettings, { context, txCount, dateFrom, dateTo }, org] = await Promise.all([
         getKiSettings(),
         buildContext(payload.orgId),
+        getOrgById(payload.orgId),
     ]);
 
-    const fullSystem = `${SYSTEM_PROMPT}\n\n${context}`;
+    const fullSystem = `${buildSystemPrompt(org?.name || 'Kitanaut')}\n\n${context}`;
 
     let reply = '';
 
