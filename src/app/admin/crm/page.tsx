@@ -209,7 +209,7 @@ export default function CrmPage() {
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                             <thead>
                                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    {['Name', 'Ort', 'Bezirk', 'Telefon', 'E-Mail', 'Träger', 'Plätze', 'Quelle', 'Status', 'Notizen'].map(h => (
+                                    {['Name', 'Ort', 'Telefon', 'E-Mail', 'Träger', 'Plätze', 'Quelle', 'Status', 'Notizen'].map(h => (
                                         <th key={h} style={{
                                             padding: '10px 12px', textAlign: 'left',
                                             fontSize: '11px', fontWeight: 600,
@@ -233,12 +233,18 @@ export default function CrmPage() {
                                             ) : (
                                                 <span>{p.name || '–'}</span>
                                             )}
+                                            {p.webseite && (
+                                                <a href={p.webseite} target="_blank" rel="noopener noreferrer"
+                                                    style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', textDecoration: 'none', marginTop: '2px' }}
+                                                    onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                                                    onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                                                >
+                                                    🌐 {(() => { try { return new URL(p.webseite).hostname.replace('www.', ''); } catch { return p.webseite; } })()}
+                                                </a>
+                                            )}
                                         </td>
                                         <td style={{ padding: '9px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                                             {[p.plz, p.ort].filter(Boolean).join(' ') || '–'}
-                                        </td>
-                                        <td style={{ padding: '9px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                                            {p.bezirk || '–'}
                                         </td>
                                         <td style={{ padding: '9px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                                             {p.telefon || '–'}
