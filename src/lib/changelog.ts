@@ -5,6 +5,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
     {
+        date: '14.03.2026',
+        changes: [
+            '— E-Mail-Absender pro Kita —',
+            'Jede Kita kann eine eigene Absenderadresse für E-Mails hinterlegen (z. B. pankonauten@kitanaut.de). Einladungen, Passwort-Resets und Abrechnungsbenachrichtigungen werden dann von dieser Adresse verschickt.',
+        ],
+    },
+    {
         date: '12.03.2026',
         changes: [
             '— Mehrere Kitas —',
