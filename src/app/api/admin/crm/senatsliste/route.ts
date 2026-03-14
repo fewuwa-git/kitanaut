@@ -88,7 +88,8 @@ export async function POST() {
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet);
 
-                send({ type: 'progress', message: `${raw.length} Einträge in der Excel-Datei. Lade bestehende Kontakte…` });
+                const firstRowKeys = raw.length > 0 ? Object.keys(raw[0]).join(' | ') : '(leer)';
+                send({ type: 'progress', message: `${raw.length} Einträge in der Excel-Datei. Spalten: ${firstRowKeys}` });
 
                 // Load all existing prospects for matching (paginated)
                 const existing: { id: number; plz: string; strasse: string; extra_sources: SenatsExtraSource[] }[] = [];
