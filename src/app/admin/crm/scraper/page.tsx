@@ -2,6 +2,19 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 
+function formatRelative(iso: string | null): string {
+    if (!iso) return 'Noch nie';
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (mins < 1) return 'Gerade eben';
+    if (mins < 60) return `vor ${mins} Min.`;
+    if (hours < 24) return `vor ${hours} Std.`;
+    if (days < 7) return `vor ${days} Tag${days !== 1 ? 'en' : ''}`;
+    return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 type Source = 'daks' | 'kita-navigator';
 type ModalPhase = 'idle' | 'running' | 'done' | 'error';
 
@@ -38,7 +51,15 @@ const SOURCES: { id: Source; label: string; endpoint: string; description: strin
 
 export default function CrmScraperPage() {
     const [modal, setModal] = useState<ModalState>(INITIAL_MODAL);
+    const [lastImport, setLastImport] = useState<Record<string, string | null>>({});
     const logEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        fetch('/api/admin/crm/scraper')
+            .then(r => r.json())
+            .then(setLastImport)
+            .catch(() => {});
+    }, []);
 
     // Escape schließt Modal (nur wenn nicht running)
     useEffect(() => {
@@ -81,6 +102,8 @@ export default function CrmScraperPage() {
                     dbTotal: event.dbTotal != null ? Number(event.dbTotal) : undefined,
                 },
             }));
+            // Letzten Import-Zeitstempel aktualisieren
+            fetch('/api/admin/crm/scraper').then(r => r.json()).then(setLastImport).catch(() => {});
         } else if (event.type === 'error') {
             setModal(prev => ({
                 ...prev,
@@ -147,6 +170,9 @@ export default function CrmScraperPage() {
                             <div style={{ flex: 1 }}>
                                 <div style={{ fontWeight: 600, marginBottom: '4px' }}>{s.label}</div>
                                 <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{s.description}</div>
+                                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px', opacity: 0.7 }}>
+                                    Letzter Import: {formatRelative(lastImport[s.id] ?? null)}
+                                </div>
                             </div>
                             <button
                                 onClick={() => handleScrape(s.id, s.endpoint)}

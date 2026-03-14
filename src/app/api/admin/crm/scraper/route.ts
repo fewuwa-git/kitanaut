@@ -77,6 +77,30 @@ async function runInBatches<T>(items: T[], concurrency: number, fn: (item: T) =>
     }
 }
 
+export async function GET() {
+    if (!await requireAdmin()) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+
+    const sources = ['daks', 'kita-navigator'];
+    const stats: Record<string, string | null> = {};
+
+    for (const source of sources) {
+        const { data } = await supabase
+            .from('crm_prospects')
+            .select('updated_at')
+            .eq('source', source)
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .single();
+        stats[source] = data?.updated_at ?? null;
+    }
+
+    return new Response(JSON.stringify(stats), {
+        headers: { 'Content-Type': 'application/json' },
+    });
+}
+
 export async function POST() {
     if (!await requireAdmin()) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
