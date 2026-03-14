@@ -86,10 +86,10 @@ export async function POST() {
                 const arrayBuffer = await res.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet);
+                // Erste Zeile ist Titel ("Kitaliste Nov 2025"), range: 1 überspringt sie
+                const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { range: 1 });
 
-                const firstRowKeys = raw.length > 0 ? Object.keys(raw[0]).join(' | ') : '(leer)';
-                send({ type: 'progress', message: `${raw.length} Einträge in der Excel-Datei. Spalten: ${firstRowKeys}` });
+                send({ type: 'progress', message: `${raw.length} Einträge in der Excel-Datei. Lade bestehende Kontakte…` });
 
                 // Load all existing prospects for matching (paginated)
                 const existing: { id: number; plz: string; strasse: string; extra_sources: SenatsExtraSource[] }[] = [];
