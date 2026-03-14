@@ -232,6 +232,14 @@ export default function Sidebar({ user }: SidebarProps) {
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(COLLAPSIBLE_SECTIONS));
+    const [orgData, setOrgData] = useState<{ name: string; logo_url: string | null } | null>(null);
+
+    useEffect(() => {
+        fetch('/api/org')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => { if (data) setOrgData({ name: data.name, logo_url: data.logo_url }); })
+            .catch(() => { });
+    }, []);
 
     useEffect(() => {
         setIsOpen(false);
@@ -268,13 +276,25 @@ export default function Sidebar({ user }: SidebarProps) {
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <ImpersonationWidget />
 
-                <div className="sidebar-logo">
-                    <img src="/logo.png" alt="Pankonauten Logo" className="sidebar-logo-icon" />
-                    <div className="sidebar-logo-text">
-                        <span className="name">Pankonauten</span>
-                        <span className="subtitle">Finanz-Dashboard</span>
+                {user.role === 'admin' ? (
+                    <a href="/verwaltung/kita" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <div className="sidebar-logo">
+                            <img src={orgData?.logo_url || '/logo.png'} alt="Kita Logo" className="sidebar-logo-icon" />
+                            <div className="sidebar-logo-text">
+                                <span className="name">{orgData?.name || 'Kitanaut'}</span>
+                                <span className="subtitle">Finanz-Dashboard</span>
+                            </div>
+                        </div>
+                    </a>
+                ) : (
+                    <div className="sidebar-logo">
+                        <img src={orgData?.logo_url || '/logo.png'} alt="Kita Logo" className="sidebar-logo-icon" />
+                        <div className="sidebar-logo-text">
+                            <span className="name">{orgData?.name || 'Kitanaut'}</span>
+                            <span className="subtitle">Finanz-Dashboard</span>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <nav className="sidebar-nav">
                     {NAV_ITEMS.map((group) => {

@@ -10,6 +10,18 @@ export interface Organization {
     slug: string;
     from_email: string | null;
     created_at: string;
+    logo_url: string | null;
+    address_street: string | null;
+    address_zip: string | null;
+    address_city: string | null;
+    phone: string | null;
+    website: string | null;
+    iban: string | null;
+    bic: string | null;
+    bank_name: string | null;
+    legal_form: string | null;
+    tax_number: string | null;
+    contact_person: string | null;
 }
 
 export async function getOrgBySlug(slug: string): Promise<Organization | null> {
@@ -30,6 +42,10 @@ export async function getOrgById(id: string): Promise<Organization | null> {
         .single();
     if (error) return null;
     return data;
+}
+
+export async function updateOrg(orgId: string, data: Partial<Omit<Organization, 'id' | 'slug' | 'created_at'>>): Promise<void> {
+    await supabase.from('organizations').update(data).eq('id', orgId);
 }
 
 export async function createOrganization(name: string, slug: string): Promise<Organization> {

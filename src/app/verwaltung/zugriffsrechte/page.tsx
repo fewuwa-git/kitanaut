@@ -45,6 +45,7 @@ const ALL_PAGES: NavItem[] = [
     { href: '/verwaltung/kategorien/regeln/log', label: 'Regelprotokoll (KI)', section: 'Verwaltung', roles: ['admin', 'finanzvorstand'] },
     { href: '/verwaltung/emails', label: 'E-Mails', section: 'Verwaltung', roles: ['admin'] },
     { href: '/verwaltung/emails/[id]', label: 'E-Mail-Vorlage bearbeiten', section: 'Verwaltung', roles: ['admin'] },
+    { href: '/verwaltung/kita', label: 'Kita-Profil', section: 'Verwaltung', roles: ['admin'] },
     { href: '/verwaltung/zugriffsrechte', label: 'Zugriffsrechte', section: 'Verwaltung', roles: ['admin'] },
 ];
 

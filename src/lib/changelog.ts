@@ -7,6 +7,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     {
         date: '14.03.2026',
         changes: [
+            '— Kita-Profil —',
+            'Neue Seite unter Verwaltung → Kita-Profil: Logo hochladen, Adresse, Bankdaten, Ansprechperson, Rechtsform, Steuernummer und E-Mail-Absender zentral pflegen. Das Logo und der Kita-Name erscheinen automatisch in der Seitenleiste.',
             '— Super-Admin-Panel —',
             'Neues Admin-Panel unter admin.kitanaut.de: Übersicht aller registrierten Kitas, Anlegen neuer Kitas mit automatischem Onboarding (Kategorien, E-Mail-Templates, Admin-Einladung) und Passwort ändern.',
             '— E-Mail-Absender pro Kita —',
