@@ -2,6 +2,15 @@
 
 import { useState, useEffect, use } from 'react';
 
+interface KnExtraSource {
+    source: 'kita-navigator';
+    source_url: string;
+    telefon: string;
+    email: string;
+    webseite: string;
+    plaetze: number | null;
+}
+
 interface Prospect {
     id: number;
     name: string;
@@ -18,6 +27,7 @@ interface Prospect {
     source_url: string;
     status: string;
     notizen: string;
+    extra_sources: KnExtraSource[];
     created_at: string;
     updated_at: string;
 }
@@ -45,6 +55,37 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
                 {label}
             </div>
             <div style={{ flex: 1, fontSize: '14px' }}>{children}</div>
+        </div>
+    );
+}
+
+/** Zeigt primären Wert + optionalen Kita-Navigator-Abweichungswert */
+function ContactField({ primary, kn, renderPrimary, renderKn }: {
+    primary: string;
+    kn: string | undefined;
+    renderPrimary: (v: string) => React.ReactNode;
+    renderKn: (v: string) => React.ReactNode;
+}) {
+    const knDiffers = kn && kn !== primary;
+    return (
+        <div>
+            {primary ? renderPrimary(primary) : <span style={{ color: 'var(--text-muted)' }}>–</span>}
+            {knDiffers && (
+                <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 600, color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.25)', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap' }}>
+                        Kita-Navigator
+                    </span>
+                    {renderKn(kn!)}
+                </div>
+            )}
+            {!primary && kn && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 600, color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.25)', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap' }}>
+                        Kita-Navigator
+                    </span>
+                    {renderKn(kn)}
+                </div>
+            )}
         </div>
     );
 }
@@ -124,6 +165,7 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
 
     const sc = STATUS_COLORS[prospect.status] ?? { bg: 'transparent', text: 'inherit' };
     const adresse = [prospect.strasse, [prospect.plz, prospect.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    const kn = prospect.extra_sources?.find(e => e.source === 'kita-navigator');
 
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -167,32 +209,35 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                 </div>
                 {prospect.telefon && (
                     <Row label="Telefon">
-                        <a href={`tel:${prospect.telefon}`} style={{ color: 'var(--accent)', textDecoration: 'none' }}
-                            onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-                            onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-                        >{prospect.telefon}</a>
+                        <ContactField
+                            primary={prospect.telefon}
+                            kn={kn?.telefon}
+                            renderPrimary={v => <a href={`tel:${v}`} style={{ color: 'var(--accent)', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
+                            renderKn={v => <a href={`tel:${v}`} style={{ color: '#a855f7', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
+                        />
                     </Row>
                 )}
-                {prospect.email && (
+                {(prospect.email || kn?.email) && (
                     <Row label="E-Mail">
-                        <a href={`mailto:${prospect.email}`} style={{ color: 'var(--accent)', textDecoration: 'none' }}
-                            onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-                            onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-                        >{prospect.email}</a>
+                        <ContactField
+                            primary={prospect.email}
+                            kn={kn?.email}
+                            renderPrimary={v => <a href={`mailto:${v}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: '12px' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
+                            renderKn={v => <a href={`mailto:${v}`} style={{ color: '#a855f7', textDecoration: 'none', fontSize: '12px' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
+                        />
                     </Row>
                 )}
-                {prospect.webseite && (
+                {(prospect.webseite || kn?.webseite) && (
                     <Row label="Webseite">
-                        <a href={prospect.webseite} target="_blank" rel="noopener noreferrer"
-                            style={{ color: 'var(--accent)', textDecoration: 'none' }}
-                            onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-                            onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-                        >
-                            {(() => { try { return new URL(prospect.webseite).hostname.replace('www.', ''); } catch { return prospect.webseite; } })()}
-                        </a>
+                        <ContactField
+                            primary={prospect.webseite}
+                            kn={kn?.webseite}
+                            renderPrimary={v => <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{(() => { try { return new URL(v).hostname.replace('www.', ''); } catch { return v; } })()}</a>}
+                            renderKn={v => <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#a855f7', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{(() => { try { return new URL(v).hostname.replace('www.', ''); } catch { return v; } })()}</a>}
+                        />
                     </Row>
                 )}
-                {!prospect.telefon && !prospect.email && !prospect.webseite && (
+                {!prospect.telefon && !prospect.email && !prospect.webseite && !kn?.email && !kn?.webseite && (
                     <div style={{ padding: '12px 0', color: 'var(--text-muted)', fontSize: '13px' }}>Keine Kontaktdaten vorhanden.</div>
                 )}
             </div>
@@ -215,7 +260,24 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                 </Row>
                 {prospect.bezirk && <Row label="Bezirk">{prospect.bezirk}</Row>}
                 {prospect.traeger && <Row label="Träger">{prospect.traeger}</Row>}
-                {prospect.plaetze != null && <Row label="Plätze">{prospect.plaetze}</Row>}
+                {(prospect.plaetze != null || kn?.plaetze != null) && (
+                    <Row label="Plätze">
+                        <div>
+                            {prospect.plaetze != null
+                                ? <span>{prospect.plaetze}</span>
+                                : <span style={{ color: 'var(--text-muted)' }}>–</span>
+                            }
+                            {kn?.plaetze != null && kn.plaetze !== prospect.plaetze && (
+                                <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ fontSize: '10px', fontWeight: 600, color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.25)', borderRadius: '4px', padding: '1px 5px' }}>
+                                        Kita-Navigator
+                                    </span>
+                                    <span style={{ color: '#a855f7' }}>{kn.plaetze}</span>
+                                </div>
+                            )}
+                        </div>
+                    </Row>
+                )}
                 <Row label="Quelle">
                     <span style={{
                         display: 'inline-block', padding: '2px 8px', borderRadius: '10px',
@@ -229,6 +291,13 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                             onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
                             onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
                         >Originalprofil ↗</a>
+                    )}
+                    {kn?.source_url && (
+                        <a href={kn.source_url} target="_blank" rel="noopener noreferrer"
+                            style={{ marginLeft: '10px', fontSize: '12px', color: '#a855f7', textDecoration: 'none' }}
+                            onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                            onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                        >Kita-Navigator ↗</a>
                     )}
                 </Row>
                 <Row label="Importiert">{formatDate(prospect.created_at)}</Row>

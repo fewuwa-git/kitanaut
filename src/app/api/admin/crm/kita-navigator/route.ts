@@ -30,31 +30,42 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 interface ListItem {
     id: number;
     name: string;
-    adresse?: {
-        strasse?: string;
-        hausnummer?: string;
-        plz?: string;
-        ort?: string;
-    };
+    adresse?: { strasse?: string; hausnummer?: string; plz?: string; ort?: string };
 }
 
 interface ListResponse {
     anzahlErgebnisse: number;
-    anzahlSeiten: number;
-    seite: number;
     einrichtungen: ListItem[];
 }
 
 interface DetailResponse {
     einrichtungsauszug?: ListItem;
-    kontaktdaten?: {
-        telefonnummer?: string;
-        emailadresse?: string;
-        webadresse?: string;
-    };
-    betreuung?: {
-        anzahlKinder?: number;
-    };
+    kontaktdaten?: { telefonnummer?: string; emailadresse?: string; webadresse?: string };
+    betreuung?: { anzahlKinder?: number };
+}
+
+export interface KnExtraSource {
+    source: 'kita-navigator';
+    source_url: string;
+    telefon: string;
+    email: string;
+    webseite: string;
+    plaetze: number | null;
+}
+
+interface KitaRecord {
+    source_url: string;
+    name: string;
+    strasse: string;
+    plz: string;
+    ort: string;
+    bezirk: string;
+    telefon: string;
+    email: string;
+    webseite: string;
+    traeger: string;
+    plaetze: number | null;
+    source: string;
 }
 
 async function runInBatches<T>(items: T[], concurrency: number, fn: (item: T) => Promise<unknown>) {
@@ -63,46 +74,50 @@ async function runInBatches<T>(items: T[], concurrency: number, fn: (item: T) =>
     }
 }
 
+/** Normalisierungsschlüssel zum Duplikat-Abgleich: PLZ + erste 12 Zeichen der Straße (lowercase, keine Leerzeichen) */
+function matchKey(plz: string, strasse: string): string {
+    const s = strasse.toLowerCase().replace(/\s+/g, '').substring(0, 12);
+    return `${plz.trim()}|${s}`;
+}
+
 export async function POST() {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // 1. Gesamtanzahl ermitteln
+    // 1. Alle existierenden Einträge laden (für Duplikat-Erkennung)
+    const { data: existing, error: existingError } = await supabase
+        .from('crm_prospects')
+        .select('id, plz, strasse, extra_sources');
+    if (existingError) return NextResponse.json({ error: existingError.message }, { status: 500 });
+
+    const lookup = new Map<string, { id: number; extra_sources: KnExtraSource[] }>();
+    for (const p of existing ?? []) {
+        if (p.plz && p.strasse) {
+            lookup.set(matchKey(p.plz, p.strasse), {
+                id: p.id,
+                extra_sources: (p.extra_sources as KnExtraSource[]) ?? [],
+            });
+        }
+    }
+
+    // 2. Alle IDs vom Kita-Navigator sammeln
     const countData = await fetchJson<{ amount: number }>(`${API_BASE}/kitas/namensucheAnzahl?Q=`);
     if (!countData) return NextResponse.json({ error: 'Kita-Navigator API nicht erreichbar.' }, { status: 502 });
 
-    const total = countData.amount;
     const pageSize = 200;
-    const pageCount = Math.ceil(total / pageSize);
-
-    // 2. Alle IDs über Listenendpunkt sammeln
+    const pageCount = Math.ceil(countData.amount / pageSize);
     const allIds: number[] = [];
-    const pagePromises = Array.from({ length: pageCount }, (_, i) =>
-        fetchJson<ListResponse>(`${API_BASE}/kitas/namensuche?Q=&seite=${i}&max=${pageSize}`)
-            .then(data => {
-                if (data?.einrichtungen) {
-                    for (const e of data.einrichtungen) allIds.push(e.id);
-                }
-            })
+
+    await Promise.all(
+        Array.from({ length: pageCount }, (_, i) =>
+            fetchJson<ListResponse>(`${API_BASE}/kitas/namensuche?Q=&seite=${i}&max=${pageSize}`)
+                .then(data => { if (data?.einrichtungen) allIds.push(...data.einrichtungen.map(e => e.id)); })
+        )
     );
-    await Promise.all(pagePromises);
 
-    // 3. Details für jede Kita laden
-    interface KitaRecord {
-        source_url: string;
-        name: string;
-        strasse: string;
-        plz: string;
-        ort: string;
-        bezirk: string;
-        telefon: string;
-        email: string;
-        webseite: string;
-        traeger: string;
-        plaetze: number | null;
-        source: string;
-    }
+    // 3. Details laden und in neue vs. existierende aufteilen
+    const newKitas: KitaRecord[] = [];
+    const matchedUpdates: { id: number; extra_sources: KnExtraSource[] }[] = [];
 
-    const kitas: KitaRecord[] = [];
     await runInBatches(allIds, CONCURRENCY, async (id) => {
         const detail = await fetchJson<DetailResponse>(`${API_BASE}/kitas/${id}`);
         if (!detail) return;
@@ -113,35 +128,68 @@ export async function POST() {
         const betreuung = detail.betreuung;
 
         const strasse = [addr?.strasse, addr?.hausnummer].filter(Boolean).join(' ');
-
-        kitas.push({
+        const plz = addr?.plz ?? '';
+        const knData: KnExtraSource = {
+            source: 'kita-navigator',
             source_url: `https://kita-navigator.berlin.de/einrichtungen/${id}`,
-            name: (auszug?.name ?? '').trim(),
-            strasse,
-            plz: addr?.plz ?? '',
-            ort: addr?.ort ?? '',
-            bezirk: '',
             telefon: kontakt?.telefonnummer ?? '',
             email: kontakt?.emailadresse ?? '',
             webseite: kontakt?.webadresse ?? '',
-            traeger: '',
             plaetze: betreuung?.anzahlKinder ?? null,
-            source: 'kita-navigator',
-        });
+        };
+
+        const match = plz && strasse ? lookup.get(matchKey(plz, strasse)) : undefined;
+
+        if (match) {
+            // Bestehenden kita-navigator-Eintrag ersetzen oder anhängen
+            const newExtraSources = [
+                ...match.extra_sources.filter(e => e.source !== 'kita-navigator'),
+                knData,
+            ];
+            matchedUpdates.push({ id: match.id, extra_sources: newExtraSources });
+        } else {
+            newKitas.push({
+                source_url: knData.source_url,
+                name: (auszug?.name ?? '').trim(),
+                strasse,
+                plz,
+                ort: addr?.ort ?? '',
+                bezirk: '',
+                telefon: knData.telefon,
+                email: knData.email,
+                webseite: knData.webseite,
+                traeger: '',
+                plaetze: knData.plaetze,
+                source: 'kita-navigator',
+            });
+        }
     });
 
-    if (kitas.length === 0) return NextResponse.json({ error: 'Keine Kitas gefunden.' }, { status: 502 });
+    // 4. Neue Kitas einfügen
+    if (newKitas.length > 0) {
+        const { error } = await supabase
+            .from('crm_prospects')
+            .upsert(newKitas, { onConflict: 'source,source_url', ignoreDuplicates: false });
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-    const { error } = await supabase
-        .from('crm_prospects')
-        .upsert(kitas, { onConflict: 'source,source_url', ignoreDuplicates: false });
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // 5. Gematchte Einträge mit extra_sources aktualisieren
+    await runInBatches(matchedUpdates, CONCURRENCY, async ({ id, extra_sources }) => {
+        await supabase
+            .from('crm_prospects')
+            .update({ extra_sources, updated_at: new Date().toISOString() })
+            .eq('id', id);
+    });
 
     const { count } = await supabase
         .from('crm_prospects')
         .select('*', { count: 'exact', head: true })
         .eq('source', 'kita-navigator');
 
-    return NextResponse.json({ total: kitas.length, dbTotal: count ?? 0 });
+    return NextResponse.json({
+        total: allIds.length,
+        new: newKitas.length,
+        matched: matchedUpdates.length,
+        dbTotal: count ?? 0,
+    });
 }

@@ -5,6 +5,8 @@ import { useState } from 'react';
 interface ScrapeResult {
     total: number;
     dbTotal: number;
+    new?: number;
+    matched?: number;
 }
 
 type Source = 'daks' | 'kita-navigator';
@@ -102,13 +104,24 @@ export default function CrmScraperPage() {
 
                         {results[src.id] && (
                             <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                <span style={{
-                                    background: 'rgba(34,197,94,0.12)', color: '#22c55e',
-                                    border: '1px solid rgba(34,197,94,0.25)',
-                                    borderRadius: '20px', padding: '4px 12px', fontSize: '12px', fontWeight: 600,
-                                }}>
-                                    {results[src.id]!.total} importiert
-                                </span>
+                                {results[src.id]!.new != null ? (
+                                    <>
+                                        <span style={{ background: 'rgba(34,197,94,0.12)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.25)', borderRadius: '20px', padding: '4px 12px', fontSize: '12px', fontWeight: 600 }}>
+                                            {results[src.id]!.new} neu angelegt
+                                        </span>
+                                        <span style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '20px', padding: '4px 12px', fontSize: '12px', fontWeight: 600 }}>
+                                            {results[src.id]!.matched} mit bestehenden gematcht
+                                        </span>
+                                    </>
+                                ) : (
+                                    <span style={{
+                                        background: 'rgba(34,197,94,0.12)', color: '#22c55e',
+                                        border: '1px solid rgba(34,197,94,0.25)',
+                                        borderRadius: '20px', padding: '4px 12px', fontSize: '12px', fontWeight: 600,
+                                    }}>
+                                        {results[src.id]!.total} importiert
+                                    </span>
+                                )}
                                 <span style={{
                                     background: 'rgba(148,163,184,0.1)', color: 'var(--text-muted)',
                                     border: '1px solid var(--border-color)',
