@@ -14,6 +14,19 @@ async function requireAdmin() {
 const API_BASE = 'https://kita-navigator.berlin.de/api/v1';
 const CONCURRENCY = 20;
 
+/** Konvertiert +49-Format in deutsches Standardformat: "030 / 5123176" */
+function normalizePhone(tel: string): string {
+    if (!tel) return '';
+    tel = tel.trim();
+    if (!tel.startsWith('+49')) return tel;
+    const digits = tel.replace('+49', '').replace(/\D/g, '');
+    const local = '0' + digits;
+    if (local.startsWith('030')) return '030 / ' + local.slice(3);
+    if (/^01[5-7]/.test(local)) return local.slice(0, 4) + ' / ' + local.slice(4);
+    if (local.startsWith('03')) return local.slice(0, 4) + ' / ' + local.slice(4);
+    return local;
+}
+
 async function fetchJson<T>(url: string): Promise<T | null> {
     try {
         const res = await fetch(url, {
@@ -132,7 +145,7 @@ export async function POST() {
         const knData: KnExtraSource = {
             source: 'kita-navigator',
             source_url: `https://kita-navigator.berlin.de/einrichtungen/${id}`,
-            telefon: kontakt?.telefonnummer ?? '',
+            telefon: normalizePhone(kontakt?.telefonnummer ?? ''),
             email: kontakt?.emailadresse ?? '',
             webseite: kontakt?.webadresse ?? '',
             plaetze: betreuung?.anzahlKinder ?? null,
