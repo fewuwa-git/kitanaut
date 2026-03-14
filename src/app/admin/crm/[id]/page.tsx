@@ -78,14 +78,6 @@ function ContactField({ primary, kn, renderPrimary, renderKn }: {
                     {renderKn(kn!)}
                 </div>
             )}
-            {!primary && kn && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 600, color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.25)', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap' }}>
-                        Kita-Navigator
-                    </span>
-                    {renderKn(kn)}
-                </div>
-            )}
         </div>
     );
 }
