@@ -70,7 +70,9 @@ export async function proxy(req: NextRequest) {
     // ── Öffentliche Routen ────────────────────────────────────────────────────
     if (
         pathname.startsWith('/login') ||
+        pathname.startsWith('/admin/login') ||
         pathname.startsWith('/api/auth') ||
+        pathname.startsWith('/api/admin-auth') ||
         pathname.startsWith('/api/org/public') ||
         pathname.startsWith('/einladen') ||
         pathname.startsWith('/api/invite') ||
