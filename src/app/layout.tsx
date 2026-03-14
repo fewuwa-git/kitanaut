@@ -16,6 +16,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
   const host = headersList.get("host") || "";
   const slug = extractSlug(host);
+  if (slug === "admin") {
+    return {
+      title: { template: "%s | Kitanaut Admin", default: "Kitanaut Admin" },
+      description: "Kitanaut Super-Admin-Bereich",
+    };
+  }
   const org = await getOrgBySlug(slug);
   const orgName = org?.name || "Kitanaut";
   return {
