@@ -12,13 +12,20 @@ async function requireAdmin() {
 export async function GET() {
     if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { data, error } = await supabase
-        .from('crm_prospects')
-        .select('source, status, plaetze, traeger, bezirk');
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    const rows = data ?? [];
+    const PAGE = 1000;
+    const rows: { source: string; status: string; plaetze: number | null; traeger: string; bezirk: string }[] = [];
+    let from = 0;
+    while (true) {
+        const { data, error } = await supabase
+            .from('crm_prospects')
+            .select('source, status, plaetze, traeger, bezirk')
+            .range(from, from + PAGE - 1);
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        if (!data || data.length === 0) break;
+        rows.push(...data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+    }
     const total = rows.length;
 
     // By source
