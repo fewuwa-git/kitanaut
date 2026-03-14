@@ -52,6 +52,9 @@ export default function CrmPage() {
     const [search, setSearch] = useState('');
     const [sourceFilter, setSourceFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [page, setPage] = useState(0);
+    const [total, setTotal] = useState(0);
+    const [pageCount, setPageCount] = useState(0);
     const [editingNotizen, setEditingNotizen] = useState<Record<number, string>>({});
     const [savingIds, setSavingIds] = useState<Set<number>>(new Set());
     const [error, setError] = useState('');
@@ -64,9 +67,13 @@ export default function CrmPage() {
             if (search) params.set('q', search);
             if (sourceFilter) params.set('source', sourceFilter);
             if (statusFilter) params.set('status', statusFilter);
+            params.set('page', String(page));
             const res = await fetch(`/api/admin/crm?${params}`);
             if (res.ok) {
-                setProspects(await res.json());
+                const json = await res.json();
+                setProspects(json.data);
+                setTotal(json.total);
+                setPageCount(json.pageCount);
             } else {
                 const d = await res.json().catch(() => ({}));
                 setError(`Fehler ${res.status}: ${d.error || 'Unbekannter Fehler'}`);
@@ -75,7 +82,10 @@ export default function CrmPage() {
             setError(`Netzwerkfehler: ${e}`);
         }
         setLoading(false);
-    }, [search, sourceFilter, statusFilter]);
+    }, [search, sourceFilter, statusFilter, page]);
+
+    // Filter-Änderungen → zurück auf Seite 0
+    useEffect(() => { setPage(0); }, [search, sourceFilter, statusFilter]);
 
     useEffect(() => {
         const t = setTimeout(load, 300);
@@ -147,7 +157,7 @@ export default function CrmPage() {
                     fontWeight: 600,
                     alignSelf: 'center',
                 }}>
-                    {prospects.length} Kontakte
+                    {total} Kontakte
                 </span>
             </div>
 
@@ -349,6 +359,58 @@ export default function CrmPage() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Paginierung */}
+            {pageCount > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                        Seite {page + 1} von {pageCount} · {total} Einträge
+                    </span>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                            onClick={() => setPage(0)}
+                            disabled={page === 0}
+                            style={{ padding: '5px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'none', color: page === 0 ? 'var(--text-muted)' : 'inherit', cursor: page === 0 ? 'default' : 'pointer' }}
+                        >«</button>
+                        <button
+                            onClick={() => setPage(p => p - 1)}
+                            disabled={page === 0}
+                            style={{ padding: '5px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'none', color: page === 0 ? 'var(--text-muted)' : 'inherit', cursor: page === 0 ? 'default' : 'pointer' }}
+                        >‹</button>
+                        {Array.from({ length: Math.min(pageCount, 7) }, (_, i) => {
+                            // Sliding window: show pages around current
+                            let p: number;
+                            if (pageCount <= 7) p = i;
+                            else if (page < 4) p = i;
+                            else if (page > pageCount - 5) p = pageCount - 7 + i;
+                            else p = page - 3 + i;
+                            return (
+                                <button
+                                    key={p}
+                                    onClick={() => setPage(p)}
+                                    style={{
+                                        padding: '5px 10px', fontSize: '13px', borderRadius: '6px',
+                                        border: '1px solid var(--border-color)',
+                                        background: p === page ? 'var(--accent, #3b82f6)' : 'none',
+                                        color: p === page ? '#fff' : 'inherit',
+                                        cursor: 'pointer', fontWeight: p === page ? 600 : 400,
+                                    }}
+                                >{p + 1}</button>
+                            );
+                        })}
+                        <button
+                            onClick={() => setPage(p => p + 1)}
+                            disabled={page >= pageCount - 1}
+                            style={{ padding: '5px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'none', color: page >= pageCount - 1 ? 'var(--text-muted)' : 'inherit', cursor: page >= pageCount - 1 ? 'default' : 'pointer' }}
+                        >›</button>
+                        <button
+                            onClick={() => setPage(pageCount - 1)}
+                            disabled={page >= pageCount - 1}
+                            style={{ padding: '5px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'none', color: page >= pageCount - 1 ? 'var(--text-muted)' : 'inherit', cursor: page >= pageCount - 1 ? 'default' : 'pointer' }}
+                        >»</button>
                     </div>
                 </div>
             )}
