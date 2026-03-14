@@ -18,6 +18,11 @@ async function sendEmail(templateId: string, to: string, vars: Record<string, st
     ]);
     if (!template) throw new Error(`E-Mail-Template "${templateId}" nicht gefunden`);
 
+    if (org?.is_demo) {
+        console.log('Demo-Modus: E-Mail nicht versendet');
+        return;
+    }
+
     const from = org?.from_email || FALLBACK_FROM;
     const subject = renderTemplate(template.subject, vars);
     const html = renderTemplate(template.body, vars);

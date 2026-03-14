@@ -22,6 +22,7 @@ export interface Organization {
     legal_form: string | null;
     tax_number: string | null;
     contact_person: string | null;
+    is_demo: boolean;
 }
 
 export async function getOrgBySlug(slug: string): Promise<Organization | null> {

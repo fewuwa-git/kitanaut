@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserById, deleteUser, getUsers, saveUser, getUserByEmail } from '@/lib/data';
+import { getUserById, deleteUser, getUsers, saveUser, getUserByEmail, getOrgById } from '@/lib/data';
 import { verifyToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { sendApprovalEmail } from '@/lib/email';
@@ -35,6 +35,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
     }
 
+    const org = await getOrgById(payload.orgId);
+    const isDemo = org?.is_demo === true;
+
     const isAdmin = payload.role === 'admin';
     const isSelf = user.email === payload.email;
 
@@ -45,7 +48,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // Admin kann Name, Rolle, Status ändern – aber nicht die eigene Rolle
     const wasPending = user.status === 'pending';
     if (isAdmin) {
-        if (body.name !== undefined) user.name = body.name;
+        if (body.name !== undefined && !isDemo) user.name = body.name;
         if (body.role !== undefined && !isSelf) user.role = body.role;
         if (body.status !== undefined) user.status = body.status;
     }
@@ -61,7 +64,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     // Springerin kann zusätzlich folgende Felder ändern (auch Admin kann sie ändern, falls nötig)
     if (isAdmin || (isSelf && user.role === 'springerin')) {
-        if (body.name !== undefined) user.name = body.name;
+        if (body.name !== undefined && !isDemo) user.name = body.name;
         if (body.steuerid !== undefined) user.steuerid = body.steuerid;
     }
     // Stundensatz nur für Admins änderbar
@@ -74,16 +77,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     // Alle (die Berechtigung haben = isSelf oder isAdmin) dürfen Email und Passwort ändern
-    if (body.email && body.email !== user.email) {
-        const existing = await getUserByEmail(body.email, payload.orgId);
-        if (existing) {
-            return NextResponse.json({ error: 'E-Mail bereits vergeben' }, { status: 409 });
+    // Außer in der Demo-Instanz
+    if (!isDemo) {
+        if (body.email && body.email !== user.email) {
+            const existing = await getUserByEmail(body.email, payload.orgId);
+            if (existing) {
+                return NextResponse.json({ error: 'E-Mail bereits vergeben' }, { status: 409 });
+            }
+            user.email = body.email;
         }
-        user.email = body.email;
-    }
 
-    if (body.password) {
-        user.password = await bcrypt.hash(body.password, 10);
+        if (body.password) {
+            user.password = await bcrypt.hash(body.password, 10);
+        }
     }
 
     await saveUser({ ...user, organization_id: payload.orgId });

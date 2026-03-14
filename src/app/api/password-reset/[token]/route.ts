@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabase } from '@/lib/db';
 
+const DEMO_ORG_ID = '00000000-0000-0000-0000-000000000002';
+
 export async function GET(
     _req: NextRequest,
     { params }: { params: Promise<{ token: string }> }
@@ -42,7 +44,7 @@ export async function POST(
 
     const { data: user, error } = await supabase
         .from('pankonauten_users')
-        .select('id, invite_expires_at, status')
+        .select('id, invite_expires_at, status, organization_id')
         .eq('invite_token', token)
         .single();
 
@@ -52,6 +54,10 @@ export async function POST(
 
     if (user.status === 'invited') {
         return NextResponse.json({ error: 'Ungültiger Link' }, { status: 404 });
+    }
+
+    if (user.organization_id === DEMO_ORG_ID) {
+        return NextResponse.json({ error: 'Passwort kann in der Demo nicht geändert werden' }, { status: 403 });
     }
 
     if (!user.invite_expires_at || new Date(user.invite_expires_at) < new Date()) {
