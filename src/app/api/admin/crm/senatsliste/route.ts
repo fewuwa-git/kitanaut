@@ -51,7 +51,7 @@ function normalizeStrasse(s: string): string {
     return s.toLowerCase()
         .replace(/str\.\s*/g, 'straße')
         .replace(/\bstr\b/g, 'straße')
-        .replace(/\d+[a-z]?/g, '')  // Hausnummern entfernen (10, 010, 10a)
+        .replace(/\d+\s*[a-z]?/gi, '') // Hausnummern entfernen (10, 010, 10a, 88H, 88 h)
         .replace(/\s+/g, '')
         .replace(/[.\-/]/g, '')
         .substring(0, 15);
