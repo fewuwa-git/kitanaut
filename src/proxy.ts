@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken, signToken } from '@/lib/auth';
+import { verifyToken, signToken, verifySuperAdminToken, signSuperAdminToken } from '@/lib/auth';
 
-const INACTIVITY_TIMEOUT = 60 * 60 * 24; // 24 Stunden in Sekunden
+const INACTIVITY_TIMEOUT = 60 * 60 * 24;
 
 const COOKIE_OPTIONS = {
     httpOnly: true,
@@ -12,19 +12,12 @@ const COOKIE_OPTIONS = {
 };
 
 function extractSubdomain(host: string): string | null {
-    // Entferne Port falls vorhanden
     const hostname = host.split(':')[0];
-
-    // Localhost: kein Subdomain-Konzept → fallback auf 'pankonauten'
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
         return process.env.DEV_ORG_SLUG || 'pankonauten';
     }
-
     const parts = hostname.split('.');
-    // Mindestens 3 Teile: sub.domain.tld
     if (parts.length < 3) return null;
-
-    // Ersten Teil als Subdomain zurückgeben
     return parts[0];
 }
 
@@ -33,7 +26,40 @@ export async function proxy(req: NextRequest) {
     const host = req.headers.get('host') || '';
     const subdomain = extractSubdomain(host);
 
-    // Öffentliche Routen – kein Auth nötig
+    // ── Super-Admin (admin.kitanaut.de) ───────────────────────────────────────
+    if (subdomain === 'admin') {
+        if (
+            pathname.startsWith('/admin/login') ||
+            pathname.startsWith('/api/admin-auth')
+        ) {
+            return NextResponse.next();
+        }
+
+        const adminToken = req.cookies.get('admin_token')?.value;
+        if (!adminToken) {
+            if (pathname.startsWith('/api')) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+            return NextResponse.redirect(new URL('/admin/login', req.url));
+        }
+
+        const adminPayload = await verifySuperAdminToken(adminToken);
+        if (!adminPayload) {
+            if (pathname.startsWith('/api')) {
+                return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+            }
+            const response = NextResponse.redirect(new URL('/admin/login', req.url));
+            response.cookies.delete('admin_token');
+            return response;
+        }
+
+        const newAdminToken = await signSuperAdminToken(adminPayload);
+        const response = NextResponse.next();
+        response.cookies.set('admin_token', newAdminToken, COOKIE_OPTIONS);
+        return response;
+    }
+
+    // ── Öffentliche Routen ────────────────────────────────────────────────────
     if (
         pathname.startsWith('/login') ||
         pathname.startsWith('/api/auth') ||
@@ -47,7 +73,7 @@ export async function proxy(req: NextRequest) {
         return NextResponse.next();
     }
 
-    // Keine Subdomain → Landing Page oder Fehler
+    // Keine Subdomain → Login
     if (!subdomain) {
         return NextResponse.redirect(new URL('/login', req.url));
     }
@@ -82,7 +108,7 @@ export async function proxy(req: NextRequest) {
         return response;
     }
 
-    // Token gültig → Ablaufzeit erneuern (Sliding Session)
+    // Token erneuern (Sliding Session)
     const newToken = await signToken({
         userId: payload.userId,
         email: payload.email,
@@ -92,7 +118,6 @@ export async function proxy(req: NextRequest) {
         orgSlug: payload.orgSlug,
     });
 
-    // Impersonation: Wenn Admin und impersonate-Cookie gesetzt → Ansicht als anderer User
     const requestHeaders = new Headers(req.headers);
     const impersonateCookie = req.cookies.get('impersonate')?.value;
     let effectiveUserId = payload.userId;

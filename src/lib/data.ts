@@ -671,6 +671,44 @@ export async function deleteBeleg(id: string): Promise<void> {
     if (error) throw new Error('Failed to delete Beleg: ' + error.message);
 }
 
+// Seeds categories and email templates for a new org, copying from the source org
+// and replacing orgName occurrences in template bodies/subjects
+export async function seedNewOrg(newOrgId: string, newOrgName: string): Promise<void> {
+    const SOURCE_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
+    // Copy categories
+    const { data: cats } = await supabase
+        .from('pankonauten_categories')
+        .select('name, color, type')
+        .eq('organization_id', SOURCE_ORG_ID);
+
+    if (cats && cats.length > 0) {
+        await supabase.from('pankonauten_categories').insert(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            cats.map((c: any) => ({ ...c, organization_id: newOrgId }))
+        );
+    }
+
+    // Copy email templates, replacing "Pankonauten" with new kita name
+    const { data: templates } = await supabase
+        .from('pankonauten_email_templates')
+        .select('id, name, subject, body')
+        .eq('organization_id', SOURCE_ORG_ID);
+
+    if (templates && templates.length > 0) {
+        await supabase.from('pankonauten_email_templates').insert(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            templates.map((t: any) => ({
+                id: t.id,
+                name: t.name,
+                subject: t.subject.replaceAll('Pankonauten', newOrgName),
+                body: t.body.replaceAll('Pankonauten', newOrgName),
+                organization_id: newOrgId,
+            }))
+        );
+    }
+}
+
 // ─── Springerin Notes ─────────────────────────────────────────────────────────
 
 export interface SpringerinNote {
