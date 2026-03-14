@@ -39,7 +39,7 @@ export function euroInWorte(betrag: number): string {
 }
 
 // ─── PDF generieren ───────────────────────────────────────────────────────────
-export async function generateBelegPDF(beleg: Beleg): Promise<string> {
+export async function generateBelegPDF(beleg: Beleg, orgAddress?: string): Promise<string> {
     // A5: 148 x 210 mm
     const doc = new jsPDF({ format: 'a5', orientation: 'portrait' });
     const W = doc.internal.pageSize.getWidth();   // 148
@@ -183,7 +183,7 @@ export async function generateBelegPDF(beleg: Beleg): Promise<string> {
     doc.setFontSize(9);
     doc.text('zu Gunsten/Lasten', M + 2, zuY + 5.5);
     doc.setFont('helvetica', 'bold');
-    doc.text('Pankonauten e.V., Ravenéstraße 10, 13347 Berlin', M + 2, zuY + 10.5);
+    doc.text(orgAddress || '', M + 2, zuY + 10.5);
     doc.setFont('helvetica', 'normal');
     doc.text('dankend erhalten.', W - M - 2, zuY + 10.5, { align: 'right' });
     const zuEndY = zuY + 16;

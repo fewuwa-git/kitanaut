@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import BelegForm from '@/components/BelegForm';
-import { getUsers } from '@/lib/data';
+import { getUsers, getOrgById } from '@/lib/data';
 
 export const metadata: Metadata = { title: 'Neuer Beleg' };
 
@@ -24,13 +24,15 @@ export default async function BelegNeuPage() {
             .filter(u => ['eltern', 'member', 'admin'].includes(u.role))
             .sort((a, b) => a.name.localeCompare(b.name))
         : [];
+    const org = orgId ? await getOrgById(orgId) : null;
+    const orgAddress = [org?.name, org?.address_street, [org?.address_zip, org?.address_city].filter(Boolean).join(' ')].filter(Boolean).join(', ');
 
     return (
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
                 <div className="page-body">
-                    <BelegForm userId={userId!} isAdmin={isAdmin} selectableUsers={selectableUsers} />
+                    <BelegForm userId={userId!} isAdmin={isAdmin} selectableUsers={selectableUsers} orgAddress={orgAddress} />
                 </div>
             </main>
         </div>

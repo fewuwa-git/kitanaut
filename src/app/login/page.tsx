@@ -11,12 +11,17 @@ function LoginForm() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
+    const [orgData, setOrgData] = useState<{ name: string; logo_url: string | null } | null>(null);
 
     // Passwort vergessen
     const [showReset, setShowReset] = useState(false);
     const [resetEmail, setResetEmail] = useState('');
     const [resetLoading, setResetLoading] = useState(false);
     const [resetDone, setResetDone] = useState(false);
+
+    useEffect(() => {
+        fetch('/api/org/public').then(r => r.json()).then(setOrgData);
+    }, []);
 
     useEffect(() => {
         if (searchParams.get('invited') === '1') {
@@ -72,9 +77,9 @@ function LoginForm() {
         <div className="login-page">
             <div className="login-card">
                 <div className="login-logo">
-                    <img src="/logo.png" alt="Pankonauten Logo" className="login-logo-icon" />
+                    <img src={orgData?.logo_url || '/logo.png'} alt={`${orgData?.name || ''} Logo`} className="login-logo-icon" />
                     <div className="login-logo-text">
-                        <h2>Pankonauten</h2>
+                        <h2>{orgData?.name || ''}</h2>
                         <p>Finanzen</p>
                     </div>
                 </div>

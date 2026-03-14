@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import BelegForm from '@/components/BelegForm';
-import { getBelegById } from '@/lib/data';
+import { getBelegById, getOrgById } from '@/lib/data';
 
 export const metadata: Metadata = { title: 'Beleg bearbeiten' };
 
@@ -31,12 +31,15 @@ export default async function BelegBearbeitenPage({
     if (!isAdmin && beleg.user_id !== userId) redirect('/eltern/belege');
     if (beleg.status !== 'entwurf' && beleg.status !== 'abgelehnt') redirect('/eltern/belege');
 
+    const org = orgId ? await getOrgById(orgId) : null;
+    const orgAddress = [org?.name, org?.address_street, [org?.address_zip, org?.address_city].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+
     return (
         <div className="app-layout">
             <Sidebar user={{ name, email, role }} />
             <main className="main-content">
                 <div className="page-body">
-                    <BelegForm userId={beleg.user_id} beleg={beleg} />
+                    <BelegForm userId={beleg.user_id} beleg={beleg} orgAddress={orgAddress} />
                 </div>
             </main>
         </div>

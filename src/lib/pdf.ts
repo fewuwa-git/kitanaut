@@ -88,12 +88,7 @@ export const generateAbrechnungPDF = async (
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(COLORS.navy[0], COLORS.navy[1], COLORS.navy[2]);
-    doc.text('Pankonauten e.V.', empfaengerX, addressY + 5, { align: 'right' });
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text('Ravenéstr. 10', empfaengerX, addressY + 10, { align: 'right' });
-    doc.text('13347 Berlin', empfaengerX, addressY + 15, { align: 'right' });
+    doc.text(orgName || '', empfaengerX, addressY + 5, { align: 'right' });
 
     // ─── Absender (links, gleiche Höhe wie Empfänger) ────────────────────────
     let y = addressY;

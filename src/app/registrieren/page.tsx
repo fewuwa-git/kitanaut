@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
@@ -9,6 +9,11 @@ export default function RegisterPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [done, setDone] = useState(false);
+    const [orgData, setOrgData] = useState<{ name: string; logo_url: string | null } | null>(null);
+
+    useEffect(() => {
+        fetch('/api/org/public').then(r => r.json()).then(setOrgData);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,9 +43,9 @@ export default function RegisterPage() {
         <div className="login-page">
             <div className="login-card">
                 <div className="login-logo">
-                    <img src="/logo.png" alt="Pankonauten Logo" className="login-logo-icon" />
+                    <img src={orgData?.logo_url || '/logo.png'} alt={`${orgData?.name || ''} Logo`} className="login-logo-icon" />
                     <div className="login-logo-text">
-                        <h2>Pankonauten</h2>
+                        <h2>{orgData?.name || ''}</h2>
                         <p>Finanzen</p>
                     </div>
                 </div>

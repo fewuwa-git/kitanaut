@@ -11,11 +11,16 @@ export default function EinladenPage({ params }: { params: Promise<{ token: stri
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
+    const [orgData, setOrgData] = useState<{ name: string; logo_url: string | null } | null>(null);
 
     const [password, setPassword] = useState('');
     const [passwordConfirm, setPasswordConfirm] = useState('');
     const [formError, setFormError] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        fetch('/api/org/public').then(r => r.json()).then(setOrgData);
+    }, []);
 
     useEffect(() => {
         fetch(`/api/invite/${token}`)
@@ -90,7 +95,7 @@ export default function EinladenPage({ params }: { params: Promise<{ token: stri
                 <div style={{ marginBottom: '28px', textAlign: 'center' }}>
                     <div style={{ fontSize: '32px', marginBottom: '8px' }}>🚣</div>
                     <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--navy, #1a3a5c)', margin: 0 }}>
-                        Pankonauten-Finanzportal
+                        {orgData?.name || 'Kitanaut'}-Finanzportal
                     </h1>
                 </div>
 

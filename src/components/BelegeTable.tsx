@@ -25,15 +25,16 @@ interface BelegeTableProps {
     selectedUserId?: string;
     selectedStatus?: string;
     statusLabels: Record<string, string>;
+    orgAddress?: string;
 }
 
-function PDFButton({ beleg }: { beleg: Beleg }) {
+function PDFButton({ beleg, orgAddress }: { beleg: Beleg; orgAddress?: string }) {
     const [loading, setLoading] = useState(false);
     const handleClick = async () => {
         setLoading(true);
         const win = window.open('', '_blank');
         try {
-            const url = await generateBelegPDF(beleg);
+            const url = await generateBelegPDF(beleg, orgAddress);
             if (win) win.location.href = url;
         } catch {
             if (win) win.close();
@@ -50,7 +51,7 @@ function PDFButton({ beleg }: { beleg: Beleg }) {
 }
 
 export default function BelegeTable({
-    belege, allUsers, isAdmin, role, currentUserId, selectedUserId, selectedStatus, statusLabels,
+    belege, allUsers, isAdmin, role, currentUserId, selectedUserId, selectedStatus, statusLabels, orgAddress,
 }: BelegeTableProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -162,7 +163,7 @@ export default function BelegeTable({
                                             </td>
                                             <td style={{ textAlign: 'right' }}>
                                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                                    <PDFButton beleg={b} />
+                                                    <PDFButton beleg={b} orgAddress={orgAddress} />
                                                     {canEdit && (
                                                         <Link href={`/eltern/belege/${b.id}/bearbeiten`}
                                                             className="btn btn-sm btn-secondary"
@@ -174,7 +175,7 @@ export default function BelegeTable({
                                                         <BelegStatusButton id={b.id} label={b.titel} targetStatus="eingereicht" />
                                                     )}
                                                     {isAdmin && isEingereicht && (
-                                                        <BelegStatusButton id={b.id} label={b.titel} targetStatus="bezahlt" beleg={b} />
+                                                        <BelegStatusButton id={b.id} label={b.titel} targetStatus="bezahlt" beleg={b} orgAddress={orgAddress} />
                                                     )}
                                                     {isAdmin && isEingereicht && (
                                                         <BelegStatusButton id={b.id} label={b.titel} targetStatus="abgelehnt" />

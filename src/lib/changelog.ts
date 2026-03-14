@@ -15,6 +15,8 @@ export const CHANGELOG: ChangelogEntry[] = [
             'Neues Admin-Panel unter admin.kitanaut.de: Übersicht aller registrierten Kitas, Anlegen neuer Kitas mit automatischem Onboarding (Kategorien, E-Mail-Templates, Admin-Einladung) und Passwort ändern.',
             '— E-Mail-Absender pro Kita —',
             'Jede Kita kann eine eigene Absenderadresse für E-Mails hinterlegen (z. B. pankonauten@kitanaut.de). Einladungen, Passwort-Resets und Abrechnungsbenachrichtigungen werden dann von dieser Adresse verschickt.',
+            '— Login- und Einladungsseiten —',
+            'Login, Registrierung, Passwort-Reset und Einladungsseite zeigen jetzt automatisch den Namen und das Logo der jeweiligen Kita an.',
         ],
     },
     {

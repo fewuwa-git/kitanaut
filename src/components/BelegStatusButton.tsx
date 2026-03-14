@@ -41,11 +41,12 @@ const CONFIG: Record<TargetStatus, {
     },
 };
 
-export default function BelegStatusButton({ id, label, targetStatus, beleg }: {
+export default function BelegStatusButton({ id, label, targetStatus, beleg, orgAddress }: {
     id: string;
     label: string;
     targetStatus: TargetStatus;
     beleg?: Beleg;
+    orgAddress?: string;
 }) {
     const [showModal, setShowModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -66,7 +67,7 @@ export default function BelegStatusButton({ id, label, targetStatus, beleg }: {
                 if (targetStatus === 'bezahlt' && beleg) {
                     try {
                         const { generateBelegPDF } = await import('@/lib/belegPdf');
-                        const blobUrl = await generateBelegPDF(beleg);
+                        const blobUrl = await generateBelegPDF(beleg, orgAddress);
                         const blobRes = await fetch(blobUrl);
                         const blob = await blobRes.blob();
                         URL.revokeObjectURL(blobUrl);

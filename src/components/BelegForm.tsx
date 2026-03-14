@@ -17,11 +17,13 @@ export default function BelegForm({
     beleg,
     isAdmin = false,
     selectableUsers = [],
+    orgAddress,
 }: {
     userId: string;
     beleg?: Beleg;
     isAdmin?: boolean;
     selectableUsers?: { id: string; name: string }[];
+    orgAddress?: string;
 }) {
     const router = useRouter();
     const isEdit = !!beleg;
@@ -174,7 +176,7 @@ export default function BelegForm({
 
                         {/* Zu Gunsten/Lasten */}
                         <div style={{ padding: '10px 16px', background: 'var(--bg)', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '13px', color: 'var(--text-muted)' }}>
-                            <strong style={{ color: 'var(--navy)' }}>Zu Gunsten / Lasten von:</strong> Pankonauten e.V., Ravenéstraße 10, 13347 Berlin
+                            <strong style={{ color: 'var(--navy)' }}>Zu Gunsten / Lasten von:</strong> {orgAddress || ''}
                         </div>
 
                         {/* Unterschrift-Vorschau */}

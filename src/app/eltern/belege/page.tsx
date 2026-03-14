@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import { getBelege, getUsers } from '@/lib/data';
+import { getBelege, getUsers, getOrgById } from '@/lib/data';
 
 export const metadata: Metadata = { title: 'Meine Belege' };
 import Sidebar from '@/components/Sidebar';
@@ -40,6 +40,9 @@ async function BelegeSection({
         ? (await getUsers(orgId)).filter(u => ['eltern', 'member', 'admin'].includes(u.role)).sort((a, b) => a.name.localeCompare(b.name))
         : [];
 
+    const org = orgId ? await getOrgById(orgId) : null;
+    const orgAddress = [org?.name, org?.address_street, [org?.address_zip, org?.address_city].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+
     return (
         <BelegeTable
             belege={belege}
@@ -50,6 +53,7 @@ async function BelegeSection({
             selectedUserId={selectedUserId}
             selectedStatus={selectedStatus}
             statusLabels={STATUS_LABELS}
+            orgAddress={orgAddress}
         />
     );
 }
