@@ -7,6 +7,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     {
         date: '14.03.2026',
         changes: [
+            '— Demo-Kita —',
+            'Neue Demo-Instanz unter demo.kitanaut.de: Alle Funktionen ausprobieren ohne echte Daten zu beeinflussen. Daten werden täglich um 3:00 Uhr automatisch zurückgesetzt. E-Mails werden im Demo-Modus nicht versendet.',
             '— Kita-Profil —',
             'Neue Seite unter Verwaltung → Kita-Profil: Logo hochladen, Adresse, Bankdaten, Ansprechperson, Rechtsform, Steuernummer und E-Mail-Absender zentral pflegen. Das Logo und der Kita-Name erscheinen automatisch in der Seitenleiste.',
             '— Super-Admin-Panel —',
