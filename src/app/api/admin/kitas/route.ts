@@ -41,6 +41,15 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // Block reserved slugs
+        const RESERVED = ['admin', 'demo', 'api', 'www', 'mail', 'app', 'login', 'static', 'assets'];
+        if (RESERVED.includes(slug.toLowerCase())) {
+            return NextResponse.json(
+                { error: `Subdomain "${slug}" ist reserviert und kann nicht verwendet werden` },
+                { status: 400 }
+            );
+        }
+
         // Check slug uniqueness
         const existing = await getOrgBySlug(slug);
         if (existing) {
