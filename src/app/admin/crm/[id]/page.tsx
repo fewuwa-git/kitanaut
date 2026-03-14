@@ -69,6 +69,10 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 /** Zeigt primären Wert + optionalen Kita-Navigator-Abweichungswert */
+function normalizePhone(tel: string): string {
+    return tel.replace(/\D/g, '');
+}
+
 function normalizeUrl(url: string): string {
     try {
         const u = new URL(url);
@@ -78,15 +82,17 @@ function normalizeUrl(url: string): string {
     }
 }
 
-function ContactField({ primary, kn, renderPrimary, renderKn, compareNormalized }: {
+function ContactField({ primary, kn, renderPrimary, renderKn, compareNormalized, normalizer }: {
     primary: string;
     kn: string | undefined;
     renderPrimary: (v: string) => React.ReactNode;
     renderKn: (v: string) => React.ReactNode;
     compareNormalized?: boolean;
+    normalizer?: (v: string) => string;
 }) {
+    const norm = normalizer ?? normalizeUrl;
     const knDiffers = kn && (compareNormalized
-        ? normalizeUrl(kn) !== normalizeUrl(primary)
+        ? norm(kn) !== norm(primary)
         : kn !== primary);
     return (
         <div>
@@ -226,10 +232,12 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                         <ContactField
                             primary={prospect.telefon}
                             kn={kn?.telefon}
+                            compareNormalized
                             renderPrimary={v => <a href={`tel:${v}`} style={{ color: 'var(--accent)', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
                             renderKn={v => <a href={`tel:${v}`} style={{ color: '#a855f7', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
+                            normalizer={normalizePhone}
                         />
-                        {senat?.telefon && senat.telefon !== prospect.telefon && senat.telefon !== kn?.telefon && (
+                        {senat?.telefon && normalizePhone(senat.telefon) !== normalizePhone(prospect.telefon) && normalizePhone(senat.telefon) !== normalizePhone(kn?.telefon ?? '') && (
                             <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <span style={{ fontSize: '10px', fontWeight: 600, color: '#16a34a', background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.25)', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap' }}>Senat</span>
                                 <a href={`tel:${senat.telefon}`} style={{ color: '#16a34a', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{senat.telefon}</a>
