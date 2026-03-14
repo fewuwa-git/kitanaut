@@ -60,13 +60,25 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 /** Zeigt primären Wert + optionalen Kita-Navigator-Abweichungswert */
-function ContactField({ primary, kn, renderPrimary, renderKn }: {
+function normalizeUrl(url: string): string {
+    try {
+        const u = new URL(url);
+        return (u.hostname + u.pathname).replace(/\/+$/, '').toLowerCase();
+    } catch {
+        return url.trim().toLowerCase();
+    }
+}
+
+function ContactField({ primary, kn, renderPrimary, renderKn, compareNormalized }: {
     primary: string;
     kn: string | undefined;
     renderPrimary: (v: string) => React.ReactNode;
     renderKn: (v: string) => React.ReactNode;
+    compareNormalized?: boolean;
 }) {
-    const knDiffers = kn && kn !== primary;
+    const knDiffers = kn && (compareNormalized
+        ? normalizeUrl(kn) !== normalizeUrl(primary)
+        : kn !== primary);
     return (
         <div>
             {primary ? renderPrimary(primary) : <span style={{ color: 'var(--text-muted)' }}>–</span>}
@@ -224,6 +236,7 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                         <ContactField
                             primary={prospect.webseite}
                             kn={kn?.webseite}
+                            compareNormalized
                             renderPrimary={v => <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{(() => { try { return new URL(v).hostname.replace('www.', ''); } catch { return v; } })()}</a>}
                             renderKn={v => <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#a855f7', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{(() => { try { return new URL(v).hostname.replace('www.', ''); } catch { return v; } })()}</a>}
                         />
