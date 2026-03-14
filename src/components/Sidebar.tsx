@@ -331,28 +331,6 @@ export default function Sidebar({ user }: SidebarProps) {
                         <span style={{ fontSize: '16px' }}>🚪</span>
                         Abmelden
                     </button>
-                    {(user.role === 'admin' || user.role === 'member') && (
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
-                            <a
-                                href="/changelog"
-                                className={`sidebar-link ${pathname === '/changelog' ? 'active' : ''}`}
-                                style={{ fontSize: '11px', opacity: 0.4, flex: 1 }}
-                            >
-                                <span style={{ fontSize: '12px' }}>📋</span>
-                                Changelog
-                            </a>
-                            {user.role === 'admin' && (
-                                <a
-                                    href="/logfiles"
-                                    className={`sidebar-link ${pathname === '/logfiles' ? 'active' : ''}`}
-                                    style={{ fontSize: '11px', opacity: 0.4, flex: 1 }}
-                                >
-                                    <span style={{ fontSize: '12px' }}>🗒️</span>
-                                    Logfiles
-                                </a>
-                            )}
-                        </div>
-                    )}
                 </div>
             </aside>
         </>

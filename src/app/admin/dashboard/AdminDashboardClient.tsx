@@ -32,6 +32,12 @@ export default function AdminDashboardClient({ orgs }: { orgs: Organization[] })
                     <a href="/admin/kitas/neu" className="btn btn-primary">
                         + Neue Kita anlegen
                     </a>
+                    <a href="/admin/changelog" className="btn btn-secondary">
+                        Changelog
+                    </a>
+                    <a href="/admin/logfiles" className="btn btn-secondary">
+                        Logfiles
+                    </a>
                     <a href="/admin/passwort" className="btn btn-secondary">
                         Passwort ändern
                     </a>

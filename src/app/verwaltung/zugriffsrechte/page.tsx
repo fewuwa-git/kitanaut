@@ -26,7 +26,6 @@ const ALL_PAGES: NavItem[] = [
     { href: '/kontoauszug', label: 'Kontoauszug', section: 'Übersicht', roles: ['admin', 'finanzvorstand', 'member'] },
     { href: '/categories', label: 'Kategorien', section: 'Übersicht', roles: ['admin', 'finanzvorstand', 'member'] },
     { href: '/dashboard/springerin', label: 'Springerin-Übersicht', section: 'Übersicht', roles: ['admin', 'finanzvorstand', 'member'] },
-    { href: '/changelog', label: 'Changelog', section: 'Übersicht', roles: ['admin', 'finanzvorstand', 'member', 'springerin', 'teammitglied', 'eltern'] },
     // Springerin
     { href: '/springerin/abrechnung', label: 'Abrechnung', section: 'Springerin', roles: ['admin', 'finanzvorstand', 'springerin'] },
     { href: '/springerin/abrechnung/neu', label: 'Neue Abrechnung', section: 'Springerin', roles: ['admin', 'finanzvorstand', 'springerin'] },
@@ -47,7 +46,6 @@ const ALL_PAGES: NavItem[] = [
     { href: '/verwaltung/emails', label: 'E-Mails', section: 'Verwaltung', roles: ['admin'] },
     { href: '/verwaltung/emails/[id]', label: 'E-Mail-Vorlage bearbeiten', section: 'Verwaltung', roles: ['admin'] },
     { href: '/verwaltung/zugriffsrechte', label: 'Zugriffsrechte', section: 'Verwaltung', roles: ['admin'] },
-    { href: '/logfiles', label: 'Audit-Log', section: 'Verwaltung', roles: ['admin'] },
 ];
 
 const ROLES: Role[] = ['admin', 'finanzvorstand', 'member', 'springerin', 'teammitglied', 'eltern'];
