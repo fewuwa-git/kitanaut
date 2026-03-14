@@ -263,16 +263,22 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                 {(prospect.plaetze != null || kn?.plaetze != null) && (
                     <Row label="Plätze">
                         <div>
-                            {prospect.plaetze != null
-                                ? <span>{prospect.plaetze}</span>
-                                : <span style={{ color: 'var(--text-muted)' }}>–</span>
-                            }
+                            {prospect.plaetze != null ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span>{prospect.plaetze}</span>
+                                    <span style={{ fontSize: '10px', fontWeight: 600, color: '#3b82f6', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '4px', padding: '1px 5px' }}>
+                                        {prospect.source === 'daks' ? 'DaKS' : prospect.source}
+                                    </span>
+                                </div>
+                            ) : (
+                                <span style={{ color: 'var(--text-muted)' }}>–</span>
+                            )}
                             {kn?.plaetze != null && kn.plaetze !== prospect.plaetze && (
                                 <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ color: '#a855f7' }}>{kn.plaetze}</span>
                                     <span style={{ fontSize: '10px', fontWeight: 600, color: '#a855f7', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.25)', borderRadius: '4px', padding: '1px 5px' }}>
                                         Kita-Navigator
                                     </span>
-                                    <span style={{ color: '#a855f7' }}>{kn.plaetze}</span>
                                 </div>
                             )}
                         </div>
