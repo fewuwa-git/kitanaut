@@ -62,7 +62,10 @@ export async function GET(req: NextRequest) {
         await client.connect();
         const result = await client.query(sql, params);
         return NextResponse.json(result.rows);
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        return NextResponse.json({ error: msg }, { status: 500 });
     } finally {
-        await client.end();
+        await client.end().catch(() => {});
     }
 }
