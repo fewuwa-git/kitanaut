@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 
 const SUB_NAV = [
     { href: '/admin/crm', label: 'Alle Kontakte' },
+    { href: '/admin/crm/statistik', label: 'Statistik' },
     { href: '/admin/crm/scraper', label: 'Import' },
 ];
 

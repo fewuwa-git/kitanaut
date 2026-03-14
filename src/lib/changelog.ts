@@ -5,6 +5,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
     {
+        date: '15.03.2026',
+        changes: [
+            '— CRM Statistik —',
+            'Neue Unterseite im CRM: Statistische Auswertung aller Kitas in der Datenbank – KPI-Kacheln (Gesamt, Ø Plätze, Kleinste/Größte Kita, ohne Angabe), Aufschlüsselung nach Quelle und Kontaktstatus, Plätze-Verteilung in 10er-Schritten, Top-Träger und Bezirke mit Balkendiagrammen.',
+        ],
+    },
+    {
         date: '14.03.2026',
         changes: [
             '— Demo-Kita —',
