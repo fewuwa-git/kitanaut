@@ -25,7 +25,9 @@ export default function AdminLoginPage() {
                 setError(data.error || 'Anmeldung fehlgeschlagen');
                 return;
             }
-            router.push('/admin/dashboard');
+            const params = new URLSearchParams(window.location.search);
+            const redirect = params.get('redirect') || '/admin/dashboard';
+            router.push(redirect);
         } catch {
             setError('Verbindungsfehler. Bitte versuche es erneut.');
         } finally {

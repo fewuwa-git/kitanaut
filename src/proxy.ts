@@ -40,7 +40,9 @@ export async function proxy(req: NextRequest) {
             if (pathname.startsWith('/api')) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             }
-            return NextResponse.redirect(new URL('/admin/login', req.url));
+            const loginUrl = new URL('/admin/login', req.url);
+            if (pathname !== '/admin/login') loginUrl.searchParams.set('redirect', pathname);
+            return NextResponse.redirect(loginUrl);
         }
 
         const adminPayload = await verifySuperAdminToken(adminToken);
@@ -48,7 +50,9 @@ export async function proxy(req: NextRequest) {
             if (pathname.startsWith('/api')) {
                 return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
             }
-            const response = NextResponse.redirect(new URL('/admin/login', req.url));
+            const loginUrl = new URL('/admin/login', req.url);
+            if (pathname !== '/admin/login') loginUrl.searchParams.set('redirect', pathname);
+            const response = NextResponse.redirect(loginUrl);
             response.cookies.delete('admin_token');
             return response;
         }

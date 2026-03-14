@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 const NAV_ITEMS = [
     { href: '/admin/dashboard', label: 'Alle Kitas' },
     { href: '/admin/kitas/neu', label: 'Neue Kita anlegen' },
+    { href: '/admin/daks-scraper', label: 'DaKS Recherche' },
     { href: '/admin/reserved-slugs', label: 'Gesperrte Subdomains' },
     { href: '/admin/changelog', label: 'Changelog' },
     { href: '/admin/logfiles', label: 'Logfiles' },
