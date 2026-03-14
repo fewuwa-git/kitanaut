@@ -54,15 +54,26 @@ export default function CrmPage() {
     const [statusFilter, setStatusFilter] = useState('');
     const [editingNotizen, setEditingNotizen] = useState<Record<number, string>>({});
     const [savingIds, setSavingIds] = useState<Set<number>>(new Set());
+    const [error, setError] = useState('');
 
     const load = useCallback(async () => {
         setLoading(true);
-        const params = new URLSearchParams();
-        if (search) params.set('q', search);
-        if (sourceFilter) params.set('source', sourceFilter);
-        if (statusFilter) params.set('status', statusFilter);
-        const res = await fetch(`/api/admin/crm?${params}`);
-        if (res.ok) setProspects(await res.json());
+        setError('');
+        try {
+            const params = new URLSearchParams();
+            if (search) params.set('q', search);
+            if (sourceFilter) params.set('source', sourceFilter);
+            if (statusFilter) params.set('status', statusFilter);
+            const res = await fetch(`/api/admin/crm?${params}`);
+            if (res.ok) {
+                setProspects(await res.json());
+            } else {
+                const d = await res.json().catch(() => ({}));
+                setError(`Fehler ${res.status}: ${d.error || 'Unbekannter Fehler'}`);
+            }
+        } catch (e) {
+            setError(`Netzwerkfehler: ${e}`);
+        }
         setLoading(false);
     }, [search, sourceFilter, statusFilter]);
 
@@ -114,6 +125,11 @@ export default function CrmPage() {
 
     return (
         <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+            {error && (
+                <div style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: '8px', padding: '12px 16px', color: '#dc2626', fontSize: '14px', marginBottom: '1.5rem' }}>
+                    {error}
+                </div>
+            )}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '1.5rem' }}>
                 <div>
                     <h1 style={{ marginTop: 0, marginBottom: '0.25rem' }}>CRM – Kontakte</h1>
