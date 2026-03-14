@@ -114,12 +114,6 @@ export default function NeueKitaPage() {
     return (
         <div style={{ padding: '2rem', maxWidth: '640px', margin: '0 auto' }}>
             <div className="page-header" style={{ marginBottom: '2rem' }}>
-                <a
-                    href="/admin/dashboard"
-                    style={{ color: 'var(--text-muted)', fontSize: '14px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}
-                >
-                    ← Zurück zum Dashboard
-                </a>
                 <h1 style={{ margin: 0 }}>Neue Kita anlegen</h1>
             </div>
 

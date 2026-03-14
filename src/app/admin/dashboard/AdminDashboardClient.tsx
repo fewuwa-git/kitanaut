@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { Organization } from '@/lib/data';
 
 function formatDate(dateStr: string): string {
@@ -12,42 +11,18 @@ function formatDate(dateStr: string): string {
 }
 
 export default function AdminDashboardClient({ orgs }: { orgs: Organization[] }) {
-    const router = useRouter();
-
-    async function handleLogout() {
-        await fetch('/api/admin-auth', { method: 'DELETE' });
-        router.push('/admin/login');
-    }
-
     return (
         <div style={{ padding: '2rem', maxWidth: '1100px', margin: '0 auto' }}>
             <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
                 <div>
-                    <h1 style={{ margin: 0 }}>Kitanaut Admin – Alle Kitas</h1>
+                    <h1 style={{ margin: 0 }}>Alle Kitas</h1>
                     <p style={{ color: 'var(--text-muted)', marginTop: '4px', fontSize: '14px' }}>
                         {orgs.length} Organisation{orgs.length !== 1 ? 'en' : ''} registriert
                     </p>
                 </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    <a href="/admin/kitas/neu" className="btn btn-primary">
-                        + Neue Kita anlegen
-                    </a>
-                    <a href="/admin/reserved-slugs" className="btn btn-secondary">
-                        Gesperrte Subdomains
-                    </a>
-                    <a href="/admin/changelog" className="btn btn-secondary">
-                        Changelog
-                    </a>
-                    <a href="/admin/logfiles" className="btn btn-secondary">
-                        Logfiles
-                    </a>
-                    <a href="/admin/passwort" className="btn btn-secondary">
-                        Passwort ändern
-                    </a>
-                    <button className="btn btn-secondary" onClick={handleLogout}>
-                        Abmelden
-                    </button>
-                </div>
+                <a href="/admin/kitas/neu" className="btn btn-primary">
+                    + Neue Kita anlegen
+                </a>
             </div>
 
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>

@@ -53,11 +53,6 @@ export default function ReservedSlugsPage() {
 
     return (
         <div style={{ padding: '2rem', maxWidth: '700px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '1.5rem' }}>
-                <a href="/admin/dashboard" className="btn btn-secondary" style={{ fontSize: '13px' }}>
-                    ← Zurück
-                </a>
-            </div>
             <h1 style={{ marginTop: 0, marginBottom: '0.25rem' }}>Gesperrte Subdomains</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '2rem' }}>
                 Diese Subdomains können beim Anlegen einer neuen Kita nicht verwendet werden.

@@ -42,11 +42,6 @@ export default function AdminPasswortPage() {
 
     return (
         <div style={{ padding: '2rem', maxWidth: '480px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '1.5rem' }}>
-                <a href="/admin/dashboard" className="btn btn-secondary" style={{ fontSize: '13px' }}>
-                    ← Zurück
-                </a>
-            </div>
             <div className="card" style={{ padding: '2rem' }}>
                 <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>Passwort ändern</h2>
                 {success ? (

@@ -14,11 +14,6 @@ export default async function AdminChangelogPage() {
 
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '1.5rem' }}>
-                <a href="/admin/dashboard" className="btn btn-secondary" style={{ fontSize: '13px' }}>
-                    ← Zurück
-                </a>
-            </div>
             <h1 style={{ marginTop: 0, marginBottom: '1.5rem' }}>Changelog</h1>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {CHANGELOG.map((entry, i) => (
