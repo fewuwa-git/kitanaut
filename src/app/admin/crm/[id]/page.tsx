@@ -226,8 +226,8 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                         <ContactField
                             primary={prospect.email}
                             kn={kn?.email}
-                            renderPrimary={v => <a href={`mailto:${v}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: '12px' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
-                            renderKn={v => <a href={`mailto:${v}`} style={{ color: '#a855f7', textDecoration: 'none', fontSize: '12px' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
+                            renderPrimary={v => <a href={`mailto:${v}`} style={{ color: 'var(--accent)', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
+                            renderKn={v => <a href={`mailto:${v}`} style={{ color: '#a855f7', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
                         />
                     </Row>
                 )}
