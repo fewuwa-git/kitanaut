@@ -7,6 +7,7 @@ interface ScrapeResult {
     dbTotal: number;
     new?: number;
     matched?: number;
+    updated?: number;
 }
 
 type Source = 'daks' | 'kita-navigator';
@@ -110,7 +111,7 @@ export default function CrmScraperPage() {
                                             {results[src.id]!.new} neu angelegt
                                         </span>
                                         <span style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '20px', padding: '4px 12px', fontSize: '12px', fontWeight: 600 }}>
-                                            {results[src.id]!.matched} mit bestehenden gematcht
+                                            {results[src.id]!.updated ?? results[src.id]!.matched} aktualisiert
                                         </span>
                                     </>
                                 ) : (

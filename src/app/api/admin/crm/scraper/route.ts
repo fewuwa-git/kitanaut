@@ -99,16 +99,49 @@ export async function POST() {
         if (html) kitas.push(parseDetail(html, url));
     });
 
-    const { error } = await supabase
+    // Bestehende Einträge laden (für Neu/Update-Unterscheidung)
+    const { data: existing } = await supabase
         .from('crm_prospects')
-        .upsert(kitas, { onConflict: 'source,source_url', ignoreDuplicates: false });
+        .select('id, source_url')
+        .eq('source', 'daks');
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const existingUrls = new Map((existing ?? []).map(e => [e.source_url, e.id]));
+
+    const newKitas = kitas.filter(k => !existingUrls.has(k.source_url));
+    const updateKitas = kitas.filter(k => existingUrls.has(k.source_url));
+
+    // Neue Kitas einfügen
+    let insertError: string | null = null;
+    if (newKitas.length > 0) {
+        const { error } = await supabase.from('crm_prospects').insert(newKitas);
+        if (error) insertError = error.message;
+    }
+
+    // Bestehende nur mit Kontaktdaten aktualisieren – status/notizen/extra_sources bleiben erhalten
+    await runInBatches(updateKitas, CONCURRENCY, async (kita) => {
+        const id = existingUrls.get(kita.source_url);
+        if (!id) return;
+        await supabase.from('crm_prospects').update({
+            name: kita.name,
+            strasse: kita.strasse,
+            plz: kita.plz,
+            ort: kita.ort,
+            bezirk: kita.bezirk,
+            telefon: kita.telefon,
+            email: kita.email,
+            webseite: kita.webseite,
+            traeger: kita.traeger,
+            plaetze: kita.plaetze,
+            updated_at: new Date().toISOString(),
+        }).eq('id', id);
+    });
+
+    if (insertError) return NextResponse.json({ error: insertError }, { status: 500 });
 
     const { count } = await supabase
         .from('crm_prospects')
         .select('*', { count: 'exact', head: true })
         .eq('source', 'daks');
 
-    return NextResponse.json({ total: kitas.length, dbTotal: count ?? 0 });
+    return NextResponse.json({ total: kitas.length, new: newKitas.length, updated: updateKitas.length, dbTotal: count ?? 0 });
 }
