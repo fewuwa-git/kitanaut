@@ -12,7 +12,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const { receiptId } = await params;
 
     const { data, error: fetchError } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .select('file_path')
         .eq('id', receiptId)
         .single();
@@ -22,7 +22,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     await supabase.storage.from(BUCKET).remove([data.file_path]);
 
     const { error } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .delete()
         .eq('id', receiptId);
 

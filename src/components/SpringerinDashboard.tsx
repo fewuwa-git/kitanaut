@@ -23,7 +23,7 @@ interface Abrechnung {
     status: string;
     totalStunden: number;
     totalBetrag: number;
-    pankonauten_users?: { name: string };
+    kitanaut_users?: { name: string };
 }
 
 interface SpringerinDashboardProps {
@@ -102,7 +102,7 @@ export default function SpringerinDashboard({ abrechnungen, initialNotes = [], c
 
         filtered.forEach(ab => {
             const monthKey = `${ab.jahr}-${String(ab.monat).padStart(2, '0')}`;
-            const springerName = ab.pankonauten_users?.name || 'Unbekannt';
+            const springerName = ab.kitanaut_users?.name || 'Unbekannt';
             springers.add(springerName);
 
             if (!monthlyGroups.has(monthKey)) {
@@ -176,7 +176,7 @@ export default function SpringerinDashboard({ abrechnungen, initialNotes = [], c
         if (!selectedSpringer) return [];
 
         return filteredData.rawFiltered
-            .filter(ab => (ab.pankonauten_users?.name || 'Unbekannt') === selectedSpringer)
+            .filter(ab => (ab.kitanaut_users?.name || 'Unbekannt') === selectedSpringer)
             .sort((a, b) => {
                 const dateA = new Date(a.jahr, a.monat - 1).getTime();
                 const dateB = new Date(b.jahr, b.monat - 1).getTime();

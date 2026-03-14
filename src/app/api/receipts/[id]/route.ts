@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const { data } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .select('file_path')
         .eq('id', id)
         .single();
@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const body = await req.json();
 
     const { data: receipt } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .select('file_path, file_name')
         .eq('id', id)
         .single();
@@ -45,13 +45,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         if (!receipt.file_path.startsWith('unlinked/')) {
             const { error: moveError } = await supabase.storage.from(BUCKET).move(receipt.file_path, newPath);
             if (!moveError) {
-                await supabase.from('pankonauten_transaction_receipts')
+                await supabase.from('kitanaut_transaction_receipts')
                     .update({ file_path: newPath, transaction_id: null, linked_method: null, linked_at: null, linked_by: null })
                     .eq('id', id);
                 return NextResponse.json({ ok: true, file_path: newPath });
             }
         }
-        await supabase.from('pankonauten_transaction_receipts')
+        await supabase.from('kitanaut_transaction_receipts')
             .update({ transaction_id: null, linked_method: null, linked_at: null, linked_by: null })
             .eq('id', id);
         return NextResponse.json({ ok: true, file_path: receipt.file_path });
@@ -70,13 +70,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         const newPath = `${transaction_id}/${fileName}`;
         const { error: moveError } = await supabase.storage.from(BUCKET).move(receipt.file_path, newPath);
         if (!moveError) {
-            await supabase.from('pankonauten_transaction_receipts').update({ file_path: newPath, ...linkFields }).eq('id', id);
+            await supabase.from('kitanaut_transaction_receipts').update({ file_path: newPath, ...linkFields }).eq('id', id);
             return NextResponse.json({ ok: true });
         }
     }
 
     const { error } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .update(linkFields)
         .eq('id', id);
 
@@ -93,7 +93,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const { id } = await params;
 
     const { data } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .select('file_path')
         .eq('id', id)
         .single();
@@ -101,7 +101,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!data) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
 
     await supabase.storage.from(BUCKET).remove([data.file_path]);
-    await supabase.from('pankonauten_transaction_receipts').delete().eq('id', id);
+    await supabase.from('kitanaut_transaction_receipts').delete().eq('id', id);
 
     return NextResponse.json({ ok: true });
 }

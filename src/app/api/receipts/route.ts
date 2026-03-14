@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     // Duplicate check
     const { data: existing } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .select('id, file_name, uploaded_at, transaction_id')
         .eq('file_hash', fileHash)
         .maybeSingle();
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 });
 
     const { data, error } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .insert({ transaction_id: null, file_path: filePath, file_name: fileName, file_size: fileData.length, file_hash: fileHash, organization_id: payload.orgId })
         .select()
         .single();

@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const jahr = searchParams.get('jahr');
     const monat = searchParams.get('monat');
 
-    let query = supabase.from('pankonauten_springerin_notes').select('*').eq('organization_id', payload.orgId);
+    let query = supabase.from('kitanaut_springerin_notes').select('*').eq('organization_id', payload.orgId);
 
     if (jahr) query = query.eq('jahr', parseInt(jahr));
     if (monat) query = query.eq('monat', parseInt(monat));
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     }
 
     const { data, error } = await supabase
-        .from('pankonauten_springerin_notes')
+        .from('kitanaut_springerin_notes')
         .upsert({
             jahr,
             monat,

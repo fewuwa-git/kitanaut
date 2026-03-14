@@ -120,31 +120,31 @@ const DEMO_EMAIL_TEMPLATES = [
 
 async function resetDemoData() {
     console.log('Deleting existing demo data...');
-    await supabase.from('pankonauten_transaction_receipts').delete().eq('organization_id', DEMO_ORG_ID);
-    await supabase.from('pankonauten_springerin_notes').delete().eq('organization_id', DEMO_ORG_ID);
-    await supabase.from('pankonauten_abrechnung_tage').delete().in('abrechnung_id', ['a0000002-0000-0000-0000-000000000001', 'a0000002-0000-0000-0000-000000000002']);
-    await supabase.from('pankonauten_abrechnungen').delete().eq('organization_id', DEMO_ORG_ID);
-    await supabase.from('pankonauten_belege').delete().eq('organization_id', DEMO_ORG_ID);
-    await supabase.from('pankonauten_transactions').delete().eq('organization_id', DEMO_ORG_ID);
-    await supabase.from('pankonauten_category_rules').delete().eq('organization_id', DEMO_ORG_ID);
-    await supabase.from('pankonauten_categories').delete().eq('organization_id', DEMO_ORG_ID);
-    await supabase.from('pankonauten_email_templates').delete().eq('organization_id', DEMO_ORG_ID);
-    await supabase.from('pankonauten_users').delete().eq('organization_id', DEMO_ORG_ID);
+    await supabase.from('kitanaut_transaction_receipts').delete().eq('organization_id', DEMO_ORG_ID);
+    await supabase.from('kitanaut_springerin_notes').delete().eq('organization_id', DEMO_ORG_ID);
+    await supabase.from('kitanaut_abrechnung_tage').delete().in('abrechnung_id', ['a0000002-0000-0000-0000-000000000001', 'a0000002-0000-0000-0000-000000000002']);
+    await supabase.from('kitanaut_abrechnungen').delete().eq('organization_id', DEMO_ORG_ID);
+    await supabase.from('kitanaut_belege').delete().eq('organization_id', DEMO_ORG_ID);
+    await supabase.from('kitanaut_transactions').delete().eq('organization_id', DEMO_ORG_ID);
+    await supabase.from('kitanaut_category_rules').delete().eq('organization_id', DEMO_ORG_ID);
+    await supabase.from('kitanaut_categories').delete().eq('organization_id', DEMO_ORG_ID);
+    await supabase.from('kitanaut_email_templates').delete().eq('organization_id', DEMO_ORG_ID);
+    await supabase.from('kitanaut_users').delete().eq('organization_id', DEMO_ORG_ID);
 
     console.log('Inserting users...');
-    const { error: usersErr } = await supabase.from('pankonauten_users').insert(
+    const { error: usersErr } = await supabase.from('kitanaut_users').insert(
         DEMO_USERS.map(u => ({ ...u, password: DEMO_PASSWORD_HASH, organization_id: DEMO_ORG_ID, status: 'active', created_at: new Date().toISOString() }))
     );
     if (usersErr) throw new Error('Users insert failed: ' + usersErr.message);
 
     console.log('Inserting categories...');
-    const { error: catErr } = await supabase.from('pankonauten_categories').insert(
+    const { error: catErr } = await supabase.from('kitanaut_categories').insert(
         DEMO_CATEGORIES.map(c => ({ ...c, organization_id: DEMO_ORG_ID }))
     );
     if (catErr) throw new Error('Categories insert failed: ' + catErr.message);
 
     console.log('Inserting transactions...');
-    const { error: txErr } = await supabase.from('pankonauten_transactions').insert(
+    const { error: txErr } = await supabase.from('kitanaut_transactions').insert(
         DEMO_TRANSACTIONS.map(t => ({ ...t, organization_id: DEMO_ORG_ID }))
     );
     if (txErr) throw new Error('Transactions insert failed: ' + txErr.message);
@@ -152,16 +152,16 @@ async function resetDemoData() {
     console.log('Inserting abrechnungen...');
     for (const abrechnung of DEMO_ABRECHNUNGEN) {
         const { tage, ...abrechnungData } = abrechnung;
-        const { error: aErr } = await supabase.from('pankonauten_abrechnungen').insert(abrechnungData);
+        const { error: aErr } = await supabase.from('kitanaut_abrechnungen').insert(abrechnungData);
         if (aErr) throw new Error('Abrechnung insert failed: ' + aErr.message);
-        const { error: tErr } = await supabase.from('pankonauten_abrechnung_tage').insert(
+        const { error: tErr } = await supabase.from('kitanaut_abrechnung_tage').insert(
             tage.map(t => ({ ...t, abrechnung_id: abrechnung.id }))
         );
         if (tErr) throw new Error('Abrechnung tage insert failed: ' + tErr.message);
     }
 
     console.log('Inserting email templates...');
-    const { error: etErr } = await supabase.from('pankonauten_email_templates').upsert(
+    const { error: etErr } = await supabase.from('kitanaut_email_templates').upsert(
         DEMO_EMAIL_TEMPLATES.map(t => ({ ...t, organization_id: DEMO_ORG_ID })),
         { onConflict: 'id' }
     );

@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     }
 
     const { data } = await supabase
-        .from('pankonauten_settings')
+        .from('kitanaut_settings')
         .select('value')
         .eq('key', KEY)
         .single();
@@ -33,7 +33,7 @@ export async function PATCH(req: NextRequest) {
     if (!Array.isArray(names)) return NextResponse.json({ error: 'Ungültige Daten' }, { status: 400 });
 
     const { error } = await supabase
-        .from('pankonauten_settings')
+        .from('kitanaut_settings')
         .upsert({ key: KEY, value: JSON.stringify(names) }, { onConflict: 'key' });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

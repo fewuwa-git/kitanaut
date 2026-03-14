@@ -68,7 +68,7 @@ export default function BelegeTable({
         ? belege.filter(b =>
             b.titel.toLowerCase().includes(search.toLowerCase()) ||
             (b.beschreibung || '').toLowerCase().includes(search.toLowerCase()) ||
-            (b.pankonauten_users?.name || '').toLowerCase().includes(search.toLowerCase())
+            (b.kitanaut_users?.name || '').toLowerCase().includes(search.toLowerCase())
         )
         : belege;
 
@@ -145,7 +145,7 @@ export default function BelegeTable({
                                             </td>
                                             {isAdmin && (
                                                 <td style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-                                                    {b.pankonauten_users?.name || '–'}
+                                                    {b.kitanaut_users?.name || '–'}
                                                 </td>
                                             )}
                                             <td style={{ fontWeight: 500 }}>{b.titel}</td>

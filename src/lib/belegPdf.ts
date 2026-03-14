@@ -57,7 +57,7 @@ export async function generateBelegPDF(beleg: Beleg): Promise<string> {
 
     setBlue();
 
-    const user = beleg.pankonauten_users;
+    const user = beleg.kitanaut_users;
     const brutto = beleg.betrag;
     const netto  = beleg.netto;
     const mwstSatz   = beleg.mwst_satz;

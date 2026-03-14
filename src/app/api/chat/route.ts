@@ -25,13 +25,13 @@ Rechne Summen und Statistiken selbst aus, wenn die Daten es erlauben.`;
 async function buildContext(orgId: string): Promise<{ context: string; txCount: number; dateFrom: string; dateTo: string }> {
     const [{ data: transactions }, { data: receipts }] = await Promise.all([
         supabase
-            .from('pankonauten_transactions')
+            .from('kitanaut_transactions')
             .select('date, description, counterparty, amount, category')
             .eq('organization_id', orgId)
             .order('date', { ascending: false })
             .limit(600),
         supabase
-            .from('pankonauten_transaction_receipts')
+            .from('kitanaut_transaction_receipts')
             .select('file_name, ai_vendor, ai_amount, ai_date, ai_description, linked_transaction_id')
             .eq('organization_id', orgId)
             .order('created_at', { ascending: false })

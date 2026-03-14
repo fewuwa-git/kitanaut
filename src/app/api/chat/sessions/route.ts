@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { data, error } = await supabase
-        .from('pankonauten_chat_sessions')
+        .from('kitanaut_chat_sessions')
         .select('id, title, created_at, updated_at')
         .eq('user_id', payload.userId)
         .order('updated_at', { ascending: false })
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     if (!title || !messages) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
     const { data, error } = await supabase
-        .from('pankonauten_chat_sessions')
+        .from('kitanaut_chat_sessions')
         .insert({ user_id: payload.userId, title, messages })
         .select('id')
         .single();

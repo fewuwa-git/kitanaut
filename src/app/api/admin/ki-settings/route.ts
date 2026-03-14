@@ -63,7 +63,7 @@ export async function PATCH(req: NextRequest) {
 
     if (upserts.length > 0) {
         const { error } = await supabase
-            .from('pankonauten_settings')
+            .from('kitanaut_settings')
             .upsert(upserts, { onConflict: 'key' });
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     }

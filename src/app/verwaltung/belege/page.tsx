@@ -31,7 +31,7 @@ async function BelegeSection({ tab, orgId }: { tab: string; orgId: string }) {
     let txMap: Record<string, any> = {};
     if (savedTxIds.length > 0) {
         const { data: txs } = await supabase
-            .from('pankonauten_transactions')
+            .from('kitanaut_transactions')
             .select('id, date, description, counterparty, amount, category')
             .eq('organization_id', orgId)
             .in('id', savedTxIds);

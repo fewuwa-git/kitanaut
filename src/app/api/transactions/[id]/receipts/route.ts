@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const { data, error } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .select('*')
         .eq('transaction_id', id)
         .order('uploaded_at', { ascending: false });
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Duplicate check
     const { data: existing } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .select('id, file_name, uploaded_at, transaction_id')
         .eq('file_hash', fileHash)
         .maybeSingle();
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 });
 
     const { data, error } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .insert({ transaction_id: id, file_path: filePath, file_name: fileName, file_size: fileData.length, file_hash: fileHash, organization_id: payload.orgId })
         .select()
         .single();

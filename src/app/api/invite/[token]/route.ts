@@ -9,7 +9,7 @@ export async function GET(
     const { token } = await params;
 
     const { data: user, error } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .select('id, name, email, invite_token, invite_expires_at, status')
         .eq('invite_token', token)
         .single();
@@ -41,7 +41,7 @@ export async function POST(
     }
 
     const { data: user, error } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .select('id, invite_expires_at, status')
         .eq('invite_token', token)
         .single();
@@ -61,7 +61,7 @@ export async function POST(
     const hashed = await bcrypt.hash(password, 10);
 
     const { error: updateError } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .update({
             password: hashed,
             status: 'active',

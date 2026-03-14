@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const { data, error } = await supabase
-        .from('pankonauten_chat_sessions')
+        .from('kitanaut_chat_sessions')
         .select('id, title, messages, created_at, updated_at')
         .eq('id', id)
         .eq('user_id', payload.userId)
@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (body.title !== undefined) update.title = body.title;
 
     const { error } = await supabase
-        .from('pankonauten_chat_sessions')
+        .from('kitanaut_chat_sessions')
         .update(update)
         .eq('id', id)
         .eq('user_id', payload.userId);
@@ -47,7 +47,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     const { id } = await params;
     const { error } = await supabase
-        .from('pankonauten_chat_sessions')
+        .from('kitanaut_chat_sessions')
         .delete()
         .eq('id', id)
         .eq('user_id', payload.userId);

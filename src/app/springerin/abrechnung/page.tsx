@@ -144,9 +144,9 @@ async function AbrechnungTable({
                                                 <td style={{ textAlign: 'right' }}>
                                                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                         <PDFOverviewButton
-                                                            user={ab.pankonauten_users || currentUser}
+                                                            user={ab.kitanaut_users || currentUser}
                                                             monthLabel={`${ab.jahr} – ${getMonthName(ab.monat)}`}
-                                                            tage={ab.pankonauten_abrechnung_tage || []}
+                                                            tage={ab.kitanaut_abrechnung_tage || []}
                                                             totalStunden={ab.totalStunden}
                                                             totalBetrag={ab.totalBetrag}
                                                             abrechnungId={ab.id}
@@ -197,7 +197,7 @@ async function AbrechnungTable({
                                                     <tr key={ab.id}>
                                                         {role === 'admin' && (
                                                             <td style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-                                                                {ab.pankonauten_users?.name || 'Unbekannt'}
+                                                                {ab.kitanaut_users?.name || 'Unbekannt'}
                                                             </td>
                                                         )}
                                                         <td style={{ whiteSpace: 'nowrap' }}>
@@ -224,9 +224,9 @@ async function AbrechnungTable({
                                                         <td style={{ textAlign: 'right' }}>
                                                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                                 <PDFOverviewButton
-                                                                    user={ab.pankonauten_users || currentUser}
+                                                                    user={ab.kitanaut_users || currentUser}
                                                                     monthLabel={`${ab.jahr} – ${getMonthName(ab.monat)}`}
-                                                                    tage={ab.pankonauten_abrechnung_tage || []}
+                                                                    tage={ab.kitanaut_abrechnung_tage || []}
                                                                     totalStunden={ab.totalStunden}
                                                                     totalBetrag={ab.totalBetrag}
                                                                     abrechnungId={ab.id}
@@ -247,19 +247,19 @@ async function AbrechnungTable({
                                                                 {role === 'admin' && ab.status === 'entwurf' && (
                                                                     <MarkAsBezahltButton
                                                                         id={ab.id}
-                                                                        label={`${ab.pankonauten_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
+                                                                        label={`${ab.kitanaut_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
                                                                         targetStatus="eingereicht"
                                                                     />
                                                                 )}
                                                                 {role === 'admin' && ab.status === 'eingereicht' && (
                                                                     <MarkAsBezahltButton
                                                                         id={ab.id}
-                                                                        label={`${ab.pankonauten_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
+                                                                        label={`${ab.kitanaut_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
                                                                         targetStatus="bezahlt"
-                                                                        pdfProps={ab.pankonauten_users ? {
-                                                                            user: ab.pankonauten_users,
+                                                                        pdfProps={ab.kitanaut_users ? {
+                                                                            user: ab.kitanaut_users,
                                                                             monthLabel: `${ab.jahr} – ${getMonthName(ab.monat)}`,
-                                                                            tage: ab.pankonauten_abrechnung_tage || [],
+                                                                            tage: ab.kitanaut_abrechnung_tage || [],
                                                                             totalStunden: ab.totalStunden,
                                                                             totalBetrag: ab.totalBetrag,
                                                                             abrechnungId: ab.id,
@@ -272,7 +272,7 @@ async function AbrechnungTable({
                                                                 {role === 'admin' && (
                                                                     <DeleteAbrechnungButton
                                                                         id={ab.id}
-                                                                        label={`${ab.pankonauten_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
+                                                                        label={`${ab.kitanaut_users?.name || 'Unbekannt'} (${ab.jahr}-${ab.monat})`}
                                                                     />
                                                                 )}
                                                             </div>

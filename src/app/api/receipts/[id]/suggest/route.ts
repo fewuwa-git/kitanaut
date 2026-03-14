@@ -177,7 +177,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const kiSettings = await getKiSettings();
 
         const { data: receipt } = await supabase
-            .from('pankonauten_transaction_receipts')
+            .from('kitanaut_transaction_receipts')
             .select('file_path, file_name, ai_vendor, ai_amount, ai_date, ai_description, ai_invoice_number, ai_suggestions')
             .eq('id', id)
             .single();
@@ -270,7 +270,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         mergeField('ai_description', extracted.description, receipt.ai_description);
         mergeField('ai_invoice_number', extracted.invoice_number, receipt.ai_invoice_number);
         if (Object.keys(extractionUpdate).length > 0) {
-            await supabase.from('pankonauten_transaction_receipts').update(extractionUpdate).eq('id', id);
+            await supabase.from('kitanaut_transaction_receipts').update(extractionUpdate).eq('id', id);
         }
 
         // Step 2: Filter transactions
@@ -423,7 +423,7 @@ Welche 3 Buchungen passen am besten zu diesem Beleg? ★-markierte Buchungen hab
         // Step 5: Save
         const newSuggestions = enriched.map((s: any) => ({ transaction_id: s.transaction_id, confidence: s.confidence, reason: s.reason }));
         if (JSON.stringify(newSuggestions) !== JSON.stringify(receipt.ai_suggestions ?? [])) {
-            await supabase.from('pankonauten_transaction_receipts').update({ ai_suggestions: newSuggestions }).eq('id', id);
+            await supabase.from('kitanaut_transaction_receipts').update({ ai_suggestions: newSuggestions }).eq('id', id);
         }
 
         return NextResponse.json({ extracted, suggestions: enriched });

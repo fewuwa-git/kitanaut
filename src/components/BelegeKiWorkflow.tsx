@@ -144,7 +144,7 @@ export default function BelegeKiWorkflow() {
                 <Step number={1} color="#3b82f6" title="Beleg aus Storage laden" subtitle="API-Route: POST /api/receipts/[id]/suggest">
                     <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
                         Der Beleg wird anhand der <code style={{ fontSize: 12, background: 'var(--bg)', padding: '1px 5px', borderRadius: 3 }}>id</code> aus der Tabelle{' '}
-                        <code style={{ fontSize: 12, background: 'var(--bg)', padding: '1px 5px', borderRadius: 3 }}>pankonauten_transaction_receipts</code> geladen.
+                        <code style={{ fontSize: 12, background: 'var(--bg)', padding: '1px 5px', borderRadius: 3 }}>kitanaut_transaction_receipts</code> geladen.
                         Die Datei wird aus dem Supabase Storage Bucket heruntergeladen und als Base64 kodiert.
                     </div>
                     <div style={{ marginTop: 12 }}>
@@ -280,7 +280,7 @@ Antworte NUR mit JSON (kein Markdown), reason max. 8 Wörter auf Deutsch:
                         automatisch wiederhergestellt – kein erneuter KI-Aufruf nötig.
                     </div>
                     <div style={CODE_STYLE}>{`-- Spalte: ai_suggestions (jsonb)
--- Tabelle: pankonauten_transaction_receipts
+-- Tabelle: kitanaut_transaction_receipts
 
 [
   {

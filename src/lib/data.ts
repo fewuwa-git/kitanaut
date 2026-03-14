@@ -131,7 +131,7 @@ export interface AbrechnungTag {
 
 export async function getUsers(orgId: string): Promise<User[]> {
     const { data, error } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .select('*')
         .eq('organization_id', orgId);
     if (error) {
@@ -143,7 +143,7 @@ export async function getUsers(orgId: string): Promise<User[]> {
 
 export async function getSpringerinUsers(orgId: string): Promise<User[]> {
     const { data, error } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .select('*')
         .eq('organization_id', orgId)
         .eq('role', 'springerin')
@@ -157,7 +157,7 @@ export async function getSpringerinUsers(orgId: string): Promise<User[]> {
 
 export async function getUserById(id: string, orgId: string): Promise<User | undefined> {
     const { data, error } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .select('*')
         .eq('id', id)
         .eq('organization_id', orgId)
@@ -170,7 +170,7 @@ export async function getUserById(id: string, orgId: string): Promise<User | und
 
 export async function getUserByEmail(email: string, orgId: string): Promise<User | undefined> {
     const { data, error } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .select('*')
         .ilike('email', email)
         .eq('organization_id', orgId)
@@ -183,7 +183,7 @@ export async function getUserByEmail(email: string, orgId: string): Promise<User
 
 export async function getUserByInviteToken(token: string): Promise<User | undefined> {
     const { data, error } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .select('*')
         .eq('invite_token', token)
         .single();
@@ -195,7 +195,7 @@ export async function getUserByInviteToken(token: string): Promise<User | undefi
 
 export async function saveUser(user: User & { organization_id: string }): Promise<void> {
     const { error } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .upsert(
             {
                 id: user.id,
@@ -226,7 +226,7 @@ export async function saveUser(user: User & { organization_id: string }): Promis
 
 export async function deleteUser(id: string, orgId: string): Promise<void> {
     const { error } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .delete()
         .eq('id', id)
         .eq('organization_id', orgId);
@@ -237,7 +237,7 @@ export async function deleteUser(id: string, orgId: string): Promise<void> {
 
 export async function updateUserLastLogin(id: string, timestamp: string): Promise<void> {
     const { error } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .update({ last_login_at: timestamp })
         .eq('id', id);
     if (error) {
@@ -254,7 +254,7 @@ export async function getTransactions(orgId: string): Promise<Transaction[]> {
 
     while (true) {
         const { data, error } = await supabase
-            .from('pankonauten_transactions')
+            .from('kitanaut_transactions')
             .select('*')
             .eq('organization_id', orgId)
             .order('date', { ascending: true })
@@ -283,7 +283,7 @@ export async function getTransactions(orgId: string): Promise<Transaction[]> {
 export async function saveTransactions(transactions: Transaction[], orgId: string): Promise<void> {
     // Delete all for this org
     const { error: delErr } = await supabase
-        .from('pankonauten_transactions')
+        .from('kitanaut_transactions')
         .delete()
         .eq('organization_id', orgId);
     if (delErr) {
@@ -296,7 +296,7 @@ export async function saveTransactions(transactions: Transaction[], orgId: strin
     const chunkSize = 1000;
     for (let i = 0; i < transactions.length; i += chunkSize) {
         const chunk = transactions.slice(i, i + chunkSize).map(t => ({ ...t, organization_id: orgId }));
-        const { error: insErr } = await supabase.from('pankonauten_transactions').insert(chunk);
+        const { error: insErr } = await supabase.from('kitanaut_transactions').insert(chunk);
         if (insErr) {
             throw new Error('Failed to insert transactions: ' + insErr.message);
         }
@@ -347,7 +347,7 @@ export async function addTransactions(newTransactions: Transaction[], orgId: str
 }
 export async function getTransactionsByCounterparty(name: string, orgId: string): Promise<Transaction[]> {
     const { data, error } = await supabase
-        .from('pankonauten_transactions')
+        .from('kitanaut_transactions')
         .select('*')
         .eq('organization_id', orgId)
         .order('date', { ascending: true });
@@ -375,7 +375,7 @@ export async function getTransactionsByCounterparty(name: string, orgId: string)
 
 export async function updateTransactionCategory(id: string, category: string, orgId: string): Promise<void> {
     const { error } = await supabase
-        .from('pankonauten_transactions')
+        .from('kitanaut_transactions')
         .update({ category })
         .eq('id', id)
         .eq('organization_id', orgId);
@@ -389,7 +389,7 @@ export async function updateTransactionCategory(id: string, category: string, or
 
 export async function getCategories(orgId: string): Promise<Category[]> {
     const { data, error } = await supabase
-        .from('pankonauten_categories')
+        .from('kitanaut_categories')
         .select('*')
         .eq('organization_id', orgId)
         .order('type', { ascending: true })
@@ -403,7 +403,7 @@ export async function getCategories(orgId: string): Promise<Category[]> {
 
 export async function createCategory(category: Category, orgId: string): Promise<void> {
     const { error } = await supabase
-        .from('pankonauten_categories')
+        .from('kitanaut_categories')
         .insert({ name: category.name, color: category.color, type: category.type, organization_id: orgId });
     if (error) {
         throw new Error('Failed to create category: ' + error.message);
@@ -414,7 +414,7 @@ export async function updateCategory(oldName: string, category: Category, orgId:
     // If name changed, update all transactions first, then update category
     if (oldName !== category.name) {
         const { error: txErr } = await supabase
-            .from('pankonauten_transactions')
+            .from('kitanaut_transactions')
             .update({ category: category.name })
             .eq('category', oldName)
             .eq('organization_id', orgId);
@@ -423,18 +423,18 @@ export async function updateCategory(oldName: string, category: Category, orgId:
         }
         // Delete old, insert new (Supabase: primary key can't be updated directly)
         const { error: delErr } = await supabase
-            .from('pankonauten_categories')
+            .from('kitanaut_categories')
             .delete()
             .eq('name', oldName)
             .eq('organization_id', orgId);
         if (delErr) throw new Error('Failed to delete old category: ' + delErr.message);
         const { error: insErr } = await supabase
-            .from('pankonauten_categories')
+            .from('kitanaut_categories')
             .insert({ name: category.name, color: category.color, type: category.type, organization_id: orgId });
         if (insErr) throw new Error('Failed to insert renamed category: ' + insErr.message);
     } else {
         const { error } = await supabase
-            .from('pankonauten_categories')
+            .from('kitanaut_categories')
             .update({ color: category.color, type: category.type })
             .eq('name', oldName)
             .eq('organization_id', orgId);
@@ -447,7 +447,7 @@ export async function updateCategory(oldName: string, category: Category, orgId:
 export async function deleteCategory(name: string, orgId: string): Promise<void> {
     // Check if any transactions use this category
     const { count, error: countErr } = await supabase
-        .from('pankonauten_transactions')
+        .from('kitanaut_transactions')
         .select('id', { count: 'exact', head: true })
         .eq('category', name)
         .eq('organization_id', orgId);
@@ -456,7 +456,7 @@ export async function deleteCategory(name: string, orgId: string): Promise<void>
         throw new Error(`Kategorie "${name}" wird von ${count} Buchung(en) verwendet und kann nicht gelöscht werden.`);
     }
     const { error } = await supabase
-        .from('pankonauten_categories')
+        .from('kitanaut_categories')
         .delete()
         .eq('name', name)
         .eq('organization_id', orgId);
@@ -469,7 +469,7 @@ export async function deleteCategory(name: string, orgId: string): Promise<void>
 
 export async function getAbrechnung(userId: string, jahr: number, monat: number, orgId: string): Promise<{ abrechnung: Abrechnung | null, tage: AbrechnungTag[] }> {
     const { data: abrechnung, error: abErr } = await supabase
-        .from('pankonauten_abrechnungen')
+        .from('kitanaut_abrechnungen')
         .select('*')
         .eq('user_id', userId)
         .eq('jahr', jahr)
@@ -485,7 +485,7 @@ export async function getAbrechnung(userId: string, jahr: number, monat: number,
     if (!abrechnung) return { abrechnung: null, tage: [] };
 
     const { data: tage, error: tageErr } = await supabase
-        .from('pankonauten_abrechnung_tage')
+        .from('kitanaut_abrechnung_tage')
         .select('*')
         .eq('abrechnung_id', abrechnung.id)
         .order('datum', { ascending: true });
@@ -500,7 +500,7 @@ export async function getAbrechnung(userId: string, jahr: number, monat: number,
 export async function saveAbrechnung(ab: Partial<Abrechnung>, orgId: string): Promise<Abrechnung> {
     const payload = { ...ab, organization_id: orgId, updated_at: new Date().toISOString() };
     const { data, error } = await supabase
-        .from('pankonauten_abrechnungen')
+        .from('kitanaut_abrechnungen')
         .upsert(payload, { onConflict: 'organization_id, user_id, jahr, monat' })
         .select()
         .single();
@@ -511,7 +511,7 @@ export async function saveAbrechnung(ab: Partial<Abrechnung>, orgId: string): Pr
 
 export async function updateAbrechnungStatus(id: string, status: string): Promise<Abrechnung> {
     const { data, error } = await supabase
-        .from('pankonauten_abrechnungen')
+        .from('kitanaut_abrechnungen')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()
@@ -523,7 +523,7 @@ export async function updateAbrechnungStatus(id: string, status: string): Promis
 
 export async function saveAbrechnungTag(tag: Partial<AbrechnungTag>): Promise<AbrechnungTag> {
     const { data, error } = await supabase
-        .from('pankonauten_abrechnung_tage')
+        .from('kitanaut_abrechnung_tage')
         .upsert(tag, { onConflict: 'abrechnung_id, datum' })
         .select()
         .single();
@@ -534,17 +534,17 @@ export async function saveAbrechnungTag(tag: Partial<AbrechnungTag>): Promise<Ab
 
 export async function getAbrechnungTagOwner(tagId: string): Promise<string | null> {
     const { data } = await supabase
-        .from('pankonauten_abrechnung_tage')
-        .select('pankonauten_abrechnungen(user_id)')
+        .from('kitanaut_abrechnung_tage')
+        .select('kitanaut_abrechnungen(user_id)')
         .eq('id', tagId)
         .single();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any)?.pankonauten_abrechnungen?.user_id ?? null;
+    return (data as any)?.kitanaut_abrechnungen?.user_id ?? null;
 }
 
 export async function deleteAbrechnungTag(tagId: string): Promise<void> {
     const { error } = await supabase
-        .from('pankonauten_abrechnung_tage')
+        .from('kitanaut_abrechnung_tage')
         .delete()
         .eq('id', tagId);
 
@@ -553,7 +553,7 @@ export async function deleteAbrechnungTag(tagId: string): Promise<void> {
 
 export async function deleteAbrechnung(id: string): Promise<void> {
     const { error } = await supabase
-        .from('pankonauten_abrechnungen')
+        .from('kitanaut_abrechnungen')
         .delete()
         .eq('id', id);
 
@@ -562,11 +562,11 @@ export async function deleteAbrechnung(id: string): Promise<void> {
 
 export async function getAllAbrechnungen(orgId: string, userId?: string): Promise<any[]> {
     let query = supabase
-        .from('pankonauten_abrechnungen')
+        .from('kitanaut_abrechnungen')
         .select(`
             *,
-            pankonauten_users (id, name, email, strasse, ort, iban, steuerid, unterschrift),
-            pankonauten_abrechnung_tage (*)
+            kitanaut_users (id, name, email, strasse, ort, iban, steuerid, unterschrift),
+            kitanaut_abrechnung_tage (*)
         `)
         .eq('organization_id', orgId);
 
@@ -584,7 +584,7 @@ export async function getAllAbrechnungen(orgId: string, userId?: string): Promis
     }
 
     return (abrechnungen || []).map(ab => {
-        const tage = ab.pankonauten_abrechnung_tage || [];
+        const tage = ab.kitanaut_abrechnung_tage || [];
         const totalStunden = tage.reduce((sum: number, t: any) => sum + Number(t.stunden), 0);
         const totalBetrag = tage.reduce((sum: number, t: any) => sum + Number(t.betrag), 0);
 
@@ -630,13 +630,13 @@ export interface Beleg {
     status: 'entwurf' | 'eingereicht' | 'bezahlt' | 'abgelehnt';
     created_at?: string;
     updated_at?: string;
-    pankonauten_users?: { id: string; name: string; email: string; strasse?: string; ort?: string; unterschrift?: string };
+    kitanaut_users?: { id: string; name: string; email: string; strasse?: string; ort?: string; unterschrift?: string };
 }
 
 export async function getNextBelegnummer(orgId: string): Promise<string> {
     const year = new Date().getFullYear();
     const { data } = await supabase
-        .from('pankonauten_belege')
+        .from('kitanaut_belege')
         .select('belegnummer')
         .eq('organization_id', orgId)
         .like('belegnummer', `BEL-${year}-%`);
@@ -649,8 +649,8 @@ export async function getNextBelegnummer(orgId: string): Promise<string> {
 
 export async function getBelegById(id: string, orgId: string): Promise<Beleg | null> {
     const { data, error } = await supabase
-        .from('pankonauten_belege')
-        .select('*, pankonauten_users(id, name, email, strasse, ort, unterschrift)')
+        .from('kitanaut_belege')
+        .select('*, kitanaut_users(id, name, email, strasse, ort, unterschrift)')
         .eq('id', id)
         .eq('organization_id', orgId)
         .single();
@@ -660,8 +660,8 @@ export async function getBelegById(id: string, orgId: string): Promise<Beleg | n
 
 export async function getBelege(orgId: string, userId?: string): Promise<Beleg[]> {
     let query = supabase
-        .from('pankonauten_belege')
-        .select('*, pankonauten_users(id, name, email, strasse, ort, unterschrift)')
+        .from('kitanaut_belege')
+        .select('*, kitanaut_users(id, name, email, strasse, ort, unterschrift)')
         .eq('organization_id', orgId)
         .order('datum', { ascending: false });
     if (userId) query = query.eq('user_id', userId);
@@ -672,10 +672,10 @@ export async function getBelege(orgId: string, userId?: string): Promise<Beleg[]
 
 export async function saveBeleg(beleg: Partial<Beleg>, orgId: string): Promise<Beleg> {
     // Strip the join field – it's not a column in the table
-    const { pankonauten_users: _, ...rest } = beleg as any;
+    const { kitanaut_users: _, ...rest } = beleg as any;
     const payload = { ...rest, organization_id: orgId, updated_at: new Date().toISOString() };
     const { data, error } = await supabase
-        .from('pankonauten_belege')
+        .from('kitanaut_belege')
         .upsert(payload, { onConflict: 'id' })
         .select()
         .single();
@@ -684,7 +684,7 @@ export async function saveBeleg(beleg: Partial<Beleg>, orgId: string): Promise<B
 }
 
 export async function deleteBeleg(id: string): Promise<void> {
-    const { error } = await supabase.from('pankonauten_belege').delete().eq('id', id);
+    const { error } = await supabase.from('kitanaut_belege').delete().eq('id', id);
     if (error) throw new Error('Failed to delete Beleg: ' + error.message);
 }
 
@@ -695,12 +695,12 @@ export async function seedNewOrg(newOrgId: string, newOrgName: string): Promise<
 
     // Copy categories
     const { data: cats } = await supabase
-        .from('pankonauten_categories')
+        .from('kitanaut_categories')
         .select('name, color, type')
         .eq('organization_id', SOURCE_ORG_ID);
 
     if (cats && cats.length > 0) {
-        await supabase.from('pankonauten_categories').insert(
+        await supabase.from('kitanaut_categories').insert(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             cats.map((c: any) => ({ ...c, organization_id: newOrgId }))
         );
@@ -708,12 +708,12 @@ export async function seedNewOrg(newOrgId: string, newOrgName: string): Promise<
 
     // Copy email templates, replacing "Pankonauten" with new kita name
     const { data: templates } = await supabase
-        .from('pankonauten_email_templates')
+        .from('kitanaut_email_templates')
         .select('id, name, subject, body')
         .eq('organization_id', SOURCE_ORG_ID);
 
     if (templates && templates.length > 0) {
-        await supabase.from('pankonauten_email_templates').insert(
+        await supabase.from('kitanaut_email_templates').insert(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             templates.map((t: any) => ({
                 id: t.id,
@@ -738,7 +738,7 @@ export interface SpringerinNote {
 }
 
 export async function getSpringerinNotes(orgId: string, jahr?: number, monat?: number): Promise<SpringerinNote[]> {
-    let query = supabase.from('pankonauten_springerin_notes').select('*').eq('organization_id', orgId);
+    let query = supabase.from('kitanaut_springerin_notes').select('*').eq('organization_id', orgId);
     if (jahr) query = query.eq('jahr', jahr);
     if (monat) query = query.eq('monat', monat);
 
@@ -752,7 +752,7 @@ export async function getSpringerinNotes(orgId: string, jahr?: number, monat?: n
 
 export async function saveSpringerinNote(note: Omit<SpringerinNote, 'id' | 'created_at'>, orgId: string): Promise<SpringerinNote | null> {
     const { data, error } = await supabase
-        .from('pankonauten_springerin_notes')
+        .from('kitanaut_springerin_notes')
         .upsert({ ...note, organization_id: orgId }, { onConflict: 'organization_id, jahr, monat' })
         .select()
         .single();
@@ -776,7 +776,7 @@ export interface EmailTemplate {
 
 export async function getEmailTemplates(orgId: string): Promise<EmailTemplate[]> {
     const { data, error } = await supabase
-        .from('pankonauten_email_templates')
+        .from('kitanaut_email_templates')
         .select('*')
         .eq('organization_id', orgId)
         .order('id');
@@ -786,7 +786,7 @@ export async function getEmailTemplates(orgId: string): Promise<EmailTemplate[]>
 
 export async function getEmailTemplate(id: string, orgId: string): Promise<EmailTemplate | null> {
     const { data, error } = await supabase
-        .from('pankonauten_email_templates')
+        .from('kitanaut_email_templates')
         .select('*')
         .eq('id', id)
         .eq('organization_id', orgId)
@@ -799,7 +799,7 @@ export async function saveEmailTemplate(id: string, subject: string, body: strin
     const payload: Record<string, string> = { subject, body, updated_at: new Date().toISOString() };
     if (name) payload.name = name;
     const { error } = await supabase
-        .from('pankonauten_email_templates')
+        .from('kitanaut_email_templates')
         .update(payload)
         .eq('id', id)
         .eq('organization_id', orgId);
@@ -810,7 +810,7 @@ export async function saveEmailTemplate(id: string, subject: string, body: strin
 
 export async function getCategoryRules(orgId: string): Promise<CategoryRule[]> {
     const { data, error } = await supabase
-        .from('pankonauten_category_rules')
+        .from('kitanaut_category_rules')
         .select('*')
         .eq('organization_id', orgId)
         .order('priority', { ascending: false })
@@ -821,7 +821,7 @@ export async function getCategoryRules(orgId: string): Promise<CategoryRule[]> {
 
 export async function createCategoryRule(rule: Omit<CategoryRule, 'id' | 'created_at'>, orgId: string): Promise<CategoryRule> {
     const { data, error } = await supabase
-        .from('pankonauten_category_rules')
+        .from('kitanaut_category_rules')
         .insert({ ...rule, organization_id: orgId })
         .select()
         .single();
@@ -831,7 +831,7 @@ export async function createCategoryRule(rule: Omit<CategoryRule, 'id' | 'create
 
 export async function updateCategoryRule(id: string, updates: Partial<Omit<CategoryRule, 'id' | 'created_at'>>): Promise<void> {
     const { error } = await supabase
-        .from('pankonauten_category_rules')
+        .from('kitanaut_category_rules')
         .update(updates)
         .eq('id', id);
     if (error) throw new Error('Failed to update category rule: ' + error.message);
@@ -839,7 +839,7 @@ export async function updateCategoryRule(id: string, updates: Partial<Omit<Categ
 
 export async function deleteCategoryRule(id: string): Promise<void> {
     const { error } = await supabase
-        .from('pankonauten_category_rules')
+        .from('kitanaut_category_rules')
         .delete()
         .eq('id', id);
     if (error) throw new Error('Failed to delete category rule: ' + error.message);
@@ -873,7 +873,7 @@ export async function applyRulesToTransactions(overwrite: boolean, orgId: string
         }
         for (const [category, ids] of byCategory) {
             const { error } = await supabase
-                .from('pankonauten_transactions')
+                .from('kitanaut_transactions')
                 .update({ category })
                 .in('id', ids)
                 .eq('organization_id', orgId);
@@ -888,7 +888,7 @@ export async function applyRulesToTransactions(overwrite: boolean, orgId: string
 
 export async function getTransactionIdsWithReceipts(orgId: string): Promise<string[]> {
     const { data, error } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .select('transaction_id')
         .eq('organization_id', orgId);
     if (error) { console.error('Error fetching receipt ids:', error); return []; }
@@ -919,7 +919,7 @@ export interface TransactionReceipt {
 
 export async function getAllTransactionReceipts(orgId: string): Promise<TransactionReceipt[]> {
     const { data: receipts, error } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .select('*')
         .eq('organization_id', orgId)
         .not('transaction_id', 'is', null)
@@ -929,7 +929,7 @@ export async function getAllTransactionReceipts(orgId: string): Promise<Transact
 
     const txIds = [...new Set(receipts.map((r: any) => r.transaction_id))];
     const { data: txs } = await supabase
-        .from('pankonauten_transactions')
+        .from('kitanaut_transactions')
         .select('id, date, description, counterparty, amount, category')
         .eq('organization_id', orgId)
         .in('id', txIds);
@@ -951,7 +951,7 @@ export async function getAllTransactionReceipts(orgId: string): Promise<Transact
 
 export async function getUnlinkedReceipts(orgId: string): Promise<Omit<TransactionReceipt, 'transaction_date' | 'transaction_description' | 'transaction_counterparty' | 'transaction_amount' | 'transaction_category'>[]> {
     const { data, error } = await supabase
-        .from('pankonauten_transaction_receipts')
+        .from('kitanaut_transaction_receipts')
         .select('*')
         .eq('organization_id', orgId)
         .is('transaction_id', null)

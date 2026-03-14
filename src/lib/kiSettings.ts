@@ -50,7 +50,7 @@ const KI_KEYS = [
 
 export async function getKiSettings(): Promise<KiSettings> {
     const { data } = await supabase
-        .from('pankonauten_settings')
+        .from('kitanaut_settings')
         .select('key, value')
         .in('key', KI_KEYS as unknown as string[]);
 

@@ -16,7 +16,7 @@ export async function POST(
     const { id } = await params;
 
     const { data: user, error } = await supabase
-        .from('pankonauten_users')
+        .from('kitanaut_users')
         .select('name, email, invite_token, status')
         .eq('id', id)
         .single();
