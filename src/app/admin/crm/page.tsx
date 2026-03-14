@@ -144,7 +144,7 @@ export default function CrmPage() {
                 <div>
                     <h1 style={{ marginTop: 0, marginBottom: '0.25rem' }}>CRM – Kontakte</h1>
                     <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
-                        Alle Kita-Kontakte aus DaKS und manuellen Einträgen
+                        Alle Kita-Kontakte aus DaKS, Kita-Navigator und Senatsliste
                     </p>
                 </div>
                 <span style={{
@@ -180,6 +180,7 @@ export default function CrmPage() {
                     <option value="">Alle Quellen</option>
                     <option value="daks">DaKS</option>
                     <option value="kita-navigator">Kita-Navigator</option>
+                    <option value="senatsliste">Senatsliste</option>
                     <option value="manual">Manuell</option>
                 </select>
                 <select
@@ -277,8 +278,8 @@ export default function CrmPage() {
                                                 borderRadius: '10px',
                                                 fontSize: '11px',
                                                 fontWeight: 600,
-                                                background: p.source === 'daks' ? 'rgba(59,130,246,0.12)' : p.source === 'kita-navigator' ? 'rgba(168,85,247,0.12)' : 'rgba(148,163,184,0.12)',
-                                                color: p.source === 'daks' ? '#3b82f6' : p.source === 'kita-navigator' ? '#a855f7' : '#94a3b8',
+                                                background: p.source === 'daks' ? 'rgba(59,130,246,0.12)' : p.source === 'kita-navigator' ? 'rgba(168,85,247,0.12)' : p.source === 'senatsliste' ? 'rgba(22,163,74,0.12)' : 'rgba(148,163,184,0.12)',
+                                                color: p.source === 'daks' ? '#3b82f6' : p.source === 'kita-navigator' ? '#a855f7' : p.source === 'senatsliste' ? '#16a34a' : '#94a3b8',
                                                 textTransform: 'uppercase',
                                                 letterSpacing: '0.04em',
                                             }}>
