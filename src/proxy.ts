@@ -28,6 +28,10 @@ export async function proxy(req: NextRequest) {
 
     // ── Super-Admin (admin.kitanaut.de) ───────────────────────────────────────
     if (subdomain === 'admin') {
+        if (pathname === '/' || pathname === '/login') {
+            return NextResponse.redirect(new URL('/admin/login', req.url), { status: 301 });
+        }
+
         if (
             pathname.startsWith('/admin/login') ||
             pathname.startsWith('/api/admin-auth')
