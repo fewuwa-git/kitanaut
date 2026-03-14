@@ -1,25 +1,31 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { verifySuperAdminToken } from '@/lib/auth';
+import { Client } from 'pg';
 import * as cheerio from 'cheerio';
 
 export const maxDuration = 300;
 
+async function requireAdmin() {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('admin_token')?.value;
+    return token ? await verifySuperAdminToken(token) : null;
+}
+
+function getClient() {
+    return new Client({
+        host: 'db.mvlnkqgitafkamsujymi.supabase.co',
+        user: 'postgres',
+        password: 'xwd7bex2kby!xdb!CTK',
+        database: 'postgres',
+        ssl: { rejectUnauthorized: false },
+        port: 5432,
+    });
+}
+
 const BASE_URL = 'https://www.daks-berlin.de';
 const LIST_URL = 'https://www.daks-berlin.de/mitglieder/suche/alle/alle/search';
 const CONCURRENCY = 15;
-
-export interface DaksKita {
-    url: string;
-    name: string;
-    strasse: string;
-    plz: string;
-    ort: string;
-    bezirk: string;
-    telefon: string;
-    email: string;
-    webseite: string;
-    traeger: string;
-    plaetze: string;
-}
 
 async function fetchHtml(url: string): Promise<string | null> {
     try {
@@ -39,6 +45,20 @@ function field($: cheerio.CheerioAPI, name: string): string {
     if (!el.length) return '';
     const item = el.find('.field__item').first();
     return (item.length ? item : el).text().trim();
+}
+
+interface DaksKita {
+    source_url: string;
+    name: string;
+    strasse: string;
+    plz: string;
+    ort: string;
+    bezirk: string;
+    telefon: string;
+    email: string;
+    webseite: string;
+    traeger: string;
+    plaetze: number | null;
 }
 
 function parseDetail(html: string, url: string): DaksKita {
@@ -62,9 +82,10 @@ function parseDetail(html: string, url: string): DaksKita {
     const traeger = traegerDiv.find('.field__item').first().text().trim();
 
     const plaetzeDiv = $('[class*="field--name-field-daks-rest-places-total"]').first();
-    const plaetze = plaetzeDiv.find('.field__item').first().text().trim();
+    const plaetzeText = plaetzeDiv.find('.field__item').first().text().trim();
+    const plaetze = plaetzeText ? parseInt(plaetzeText, 10) || null : null;
 
-    return { url, name, strasse, plz, ort, bezirk, telefon, email, webseite, traeger, plaetze };
+    return { source_url: url, name, strasse, plz, ort, bezirk, telefon, email, webseite, traeger, plaetze };
 }
 
 async function runInBatches<T>(items: T[], concurrency: number, fn: (item: T) => Promise<unknown>) {
@@ -78,6 +99,8 @@ async function runInBatches<T>(items: T[], concurrency: number, fn: (item: T) =>
 }
 
 export async function POST() {
+    if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const listHtml = await fetchHtml(LIST_URL);
     if (!listHtml) {
         return NextResponse.json({ error: 'Mitgliederliste konnte nicht geladen werden.' }, { status: 502 });
@@ -102,7 +125,45 @@ export async function POST() {
         }
     });
 
-    kitas.sort((a, b) => a.name.localeCompare(b.name, 'de'));
+    const client = getClient();
+    try {
+        await client.connect();
 
-    return NextResponse.json({ kitas, total: kitas.length, scrapedAt: new Date().toISOString() });
+        let imported = 0;
+        let updated = 0;
+
+        for (const k of kitas) {
+            const result = await client.query(`
+                INSERT INTO crm_prospects (name, strasse, plz, ort, bezirk, telefon, email, webseite, traeger, plaetze, source, source_url)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'daks', $11)
+                ON CONFLICT (source, source_url) WHERE source_url <> '' DO UPDATE SET
+                    name = EXCLUDED.name,
+                    strasse = EXCLUDED.strasse,
+                    plz = EXCLUDED.plz,
+                    ort = EXCLUDED.ort,
+                    bezirk = EXCLUDED.bezirk,
+                    telefon = EXCLUDED.telefon,
+                    email = EXCLUDED.email,
+                    webseite = EXCLUDED.webseite,
+                    traeger = EXCLUDED.traeger,
+                    plaetze = EXCLUDED.plaetze,
+                    updated_at = NOW()
+                RETURNING (xmax = 0) AS inserted
+            `, [k.name, k.strasse, k.plz, k.ort, k.bezirk, k.telefon, k.email,
+                k.webseite, k.traeger, k.plaetze, k.source_url]);
+
+            if (result.rows[0]?.inserted) {
+                imported++;
+            } else {
+                updated++;
+            }
+        }
+
+        const totalResult = await client.query(`SELECT COUNT(*) FROM crm_prospects WHERE source = 'daks'`);
+        const total = parseInt(totalResult.rows[0].count, 10);
+
+        return NextResponse.json({ imported, updated, total });
+    } finally {
+        await client.end();
+    }
 }
