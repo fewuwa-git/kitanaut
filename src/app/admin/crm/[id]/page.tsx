@@ -250,7 +250,7 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                 <Row label="Adresse">
                     <span>{adresse || '–'}</span>
                     {adresse && (
-                        <a href={`https://www.google.com/maps/search/${encodeURIComponent(adresse)}`}
+                        <a href={`https://www.google.com/maps/search/${encodeURIComponent([prospect.name, adresse].filter(Boolean).join(', '))}`}
                             target="_blank" rel="noopener noreferrer"
                             style={{ marginLeft: '10px', fontSize: '12px', color: 'var(--text-muted)', textDecoration: 'none' }}
                             onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
