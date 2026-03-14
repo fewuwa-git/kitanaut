@@ -47,9 +47,18 @@ function normalizePhone(tel: string): string {
     return digits;
 }
 
+function normalizeStrasse(s: string): string {
+    return s.toLowerCase()
+        .replace(/str\.\s*/g, 'straße')
+        .replace(/\bstr\b/g, 'straße')
+        .replace(/\d+[a-z]?/g, '')  // Hausnummern entfernen (10, 010, 10a)
+        .replace(/\s+/g, '')
+        .replace(/[.\-/]/g, '')
+        .substring(0, 15);
+}
+
 function matchKey(plz: string, strasse: string): string {
-    const s = strasse.toLowerCase().replace(/\s+/g, '').substring(0, 12);
-    return `${plz.trim()}|${s}`;
+    return `${plz.trim()}|${normalizeStrasse(strasse)}`;
 }
 
 async function runInBatches<T>(items: T[], concurrency: number, fn: (item: T) => Promise<unknown>) {
