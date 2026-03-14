@@ -20,6 +20,19 @@ interface SenatsExtraSource {
     traeger: string;
 }
 
+interface KietzeeExtraSource {
+    source: 'kietzee';
+    source_url: string;
+    email: string;
+    telefon: string;
+    webseite: string;
+    plaetze: number | null;
+    plaetze_unter3: number | null;
+    plaetze_ueber3: number | null;
+    traeger: string;
+    typ: string;
+}
+
 interface Prospect {
     id: number;
     name: string;
@@ -36,7 +49,7 @@ interface Prospect {
     source_url: string;
     status: string;
     notizen: string;
-    extra_sources: (KnExtraSource | SenatsExtraSource)[];
+    extra_sources: (KnExtraSource | SenatsExtraSource | KietzeeExtraSource)[];
     created_at: string;
     updated_at: string;
 }
@@ -186,6 +199,7 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
     const adresse = [prospect.strasse, [prospect.plz, prospect.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ');
     const kn = prospect.extra_sources?.find(e => e.source === 'kita-navigator') as KnExtraSource | undefined;
     const senat = prospect.extra_sources?.find(e => e.source === 'senatsliste') as SenatsExtraSource | undefined;
+    const kietzee = prospect.extra_sources?.find(e => e.source === 'kietzee') as KietzeeExtraSource | undefined;
 
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -227,7 +241,7 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                 <div style={{ padding: '14px 0 6px', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                     Kontakt
                 </div>
-                {(prospect.telefon || kn?.telefon || senat?.telefon) && (
+                {(prospect.telefon || kn?.telefon || senat?.telefon || kietzee?.telefon) && (
                     <Row label="Telefon">
                         <ContactField
                             primary={prospect.telefon}
@@ -243,9 +257,15 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                                 <a href={`tel:${senat.telefon}`} style={{ color: '#16a34a', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{senat.telefon}</a>
                             </div>
                         )}
+                        {kietzee?.telefon && normalizePhone(kietzee.telefon) !== normalizePhone(prospect.telefon) && normalizePhone(kietzee.telefon) !== normalizePhone(kn?.telefon ?? '') && normalizePhone(kietzee.telefon) !== normalizePhone(senat?.telefon ?? '') && (
+                            <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '10px', fontWeight: 600, color: '#f97316', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap' }}>Kietzee</span>
+                                <a href={`tel:${kietzee.telefon}`} style={{ color: '#f97316', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{kietzee.telefon}</a>
+                            </div>
+                        )}
                     </Row>
                 )}
-                {(prospect.email || kn?.email) && (
+                {(prospect.email || kn?.email || kietzee?.email) && (
                     <Row label="E-Mail">
                         <ContactField
                             primary={prospect.email}
@@ -253,9 +273,15 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                             renderPrimary={v => <a href={`mailto:${v}`} style={{ color: 'var(--accent)', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
                             renderKn={v => <a href={`mailto:${v}`} style={{ color: '#a855f7', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
                         />
+                        {kietzee?.email && kietzee.email.toLowerCase() !== prospect.email.toLowerCase() && kietzee.email.toLowerCase() !== (kn?.email ?? '').toLowerCase() && (
+                            <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '10px', fontWeight: 600, color: '#f97316', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap' }}>Kietzee</span>
+                                <a href={`mailto:${kietzee.email}`} style={{ color: '#f97316', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{kietzee.email}</a>
+                            </div>
+                        )}
                     </Row>
                 )}
-                {(prospect.webseite || kn?.webseite) && (
+                {(prospect.webseite || kn?.webseite || kietzee?.webseite) && (
                     <Row label="Webseite">
                         <ContactField
                             primary={prospect.webseite}
@@ -264,9 +290,15 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                             renderPrimary={v => <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{(() => { try { return new URL(v).hostname.replace('www.', ''); } catch { return v; } })()}</a>}
                             renderKn={v => <a href={v} target="_blank" rel="noopener noreferrer" style={{ color: '#a855f7', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{(() => { try { return new URL(v).hostname.replace('www.', ''); } catch { return v; } })()}</a>}
                         />
+                        {kietzee?.webseite && normalizeUrl(kietzee.webseite) !== normalizeUrl(prospect.webseite) && normalizeUrl(kietzee.webseite) !== normalizeUrl(kn?.webseite ?? '') && (
+                            <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '10px', fontWeight: 600, color: '#f97316', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap' }}>Kietzee</span>
+                                <a href={kietzee.webseite} target="_blank" rel="noopener noreferrer" style={{ color: '#f97316', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{(() => { try { return new URL(kietzee.webseite).hostname.replace('www.', ''); } catch { return kietzee.webseite; } })()}</a>
+                            </div>
+                        )}
                     </Row>
                 )}
-                {!prospect.telefon && !prospect.email && !prospect.webseite && !kn?.email && !kn?.webseite && (
+                {!prospect.telefon && !prospect.email && !prospect.webseite && !kn?.email && !kn?.webseite && !kietzee?.email && !kietzee?.webseite && (
                     <div style={{ padding: '12px 0', color: 'var(--text-muted)', fontSize: '13px' }}>Keine Kontaktdaten vorhanden.</div>
                 )}
             </div>
@@ -289,7 +321,7 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                 </Row>
                 {prospect.bezirk && <Row label="Bezirk">{prospect.bezirk}</Row>}
                 {prospect.traeger && <Row label="Träger">{prospect.traeger}</Row>}
-                {(prospect.plaetze != null || kn?.plaetze != null || senat?.plaetze != null) && (
+                {(prospect.plaetze != null || kn?.plaetze != null || senat?.plaetze != null || kietzee?.plaetze != null) && (
                     <Row label="Plätze">
                         <div>
                             {prospect.plaetze != null ? (
@@ -318,6 +350,17 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                                     </span>
                                 </div>
                             )}
+                            {kietzee?.plaetze != null && kietzee.plaetze !== prospect.plaetze && kietzee.plaetze !== kn?.plaetze && kietzee.plaetze !== senat?.plaetze && (
+                                <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ color: '#f97316' }}>{kietzee.plaetze}</span>
+                                    <span style={{ fontSize: '10px', fontWeight: 600, color: '#f97316', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: '4px', padding: '1px 5px' }}>Kietzee</span>
+                                    {(kietzee.plaetze_unter3 != null || kietzee.plaetze_ueber3 != null) && (
+                                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                            ({kietzee.plaetze_unter3 ?? '?'} Krippe / {kietzee.plaetze_ueber3 ?? '?'} Kiga)
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </Row>
                 )}
@@ -326,8 +369,8 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                         <span style={{
                             display: 'inline-block', padding: '2px 8px', borderRadius: '10px',
                             fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em',
-                            background: prospect.source === 'daks' ? 'rgba(59,130,246,0.12)' : prospect.source === 'kita-navigator' ? 'rgba(168,85,247,0.12)' : prospect.source === 'senatsliste' ? 'rgba(22,163,74,0.12)' : 'rgba(148,163,184,0.12)',
-                            color: prospect.source === 'daks' ? '#3b82f6' : prospect.source === 'kita-navigator' ? '#a855f7' : prospect.source === 'senatsliste' ? '#16a34a' : '#94a3b8',
+                            background: prospect.source === 'daks' ? 'rgba(59,130,246,0.12)' : prospect.source === 'kita-navigator' ? 'rgba(168,85,247,0.12)' : prospect.source === 'senatsliste' ? 'rgba(22,163,74,0.12)' : prospect.source === 'kietzee' ? 'rgba(249,115,22,0.12)' : 'rgba(148,163,184,0.12)',
+                            color: prospect.source === 'daks' ? '#3b82f6' : prospect.source === 'kita-navigator' ? '#a855f7' : prospect.source === 'senatsliste' ? '#16a34a' : prospect.source === 'kietzee' ? '#f97316' : '#94a3b8',
                         }}>{prospect.source === 'senatsliste' ? 'Senatsliste' : prospect.source}</span>
                         {prospect.source_url && (
                             <a href={prospect.source_url} target="_blank" rel="noopener noreferrer"
@@ -342,6 +385,13 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                                 onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
                                 onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
                             >Kita-Navigator ↗</a>
+                        )}
+                        {kietzee?.source_url && (
+                            <a href={kietzee.source_url} target="_blank" rel="noopener noreferrer"
+                                style={{ fontSize: '12px', color: '#f97316', textDecoration: 'none' }}
+                                onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                            >Kietzee ↗</a>
                         )}
                     </div>
                 </Row>

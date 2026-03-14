@@ -82,7 +82,7 @@ export async function GET() {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-    const sources = ['daks', 'kita-navigator', 'senatsliste'];
+    const sources = ['daks', 'kita-navigator', 'senatsliste', 'kietzee'];
     const stats: Record<string, string | null> = {};
 
     for (const source of sources) {
