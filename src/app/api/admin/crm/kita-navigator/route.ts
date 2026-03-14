@@ -165,13 +165,10 @@ export async function POST() {
         }
     });
 
-    // 4. Neue Kitas einfügen
-    if (newKitas.length > 0) {
-        const { error } = await supabase
-            .from('crm_prospects')
-            .upsert(newKitas, { onConflict: 'source,source_url', ignoreDuplicates: false });
-        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    // 4. Neue Kitas einfügen (einzeln, da Partial-Index kein bulk-upsert erlaubt)
+    await runInBatches(newKitas, CONCURRENCY, async (kita) => {
+        await supabase.from('crm_prospects').insert(kita);
+    });
 
     // 5. Gematchte Einträge mit extra_sources aktualisieren
     await runInBatches(matchedUpdates, CONCURRENCY, async ({ id, extra_sources }) => {
