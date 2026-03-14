@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getEmailTemplates } from '@/lib/data';
+import { getEmailTemplates, getOrgById } from '@/lib/data';
 import Sidebar from '@/components/Sidebar';
 
 export const metadata: Metadata = { title: 'E-Mail-Templates' };
@@ -25,7 +25,10 @@ export default async function EmailTemplatesPage() {
     if (!userId || !role) redirect('/login');
     if (role !== 'admin') redirect('/dashboard');
 
-    const templates = await getEmailTemplates(orgId);
+    const [templates, org] = await Promise.all([
+        getEmailTemplates(orgId),
+        getOrgById(orgId),
+    ]);
 
     return (
         <div className="app-layout">
@@ -72,7 +75,7 @@ export default async function EmailTemplatesPage() {
                                 <div style={{ fontWeight: 700, marginBottom: '6px', color: 'var(--text)' }}>Login</div>
                                 <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
                                     Anmeldung unter <strong>resend.com</strong> via <strong>GitHub</strong>.<br />
-                                    Absenderadresse: <code style={{ background: 'var(--bg-secondary)', padding: '1px 6px', borderRadius: '4px' }}>finanzen@pankonauten.de</code>
+                                    Absenderadresse: <code style={{ background: 'var(--bg-secondary)', padding: '1px 6px', borderRadius: '4px' }}>{org?.from_email || 'no-reply@kitanaut.de'}</code>
                                 </p>
                             </div>
 
@@ -90,10 +93,10 @@ export default async function EmailTemplatesPage() {
                             </div>
 
                             <div>
-                                <div style={{ fontWeight: 700, marginBottom: '10px', color: 'var(--text)' }}>DNS-Einträge bei pankonauten.de</div>
+                                <div style={{ fontWeight: 700, marginBottom: '10px', color: 'var(--text)' }}>DNS-Einträge bei kitanaut.de</div>
                                 <p style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)' }}>
                                     Damit E-Mails nicht im Spam landen, wurden folgende DNS-Records gesetzt. Diese müssen beim DNS-Anbieter
-                                    von pankonauten.de gepflegt bleiben:
+                                    von kitanaut.de gepflegt bleiben:
                                 </p>
 
                                 <div style={{ overflowX: 'auto' }}>
@@ -145,8 +148,8 @@ export default async function EmailTemplatesPage() {
 
                                 <p style={{ margin: '10px 0 0 0', color: 'var(--text-secondary)', fontSize: '13px' }}>
                                     <strong>DKIM</strong> signiert ausgehende E-Mails kryptografisch – Empfänger können prüfen, ob die Mail wirklich von uns stammt.<br />
-                                    <strong>SPF</strong> legt fest, welche Server E-Mails im Namen von pankonauten.de versenden dürfen. Der MX-Eintrag leitet Bounce-Meldungen (nicht zustellbare Mails) zurück an Amazon SES, das Resend intern nutzt.<br /><br />
-                                    DNS-Einträge werden verwaltet bei: <strong>udmedia</strong> – Login unter <code style={{ background: 'var(--bg-secondary)', padding: '1px 5px', borderRadius: '3px' }}>login.udmedia.de</code>
+                                    <strong>SPF</strong> legt fest, welche Server E-Mails im Namen von kitanaut.de versenden dürfen. Der MX-Eintrag leitet Bounce-Meldungen (nicht zustellbare Mails) zurück an Amazon SES, das Resend intern nutzt.<br /><br />
+                                    DNS-Einträge werden verwaltet bei: <strong>Vercel</strong> (kitanaut.de läuft über Vercel-Nameserver)
                                 </p>
                             </div>
 

@@ -14,6 +14,7 @@ interface PdfProps {
     abrechnungId: string;
     jahr: number;
     monat: number;
+    orgName?: string;
 }
 
 interface MarkAsBezahltButtonProps {
@@ -56,7 +57,8 @@ export default function MarkAsBezahltButton({ id, label, targetStatus, pdfProps 
                             pdfProps.totalBetrag,
                             pdfProps.abrechnungId,
                             pdfProps.jahr,
-                            pdfProps.monat
+                            pdfProps.monat,
+                            pdfProps.orgName
                         );
                         const blobRes = await fetch(blobUrl);
                         const blob = await blobRes.blob();

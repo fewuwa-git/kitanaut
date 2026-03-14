@@ -5,7 +5,7 @@ import { headers } from 'next/headers';
 export const metadata: Metadata = { title: 'Abrechnung' };
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
-import { getAllAbrechnungen, getUserById, getSpringerinUsers } from '@/lib/data';
+import { getAllAbrechnungen, getUserById, getSpringerinUsers, getOrgById } from '@/lib/data';
 import Sidebar from '@/components/Sidebar';
 import Link from 'next/link';
 import PDFOverviewButton from '@/components/PDFOverviewButton';
@@ -45,11 +45,13 @@ async function AbrechnungTable({
     selectedJahr?: number;
     selectedStatus?: string;
 }) {
-    const [abrechnungenRaw, currentUser, springerinnen] = await Promise.all([
+    const [abrechnungenRaw, currentUser, springerinnen, org] = await Promise.all([
         role === 'admin' ? getAllAbrechnungen(orgId, selectedSpringerinId) : getAllAbrechnungen(orgId, userId),
         getUserById(userId, orgId),
         role === 'admin' ? getSpringerinUsers(orgId) : Promise.resolve([]),
+        getOrgById(orgId),
     ]);
+    const orgName = org?.name;
 
     if (!currentUser) redirect('/login');
 
@@ -150,6 +152,7 @@ async function AbrechnungTable({
                                                             abrechnungId={ab.id}
                                                             jahr={ab.jahr}
                                                             monat={ab.monat}
+                                                            orgName={orgName}
                                                         />
                                                         {!isLocked && (
                                                             <Link
@@ -262,6 +265,7 @@ async function AbrechnungTable({
                                                                             abrechnungId: ab.id,
                                                                             jahr: ab.jahr,
                                                                             monat: ab.monat,
+                                                                            orgName,
                                                                         } : undefined}
                                                                     />
                                                                 )}

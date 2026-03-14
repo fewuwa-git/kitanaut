@@ -30,7 +30,8 @@ export const generateAbrechnungPDF = async (
     totalBetrag: number,
     abrechnungId?: string,
     jahr?: number,
-    monat?: number
+    monat?: number,
+    orgName?: string
 ): Promise<string> => {
     const doc = new jsPDF();
     const margin = 20;
@@ -224,7 +225,7 @@ export const generateAbrechnungPDF = async (
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
             doc.text(
-                `Erstellt am ${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })} · Pankonauten Finanzen · Nr. ${docNumber}`,
+                `Erstellt am ${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })} · ${orgName || 'Kitanaut'} Finanzen · Nr. ${docNumber}`,
                 margin,
                 footerY
             );

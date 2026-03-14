@@ -59,13 +59,15 @@ export default function AbrechnungForm({
     initialMonth,
     initialYear,
     allSpringerinnen,
-    initialSpringer
+    initialSpringer,
+    orgName,
 }: {
     user: User,
     initialMonth?: number,
     initialYear?: number,
     allSpringerinnen?: User[],
-    initialSpringer?: User
+    initialSpringer?: User,
+    orgName?: string,
 }) {
     const [selectedSpringer, setSelectedSpringer] = useState<User>(initialSpringer || user);
     const stundensatz = selectedSpringer.stundensatz || 0;
@@ -357,7 +359,7 @@ export default function AbrechnungForm({
         setError('');
         try {
             const monthLabel = availableMonths.find(m => m.value === selectedMonth)?.label || '';
-            const url = await generateAbrechnungPDF(selectedSpringer, monthLabel, tage, totalStunden, totalBetrag);
+            const url = await generateAbrechnungPDF(selectedSpringer, monthLabel, tage, totalStunden, totalBetrag, undefined, undefined, undefined, orgName);
             setPdfUrl(url);
         } catch (err: any) {
             console.error('PDF Generation Error:', err);

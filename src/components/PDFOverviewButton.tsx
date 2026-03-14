@@ -12,6 +12,7 @@ interface PDFOverviewButtonProps {
     abrechnungId?: string;
     jahr?: number;
     monat?: number;
+    orgName?: string;
 }
 
 export default function PDFOverviewButton({
@@ -22,7 +23,8 @@ export default function PDFOverviewButton({
     totalBetrag,
     abrechnungId,
     jahr,
-    monat
+    monat,
+    orgName,
 }: PDFOverviewButtonProps) {
     const [generating, setGenerating] = useState(false);
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export default function PDFOverviewButton({
     const handleGenerate = async () => {
         setGenerating(true);
         try {
-            const url = await generateAbrechnungPDF(user, monthLabel, tage, totalStunden, totalBetrag, abrechnungId, jahr, monat);
+            const url = await generateAbrechnungPDF(user, monthLabel, tage, totalStunden, totalBetrag, abrechnungId, jahr, monat, orgName);
             setPdfUrl(url);
         } catch (error) {
             console.error('Error generating PDF:', error);

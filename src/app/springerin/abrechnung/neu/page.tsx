@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getUserById, getUsers } from '@/lib/data';
+import { getUserById, getUsers, getOrgById } from '@/lib/data';
 import Sidebar from '@/components/Sidebar';
 
 export const metadata: Metadata = { title: 'Neue Abrechnung' };
@@ -27,10 +27,11 @@ export default async function NeueAbrechnungPage({
     if (!userId || !role) redirect('/login');
     if (role !== 'admin' && role !== 'springerin') redirect('/dashboard');
 
-    const [currentUser, initialSpringer, allUsers] = await Promise.all([
+    const [currentUser, initialSpringer, allUsers, org] = await Promise.all([
         getUserById(userId, orgId),
         springerinId ? getUserById(springerinId, orgId) : Promise.resolve(undefined),
         role === 'admin' ? getUsers(orgId) : Promise.resolve(undefined),
+        getOrgById(orgId),
     ]);
 
     if (!currentUser) redirect('/login');
@@ -53,6 +54,7 @@ export default async function NeueAbrechnungPage({
                                 initialYear={initialYear}
                                 allSpringerinnen={springerList}
                                 initialSpringer={initialSpringer}
+                                orgName={org?.name}
                             />
                         </div>
                     </div>
