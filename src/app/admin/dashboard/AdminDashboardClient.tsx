@@ -32,6 +32,9 @@ export default function AdminDashboardClient({ orgs }: { orgs: Organization[] })
                     <a href="/admin/kitas/neu" className="btn btn-primary">
                         + Neue Kita anlegen
                     </a>
+                    <a href="/admin/reserved-slugs" className="btn btn-secondary">
+                        Gesperrte Subdomains
+                    </a>
                     <a href="/admin/changelog" className="btn btn-secondary">
                         Changelog
                     </a>
