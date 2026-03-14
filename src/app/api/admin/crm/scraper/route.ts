@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifySuperAdminToken } from '@/lib/auth';
 import { supabase } from '@/lib/db';
@@ -79,69 +78,95 @@ async function runInBatches<T>(items: T[], concurrency: number, fn: (item: T) =>
 }
 
 export async function POST() {
-    if (!await requireAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!await requireAdmin()) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
 
-    const listHtml = await fetchHtml(LIST_URL);
-    if (!listHtml) return NextResponse.json({ error: 'Mitgliederliste konnte nicht geladen werden.' }, { status: 502 });
+    const encoder = new TextEncoder();
 
-    const $ = cheerio.load(listHtml);
-    const links = new Set<string>();
-    $('a[href]').each((_, el) => {
-        const href = $(el).attr('href') || '';
-        if (href.includes('/mitglieder/suche/kita/') && href.includes('/view')) {
-            links.add(href.startsWith('http') ? href : BASE_URL + href);
+    const stream = new ReadableStream({
+        async start(controller) {
+            const send = (event: object) => {
+                controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'));
+            };
+
+            try {
+                send({ type: 'progress', message: 'Lade Mitgliederliste von daks-berlin.de…' });
+
+                const listHtml = await fetchHtml(LIST_URL);
+                if (!listHtml) {
+                    send({ type: 'error', message: 'Mitgliederliste konnte nicht geladen werden.' });
+                    return;
+                }
+
+                const $ = cheerio.load(listHtml);
+                const links = new Set<string>();
+                $('a[href]').each((_, el) => {
+                    const href = $(el).attr('href') || '';
+                    if (href.includes('/mitglieder/suche/kita/') && href.includes('/view')) {
+                        links.add(href.startsWith('http') ? href : BASE_URL + href);
+                    }
+                });
+
+                const linkArray = Array.from(links).sort();
+                const total = linkArray.length;
+                send({ type: 'progress', message: `${total} Kitas gefunden, lade Details…`, current: 0, total });
+
+                const kitas: DaksKita[] = [];
+
+                await runInBatches(linkArray, CONCURRENCY, async (url) => {
+                    const html = await fetchHtml(url);
+                    if (html) {
+                        const kita = parseDetail(html, url);
+                        kitas.push(kita);
+                        send({ type: 'progress', message: kita.name, current: kitas.length, total });
+                    }
+                });
+
+                send({ type: 'progress', message: 'Vergleiche mit Datenbank…' });
+
+                const { data: existing } = await supabase
+                    .from('crm_prospects')
+                    .select('id, source_url')
+                    .eq('source', 'daks');
+
+                const existingUrls = new Map((existing ?? []).map(e => [e.source_url, e.id]));
+                const newKitas = kitas.filter(k => !existingUrls.has(k.source_url));
+                const updateKitas = kitas.filter(k => existingUrls.has(k.source_url));
+
+                send({ type: 'progress', message: `Speichere ${newKitas.length} neue, aktualisiere ${updateKitas.length}…` });
+
+                if (newKitas.length > 0) {
+                    await supabase.from('crm_prospects').insert(newKitas);
+                }
+
+                await runInBatches(updateKitas, CONCURRENCY, async (kita) => {
+                    const id = existingUrls.get(kita.source_url);
+                    if (!id) return;
+                    await supabase.from('crm_prospects').update({
+                        name: kita.name, strasse: kita.strasse, plz: kita.plz,
+                        ort: kita.ort, bezirk: kita.bezirk, telefon: kita.telefon,
+                        email: kita.email, webseite: kita.webseite, traeger: kita.traeger,
+                        plaetze: kita.plaetze, updated_at: new Date().toISOString(),
+                    }).eq('id', id);
+                });
+
+                const { count } = await supabase
+                    .from('crm_prospects')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('source', 'daks');
+
+                send({ type: 'done', new: newKitas.length, updated: updateKitas.length, total: kitas.length, dbTotal: count ?? 0 });
+
+            } catch (err) {
+                send({ type: 'error', message: err instanceof Error ? err.message : 'Unbekannter Fehler' });
+            } finally {
+                controller.close();
+            }
         }
     });
 
-    const kitas: DaksKita[] = [];
-    await runInBatches(Array.from(links).sort(), CONCURRENCY, async (url) => {
-        const html = await fetchHtml(url);
-        if (html) kitas.push(parseDetail(html, url));
+    return new Response(stream, {
+        headers: { 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-cache' },
     });
-
-    // Bestehende Einträge laden (für Neu/Update-Unterscheidung)
-    const { data: existing } = await supabase
-        .from('crm_prospects')
-        .select('id, source_url')
-        .eq('source', 'daks');
-
-    const existingUrls = new Map((existing ?? []).map(e => [e.source_url, e.id]));
-
-    const newKitas = kitas.filter(k => !existingUrls.has(k.source_url));
-    const updateKitas = kitas.filter(k => existingUrls.has(k.source_url));
-
-    // Neue Kitas einfügen
-    let insertError: string | null = null;
-    if (newKitas.length > 0) {
-        const { error } = await supabase.from('crm_prospects').insert(newKitas);
-        if (error) insertError = error.message;
-    }
-
-    // Bestehende nur mit Kontaktdaten aktualisieren – status/notizen/extra_sources bleiben erhalten
-    await runInBatches(updateKitas, CONCURRENCY, async (kita) => {
-        const id = existingUrls.get(kita.source_url);
-        if (!id) return;
-        await supabase.from('crm_prospects').update({
-            name: kita.name,
-            strasse: kita.strasse,
-            plz: kita.plz,
-            ort: kita.ort,
-            bezirk: kita.bezirk,
-            telefon: kita.telefon,
-            email: kita.email,
-            webseite: kita.webseite,
-            traeger: kita.traeger,
-            plaetze: kita.plaetze,
-            updated_at: new Date().toISOString(),
-        }).eq('id', id);
-    });
-
-    if (insertError) return NextResponse.json({ error: insertError }, { status: 500 });
-
-    const { count } = await supabase
-        .from('crm_prospects')
-        .select('*', { count: 'exact', head: true })
-        .eq('source', 'daks');
-
-    return NextResponse.json({ total: kitas.length, new: newKitas.length, updated: updateKitas.length, dbTotal: count ?? 0 });
 }
