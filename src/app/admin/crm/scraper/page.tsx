@@ -15,7 +15,7 @@ function formatRelative(iso: string | null): string {
     return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-type Source = 'daks' | 'kita-navigator' | 'senatsliste' | 'kietzee';
+type Source = 'daks' | 'kita-navigator' | 'senatsliste' | 'kietzee' | 'kitanetz';
 type ModalPhase = 'idle' | 'running' | 'done' | 'error';
 
 interface ModalState {
@@ -58,6 +58,12 @@ const SOURCES: { id: Source; label: string; endpoint: string; description: strin
         label: 'Kietzee',
         endpoint: '/api/admin/crm/kietzee',
         description: 'Importiert ~2.850 Kitas von kietzee.com. Enthält E-Mail, Webseite, Träger, Kapazität (gesamt, Krippe, Kiga) und Koordinaten.',
+    },
+    {
+        id: 'kitanetz',
+        label: 'Kitanetz',
+        endpoint: '/api/admin/crm/kitanetz',
+        description: 'Scrapt Kitas von kitanetz.de (deutschlandweit). Enthält Telefon, E-Mail, Träger, Kapazität und Koordinaten.',
     },
 ];
 

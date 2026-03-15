@@ -13,6 +13,8 @@ export const CHANGELOG: ChangelogEntry[] = [
             'Neue Importquelle: Offizielle Kitaliste der Berliner Senatsverwaltung (~2.900 Kitas als XLSX). Enthält behördlich genehmigte Platzzahlen, Einrichtungstyp und Einrichtungsnummern. Bestehende Einträge werden per PLZ+Straße gematcht und mit Senatsdaten angereichert.',
             '— CRM Kietzee —',
             'Neue Importquelle: kietzee.com (~2.850 Kitas). Ergänzt E-Mail-Adressen, Webseiten, Träger, Kapazitäten (gesamt, Krippe, Kiga) und Koordinaten. Auf der Kita-Detailseite werden abweichende Kontaktdaten mit orangem Kietzee-Badge angezeigt.',
+            '— CRM Kitanetz —',
+            'Neue Importquelle: kitanetz.de (deutschlandweit). Scraper crawlt alle 16 Bundesländer über mehrstufige URL-Erkennung (Bundesland → Bezirk/Kreis → Kita-Detailseiten) und ergänzt Telefon, E-Mail, Träger, Platzzahlen und Koordinaten. Abweichende Kontaktdaten werden auf der Kita-Detailseite mit türkisem Kitanetz-Badge angezeigt.',
         ],
     },
     {

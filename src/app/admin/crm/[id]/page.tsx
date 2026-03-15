@@ -20,6 +20,18 @@ interface SenatsExtraSource {
     traeger: string;
 }
 
+interface KitanetzExtraSource {
+    source: 'kitanetz';
+    source_url: string;
+    telefon: string;
+    email: string;
+    traeger: string;
+    plaetze: number | null;
+    bundesland: string;
+    lat: number | null;
+    lng: number | null;
+}
+
 interface KietzeeExtraSource {
     source: 'kietzee';
     source_url: string;
@@ -49,7 +61,7 @@ interface Prospect {
     source_url: string;
     status: string;
     notizen: string;
-    extra_sources: (KnExtraSource | SenatsExtraSource | KietzeeExtraSource)[];
+    extra_sources: (KnExtraSource | SenatsExtraSource | KietzeeExtraSource | KitanetzExtraSource)[];
     created_at: string;
     updated_at: string;
 }
@@ -200,6 +212,7 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
     const kn = prospect.extra_sources?.find(e => e.source === 'kita-navigator') as KnExtraSource | undefined;
     const senat = prospect.extra_sources?.find(e => e.source === 'senatsliste') as SenatsExtraSource | undefined;
     const kietzee = prospect.extra_sources?.find(e => e.source === 'kietzee') as KietzeeExtraSource | undefined;
+    const kitanetz = prospect.extra_sources?.find(e => e.source === 'kitanetz') as KitanetzExtraSource | undefined;
 
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -241,7 +254,7 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                 <div style={{ padding: '14px 0 6px', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                     Kontakt
                 </div>
-                {(prospect.telefon || kn?.telefon || senat?.telefon || kietzee?.telefon) && (
+                {(prospect.telefon || kn?.telefon || senat?.telefon || kietzee?.telefon || kitanetz?.telefon) && (
                     <Row label="Telefon">
                         <ContactField
                             primary={prospect.telefon}
@@ -263,9 +276,15 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                                 <a href={`tel:${kietzee.telefon}`} style={{ color: '#f97316', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{kietzee.telefon}</a>
                             </div>
                         )}
+                        {kitanetz?.telefon && normalizePhone(kitanetz.telefon) !== normalizePhone(prospect.telefon) && normalizePhone(kitanetz.telefon) !== normalizePhone(kn?.telefon ?? '') && normalizePhone(kitanetz.telefon) !== normalizePhone(senat?.telefon ?? '') && normalizePhone(kitanetz.telefon) !== normalizePhone(kietzee?.telefon ?? '') && (
+                            <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '10px', fontWeight: 600, color: '#0891b2', background: 'rgba(8,145,178,0.1)', border: '1px solid rgba(8,145,178,0.25)', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap' }}>Kitanetz</span>
+                                <a href={`tel:${kitanetz.telefon}`} style={{ color: '#0891b2', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{kitanetz.telefon}</a>
+                            </div>
+                        )}
                     </Row>
                 )}
-                {(prospect.email || kn?.email || kietzee?.email) && (
+                {(prospect.email || kn?.email || kietzee?.email || kitanetz?.email) && (
                     <Row label="E-Mail">
                         <ContactField
                             primary={prospect.email}
@@ -273,6 +292,12 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                             renderPrimary={v => <a href={`mailto:${v}`} style={{ color: 'var(--accent)', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
                             renderKn={v => <a href={`mailto:${v}`} style={{ color: '#a855f7', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{v}</a>}
                         />
+                        {kitanetz?.email && kitanetz.email.toLowerCase() !== prospect.email.toLowerCase() && kitanetz.email.toLowerCase() !== (kn?.email ?? '').toLowerCase() && kitanetz.email.toLowerCase() !== (kietzee?.email ?? '').toLowerCase() && (
+                            <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '10px', fontWeight: 600, color: '#0891b2', background: 'rgba(8,145,178,0.1)', border: '1px solid rgba(8,145,178,0.25)', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap' }}>Kitanetz</span>
+                                <a href={`mailto:${kitanetz.email}`} style={{ color: '#0891b2', textDecoration: 'none' }} onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')} onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}>{kitanetz.email}</a>
+                            </div>
+                        )}
                         {kietzee?.email && kietzee.email.toLowerCase() !== prospect.email.toLowerCase() && kietzee.email.toLowerCase() !== (kn?.email ?? '').toLowerCase() && (
                             <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <span style={{ fontSize: '10px', fontWeight: 600, color: '#f97316', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap' }}>Kietzee</span>
@@ -369,8 +394,8 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                         <span style={{
                             display: 'inline-block', padding: '2px 8px', borderRadius: '10px',
                             fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em',
-                            background: prospect.source === 'daks' ? 'rgba(59,130,246,0.12)' : prospect.source === 'kita-navigator' ? 'rgba(168,85,247,0.12)' : prospect.source === 'senatsliste' ? 'rgba(22,163,74,0.12)' : prospect.source === 'kietzee' ? 'rgba(249,115,22,0.12)' : 'rgba(148,163,184,0.12)',
-                            color: prospect.source === 'daks' ? '#3b82f6' : prospect.source === 'kita-navigator' ? '#a855f7' : prospect.source === 'senatsliste' ? '#16a34a' : prospect.source === 'kietzee' ? '#f97316' : '#94a3b8',
+                            background: prospect.source === 'daks' ? 'rgba(59,130,246,0.12)' : prospect.source === 'kita-navigator' ? 'rgba(168,85,247,0.12)' : prospect.source === 'senatsliste' ? 'rgba(22,163,74,0.12)' : prospect.source === 'kietzee' ? 'rgba(249,115,22,0.12)' : prospect.source === 'kitanetz' ? 'rgba(8,145,178,0.12)' : 'rgba(148,163,184,0.12)',
+                            color: prospect.source === 'daks' ? '#3b82f6' : prospect.source === 'kita-navigator' ? '#a855f7' : prospect.source === 'senatsliste' ? '#16a34a' : prospect.source === 'kietzee' ? '#f97316' : prospect.source === 'kitanetz' ? '#0891b2' : '#94a3b8',
                         }}>{prospect.source === 'senatsliste' ? 'Senatsliste' : prospect.source}</span>
                         {prospect.source_url && (
                             <a href={prospect.source_url} target="_blank" rel="noopener noreferrer"
@@ -392,6 +417,13 @@ export default function CrmDetailPage({ params }: { params: Promise<{ id: string
                                 onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
                                 onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
                             >Kietzee ↗</a>
+                        )}
+                        {kitanetz?.source_url && (
+                            <a href={kitanetz.source_url} target="_blank" rel="noopener noreferrer"
+                                style={{ fontSize: '12px', color: '#0891b2', textDecoration: 'none' }}
+                                onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                            >Kitanetz ↗</a>
                         )}
                     </div>
                 </Row>
