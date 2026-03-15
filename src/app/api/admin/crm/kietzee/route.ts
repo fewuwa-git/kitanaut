@@ -157,6 +157,7 @@ export async function POST() {
 
                 const newKitas: object[] = [];
                 const matchedUpdates: { id: number; extra_sources: KietzeeExtraSource[] }[] = [];
+                const newKeys = new Set<string>();
                 let current = 0;
 
                 for (const kita of allKitas) {
@@ -180,13 +181,16 @@ export async function POST() {
 
                     const match = plz && strasse ? lookup.get(matchKey(plz, strasse)) : undefined;
 
+                    const key = plz && strasse ? matchKey(plz, strasse) : null;
+
                     if (match) {
                         const newExtraSources = [
                             ...match.extra_sources.filter(e => e.source !== 'kietzee'),
                             kzData,
                         ];
                         matchedUpdates.push({ id: match.id, extra_sources: newExtraSources });
-                    } else {
+                    } else if (key && !newKeys.has(key)) {
+                        newKeys.add(key);
                         newKitas.push({
                             source: 'kietzee',
                             source_url: kzData.source_url,

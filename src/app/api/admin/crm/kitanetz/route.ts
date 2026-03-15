@@ -254,6 +254,7 @@ export async function POST() {
 
                 const newKitas: object[] = [];
                 const matchedUpdates: { id: number; extra_sources: KitanetzExtraSource[] }[] = [];
+                const newKeys = new Set<string>();
                 let current = 0;
 
                 await runInBatches(kitaUrls, CONCURRENCY, async (url) => {
@@ -283,7 +284,8 @@ export async function POST() {
                         lng: kita.lng,
                     };
 
-                    const match = kita.plz && kita.strasse ? lookup.get(matchKey(kita.plz, kita.strasse)) : undefined;
+                    const key = kita.plz && kita.strasse ? matchKey(kita.plz, kita.strasse) : null;
+                    const match = key ? lookup.get(key) : undefined;
 
                     if (match) {
                         const newExtraSources = [
@@ -291,7 +293,8 @@ export async function POST() {
                             kzData,
                         ];
                         matchedUpdates.push({ id: match.id, extra_sources: newExtraSources });
-                    } else {
+                    } else if (!key || !newKeys.has(key)) {
+                        if (key) newKeys.add(key);
                         newKitas.push({
                             source: 'kitanetz',
                             source_url: kita.source_url,
